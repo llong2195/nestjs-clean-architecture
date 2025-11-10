@@ -3,7 +3,7 @@
 **Feature Branch**: `001-clean-architecture-boilerplate`  
 **Created**: 2025-11-11  
 **Status**: Ready for Planning  
-**Input**: User description: "Build a backend boilerplate project that follows Clean Architecture principles using NestJS, TypeORM, PostgreSQL, Redis, and WebSocket, Socket.IO, Kafka, etc (MQ), Queue (BullMQ)"
+**Input**: User description: "Build a backend boilerplate project that follows Clean Architecture principles using NestJS, TypeORM, PostgreSQL, Redis, and WebSocket, Socket.IO, Kafka, message queues (MQ), Queue (BullMQ)"
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -183,7 +183,7 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 - **FR-022**: System MUST support transactional operations for data consistency
 - **FR-023**: System MUST implement rate limiting for public endpoints
 - **FR-024**: System MUST use pnpm for package management
-- **FR-025**: Shared modules (logger, config, database, cache) MUST be isolated and reusable
+- **FR-025**: Shared modules (logger, config, database, cache, messaging, websocket, i18n, storage, notification) MUST be isolated and reusable
 - **FR-026**: System MUST support Domain-Driven Design (DDD) patterns including aggregates, value objects, and domain events
 - **FR-027**: System MUST implement domain event dispatching for cross-aggregate communication
 - **FR-028**: System MUST provide base interfaces for aggregate roots and domain events
@@ -191,9 +191,10 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 - **FR-030**: System MUST provide notification abstraction supporting email, SMS, and push notifications via adapter pattern
 - **FR-031**: System MUST provide file storage abstraction supporting local filesystem and cloud storage (S3)
 - **FR-032**: System MUST support OAuth 2.0 authentication with Google provider integration
-- **FR-033**: System MUST automatically detect user language from Accept-Language header or query parameter
-- **FR-034**: System MUST support file upload with validation (size, type, virus scanning hooks)
-- **FR-035**: System MUST provide Kafka consumer examples alongside producers for event-driven architecture
+- **FR-033**: OAuth credentials (client ID and secret) MUST NOT be committed to version control and MUST be documented in .env.example (without actual values)
+- **FR-034**: System MUST automatically detect user language from Accept-Language header or query parameter
+- **FR-035**: System MUST support file upload with validation (size, type, virus scanning hooks)
+- **FR-036**: System MUST provide Kafka consumer examples alongside producers for event-driven architecture
 
 ### Key Entities
 
@@ -201,16 +202,17 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 
 - **User** (Sample Entity): Demonstrates authentication and authorization patterns; attributes include unique identifier, authentication credentials (hashed), profile information, role/permissions, OAuth provider linkage (local, google)
 - **Post** (Sample Aggregate): Demonstrates DDD aggregate pattern with Post as root managing Comments and Tags; attributes include title, content (value object), slug (value object), status, author reference, timestamps, file attachments
-- **Conversation** (Sample Aggregate): Demonstrates complex aggregate with Conversation root managing Messages and Participants; attributes include conversation type, participants list (value objects), message history, read status tracking
+- **Session** (Sample Entity): Demonstrates authentication session management; attributes include user reference, access token (hashed/encrypted), refresh token (hashed/encrypted), provider type, expiration timestamps. Tokens MUST NOT be stored in plaintext—follow secure token storage patterns (e.g., hashing or encryption) as per security best practices.
 - **Session** (Sample Entity): Demonstrates authentication session management; attributes include user reference, access token, refresh token, provider type, expiration timestamps
 - **Notification** (System Entity): Demonstrates notification system; attributes include recipient, channel (email/SMS/push), template, payload, delivery status
 - **FileMetadata** (System Entity): Demonstrates file storage; attributes include filename, storage path, mime type, size, uploader reference, storage provider
-- **Configuration** (System Entity): Represents environment-specific settings; attributes include environment name, feature flags, connection strings, API keys (encrypted)
+- **Configuration** (System Entity): Represents environment-specific settings; attributes include environment name, feature flags, and non-sensitive configuration values.
+  > **Note:** Sensitive secrets such as API keys and credentials MUST NOT be stored as plain database attributes. Use environment variables or a secret management system (e.g., HashiCorp Vault, AWS Secrets Manager) for secret storage and retrieval.
 
 ### Assumptions
 
-- Development teams are familiar with TypeScript and modern JavaScript
-- Docker is available in development environments for running PostgreSQL and Redis
+- Development teams are familiar with TypeScript and JavaScript ES2020+ (including async/await, modules, destructuring)
+- Docker is available in development environments for running PostgreSQL, Redis, and Kafka
 - Node.js 22+ (LTS) is the target runtime environment
 - Teams follow conventional commit standards and Git workflow practices
 - Authentication mechanisms will be implemented as separate feature modules using this boilerplate
@@ -230,8 +232,9 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 - File uploads are stored in local filesystem by default; S3 adapter requires AWS credentials
 - Notification adapters are interfaces only; actual SMTP/SMS/Push providers configured per environment
 - OAuth requires Google client ID and secret configuration (environment variables)
+- OAuth credentials (client ID and secret) MUST NOT be committed to version control and MUST be documented in .env.example (without actual values)
 - Translation files support nested keys and pluralization rules
-- File size limits enforced at application layer (configurable, default 10MB)
+- File size limits enforced at application layer (configurable, default 10MB); file uploads MUST be rate limited and infrastructure-level size limits (e.g., reverse proxy/load balancer) are RECOMMENDED in addition to application-layer validation to prevent resource exhaustion and denial-of-service.
 
 ### Project Structure
 
@@ -356,7 +359,7 @@ nestjs-clean-architecture/
 │   │   │
 │   │   ├── chat/                         # Real-time chat module
 │   │   │   ├── domain/
-│   │   │   │   ├── aggregates/                   # Chat aggregate
+│   │   │   │   ├── aggregates/                   # Conversation aggregate
 │   │   │   │   │   └── conversation.aggregate.ts # Conversation aggregate root (manages messages + participants)
 │   │   │   │   ├── entities/
 │   │   │   │   │   ├── conversation.entity.ts    # Aggregate root entity
@@ -883,7 +886,8 @@ nestjs-clean-architecture/
 
    - Shared modules (database, cache, logger, messaging, **i18n**, **storage**, **notification**) are framework-aware but isolated
    - Common utilities (guards, filters, interceptors) handle cross-cutting concerns
-   - Each module can use shared infrastructure without coupling to other modules
+   - **Migrations**: All database migrations are centralized in `database/migrations/` (NOT in module folders) to maintain a single source of truth and proper execution order.
+     > **Note:** Centralizing migrations can conflict with modular Clean Architecture, as it introduces coupling and may hinder independent module development/deployment. To mitigate this, document migration ownership in each module's README, use clear naming conventions (e.g., prefix migration files with the module name), and establish a process for module authors to contribute migrations to the central folder. Consider using tooling/scripts to automate migration discovery and execution per module if future decoupling is required.
    - **Migrations**: All database migrations centralized in `database/migrations/` (NOT in module folders) to maintain single source of truth and proper execution order
    - **I18n**: Language detection via headers/query params; translation keys in JSON files; decorator-based translation
    - **File Storage**: Abstracted via ports; supports local filesystem (default) and cloud storage (S3) via adapter pattern
