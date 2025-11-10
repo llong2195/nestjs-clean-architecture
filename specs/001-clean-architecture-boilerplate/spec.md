@@ -184,13 +184,27 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 - **FR-023**: System MUST implement rate limiting for public endpoints
 - **FR-024**: System MUST use pnpm for package management
 - **FR-025**: Shared modules (logger, config, database, cache) MUST be isolated and reusable
+- **FR-026**: System MUST support Domain-Driven Design (DDD) patterns including aggregates, value objects, and domain events
+- **FR-027**: System MUST implement domain event dispatching for cross-aggregate communication
+- **FR-028**: System MUST provide base interfaces for aggregate roots and domain events
+- **FR-029**: System MUST support internationalization (i18n) with multi-language support (English, Vietnamese, Japanese minimum)
+- **FR-030**: System MUST provide notification abstraction supporting email, SMS, and push notifications via adapter pattern
+- **FR-031**: System MUST provide file storage abstraction supporting local filesystem and cloud storage (S3)
+- **FR-032**: System MUST support OAuth 2.0 authentication with Google provider integration
+- **FR-033**: System MUST automatically detect user language from Accept-Language header or query parameter
+- **FR-034**: System MUST support file upload with validation (size, type, virus scanning hooks)
+- **FR-035**: System MUST provide Kafka consumer examples alongside producers for event-driven architecture
 
 ### Key Entities
 
 **Note**: This is a boilerplate project focused on infrastructure and architecture patterns rather than specific business domain entities. The entities below represent example/sample entities to demonstrate the architecture:
 
-- **User** (Sample Entity): Demonstrates authentication and authorization patterns; attributes include unique identifier, authentication credentials (hashed), profile information, role/permissions
-- **AuditLog** (Sample Entity): Demonstrates event sourcing and audit trail patterns; attributes include event type, actor, timestamp, changes, correlation ID
+- **User** (Sample Entity): Demonstrates authentication and authorization patterns; attributes include unique identifier, authentication credentials (hashed), profile information, role/permissions, OAuth provider linkage (local, google)
+- **Post** (Sample Aggregate): Demonstrates DDD aggregate pattern with Post as root managing Comments and Tags; attributes include title, content (value object), slug (value object), status, author reference, timestamps, file attachments
+- **Conversation** (Sample Aggregate): Demonstrates complex aggregate with Conversation root managing Messages and Participants; attributes include conversation type, participants list (value objects), message history, read status tracking
+- **Session** (Sample Entity): Demonstrates authentication session management; attributes include user reference, access token, refresh token, provider type, expiration timestamps
+- **Notification** (System Entity): Demonstrates notification system; attributes include recipient, channel (email/SMS/push), template, payload, delivery status
+- **FileMetadata** (System Entity): Demonstrates file storage; attributes include filename, storage path, mime type, size, uploader reference, storage provider
 - **Configuration** (System Entity): Represents environment-specific settings; attributes include environment name, feature flags, connection strings, API keys (encrypted)
 
 ### Assumptions
@@ -209,6 +223,15 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 - Security headers (CORS, HELMET) are configured with sensible defaults
 - TLS/SSL is handled at infrastructure level (reverse proxy/load balancer) in production
 - API versioning (if needed) will be implemented in URL path or headers by features
+- Domain events are processed synchronously within the same transaction by default
+- Aggregate boundaries are kept small and focus on transactional consistency needs
+- Cross-aggregate communication uses domain events, not direct references
+- Default language is English; users can override via Accept-Language header or query param
+- File uploads are stored in local filesystem by default; S3 adapter requires AWS credentials
+- Notification adapters are interfaces only; actual SMTP/SMS/Push providers configured per environment
+- OAuth requires Google client ID and secret configuration (environment variables)
+- Translation files support nested keys and pluralization rules
+- File size limits enforced at application layer (configurable, default 10MB)
 
 ### Project Structure
 
@@ -232,6 +255,10 @@ nestjs-clean-architecture/
 │   │   │   │   │   └── user.repository.interface.ts  # Port
 │   │   │   │   ├── services/
 │   │   │   │   │   └── user-validation.service.ts
+│   │   │   │   ├── events/                       # Domain events
+│   │   │   │   │   ├── user-created.event.ts
+│   │   │   │   │   ├── user-updated.event.ts
+│   │   │   │   │   └── user-deleted.event.ts
 │   │   │   │   └── exceptions/
 │   │   │   │       ├── user-not-found.exception.ts
 │   │   │   │       └── duplicate-email.exception.ts
@@ -242,12 +269,16 @@ nestjs-clean-architecture/
 │   │   │   │   │   ├── get-user.use-case.ts
 │   │   │   │   │   ├── delete-user.use-case.ts
 │   │   │   │   │   └── list-users.use-case.ts
+│   │   │   │   ├── event-handlers/               # Domain event handlers
+│   │   │   │   │   ├── user-created.handler.ts
+│   │   │   │   │   └── user-deleted.handler.ts
 │   │   │   │   ├── dtos/
 │   │   │   │   │   ├── create-user.dto.ts
 │   │   │   │   │   ├── update-user.dto.ts
 │   │   │   │   │   └── user-response.dto.ts
 │   │   │   │   ├── ports/
-│   │   │   │   │   └── email-service.port.ts
+│   │   │   │   │   ├── email-service.port.ts
+│   │   │   │   │   └── notification-service.port.ts
 │   │   │   │   └── mappers/
 │   │   │   │       └── user.mapper.ts
 │   │   │   ├── infrastructure/
@@ -257,7 +288,8 @@ nestjs-clean-architecture/
 │   │   │   │   │   └── repositories/
 │   │   │   │   │       └── user.repository.ts
 │   │   │   │   ├── adapters/
-│   │   │   │   │   └── email.adapter.ts
+│   │   │   │   │   ├── email.adapter.ts
+│   │   │   │   │   └── notification.adapter.ts    # Email/SMS notification
 │   │   │   │   └── cache/
 │   │   │   │       └── user-cache.service.ts
 │   │   │   ├── interface/
@@ -318,23 +350,31 @@ nestjs-clean-architecture/
 │   │   │   │       │   └── auth.controller.ts
 │   │   │   │       └── dtos/
 │   │   │   │           ├── login-request.dto.ts
+│   │   │   │           ├── google-login-request.dto.ts
 │   │   │   │           └── auth-response.dto.ts
 │   │   │   └── auth.module.ts
 │   │   │
 │   │   ├── chat/                         # Real-time chat module
 │   │   │   ├── domain/
+│   │   │   │   ├── aggregates/                   # Chat aggregate
+│   │   │   │   │   └── conversation.aggregate.ts # Conversation aggregate root (manages messages + participants)
 │   │   │   │   ├── entities/
-│   │   │   │   │   ├── conversation.entity.ts
-│   │   │   │   │   ├── message.entity.ts
-│   │   │   │   │   └── participant.entity.ts
+│   │   │   │   │   ├── conversation.entity.ts    # Aggregate root entity
+│   │   │   │   │   ├── message.entity.ts         # Child entity
+│   │   │   │   │   └── participant.entity.ts     # Child entity
 │   │   │   │   ├── value-objects/
 │   │   │   │   │   ├── message-status.vo.ts
 │   │   │   │   │   └── conversation-type.vo.ts
 │   │   │   │   ├── repositories/
-│   │   │   │   │   ├── conversation.repository.interface.ts
+│   │   │   │   │   ├── conversation.repository.interface.ts  # Aggregate repository
 │   │   │   │   │   └── message.repository.interface.ts
 │   │   │   │   ├── services/
 │   │   │   │   │   └── message-validator.service.ts
+│   │   │   │   ├── events/                       # Domain events
+│   │   │   │   │   ├── conversation-created.event.ts
+│   │   │   │   │   ├── message-sent.event.ts
+│   │   │   │   │   ├── message-read.event.ts
+│   │   │   │   │   └── participant-joined.event.ts
 │   │   │   │   └── exceptions/
 │   │   │   │       ├── conversation-not-found.exception.ts
 │   │   │   │       └── unauthorized-participant.exception.ts
@@ -345,6 +385,9 @@ nestjs-clean-architecture/
 │   │   │   │   │   ├── get-conversation-history.use-case.ts
 │   │   │   │   │   ├── mark-message-read.use-case.ts
 │   │   │   │   │   └── delete-message.use-case.ts
+│   │   │   │   ├── event-handlers/               # Domain event handlers
+│   │   │   │   │   ├── message-sent.handler.ts
+│   │   │   │   │   └── participant-joined.handler.ts
 │   │   │   │   ├── dtos/
 │   │   │   │   │   ├── create-conversation.dto.ts
 │   │   │   │   │   ├── send-message.dto.ts
@@ -370,7 +413,8 @@ nestjs-clean-architecture/
 │   │   │   │   │   ├── conversation-cache.service.ts
 │   │   │   │   │   └── online-users-cache.service.ts
 │   │   │   │   └── messaging/
-│   │   │   │       └── chat-events.producer.ts     # Kafka producer
+│   │   │   │       ├── chat-events.producer.ts     # Kafka producer
+│   │   │   │       └── chat-events.consumer.ts     # Kafka consumer
 │   │   │   ├── interface/
 │   │   │   │   ├── http/
 │   │   │   │   │   ├── controllers/
@@ -388,22 +432,29 @@ nestjs-clean-architecture/
 │   │   │
 │   │   ├── blog/                         # Blog/content management
 │   │   │   ├── domain/
+│   │   │   │   ├── aggregates/                   # Blog aggregate
+│   │   │   │   │   └── post.aggregate.ts         # Post aggregate root (manages post + comments + tags)
 │   │   │   │   ├── entities/
-│   │   │   │   │   ├── post.entity.ts
+│   │   │   │   │   ├── post.entity.ts            # Aggregate root entity
 │   │   │   │   │   ├── category.entity.ts
 │   │   │   │   │   ├── tag.entity.ts
-│   │   │   │   │   └── comment.entity.ts
+│   │   │   │   │   └── comment.entity.ts         # Child entity within aggregate
 │   │   │   │   ├── value-objects/
 │   │   │   │   │   ├── post-status.vo.ts
 │   │   │   │   │   ├── slug.vo.ts
 │   │   │   │   │   └── content.vo.ts
 │   │   │   │   ├── repositories/
-│   │   │   │   │   ├── post.repository.interface.ts
+│   │   │   │   │   ├── post.repository.interface.ts       # Aggregate repository
 │   │   │   │   │   ├── category.repository.interface.ts
 │   │   │   │   │   └── comment.repository.interface.ts
 │   │   │   │   ├── services/
 │   │   │   │   │   ├── slug-generator.service.ts
 │   │   │   │   │   └── content-sanitizer.service.ts
+│   │   │   │   ├── events/                       # Domain events
+│   │   │   │   │   ├── post-created.event.ts
+│   │   │   │   │   ├── post-published.event.ts
+│   │   │   │   │   ├── comment-added.event.ts
+│   │   │   │   │   └── post-viewed.event.ts
 │   │   │   │   └── exceptions/
 │   │   │   │       ├── post-not-found.exception.ts
 │   │   │   │       └── duplicate-slug.exception.ts
@@ -417,6 +468,10 @@ nestjs-clean-architecture/
 │   │   │   │   │   ├── list-posts.use-case.ts
 │   │   │   │   │   ├── add-comment.use-case.ts
 │   │   │   │   │   └── search-posts.use-case.ts
+│   │   │   │   ├── event-handlers/               # Domain event handlers
+│   │   │   │   │   ├── post-published.handler.ts
+│   │   │   │   │   ├── post-viewed.handler.ts
+│   │   │   │   │   └── comment-added.handler.ts
 │   │   │   │   ├── dtos/
 │   │   │   │   │   ├── create-post.dto.ts
 │   │   │   │   │   ├── update-post.dto.ts
@@ -448,6 +503,7 @@ nestjs-clean-architecture/
 │   │   │   │   │   └── category-cache.service.ts
 │   │   │   │   └── messaging/
 │   │   │   │       ├── post-published.producer.ts  # Kafka event
+│   │   │   │       ├── post-published.consumer.ts  # Kafka consumer
 │   │   │   │       └── post-view-counter.processor.ts  # BullMQ job
 │   │   │   ├── interface/
 │   │   │   │   ├── http/
@@ -467,9 +523,6 @@ nestjs-clean-architecture/
 │   │   │   └── blog.module.ts
 │   │   │
 │   │   └── health/                       # Health check module
-│   │       ├── domain/
-│   │       │   └── services/
-│   │       │       └── health-checker.service.ts
 │   │       ├── application/
 │   │       │   ├── use-cases/
 │   │       │   │   └── check-health.use-case.ts
@@ -530,13 +583,67 @@ nestjs-clean-architecture/
 │   │       ├── websocket.adapter.ts
 │   │       └── redis-io.adapter.ts       # Redis adapter for Socket.IO
 │   │
+│   ├── i18n/                             # Internationalization module
+│   │   ├── i18n.module.ts
+│   │   ├── i18n.service.ts
+│   │   ├── i18n.interceptor.ts           # Auto-detect language from headers
+│   │   ├── translations/
+│   │   │   ├── en/
+│   │   │   │   ├── common.json
+│   │   │   │   ├── errors.json
+│   │   │   │   └── validations.json
+│   │   │   ├── vi/
+│   │   │   │   ├── common.json
+│   │   │   │   ├── errors.json
+│   │   │   │   └── validations.json
+│   │   │   └── ja/
+│   │   │       ├── common.json
+│   │   │       ├── errors.json
+│   │   │       └── validations.json
+│   │   └── decorators/
+│   │       └── translate.decorator.ts
+│   │
+│   ├── storage/                          # File storage module
+│   │   ├── storage.module.ts
+│   │   ├── storage.service.ts
+│   │   ├── storage.config.ts
+│   │   ├── adapters/
+│   │   │   ├── local-storage.adapter.ts  # Local filesystem storage
+│   │   │   └── s3-storage.adapter.ts     # AWS S3 storage (optional)
+│   │   ├── interfaces/
+│   │   │   └── storage-adapter.interface.ts
+│   │   └── dto/
+│   │       ├── upload-file.dto.ts
+│   │       └── file-metadata.dto.ts
+│   │
+│   ├── notification/                     # Notification module
+│   │   ├── notification.module.ts
+│   │   ├── notification.service.ts
+│   │   ├── notification.config.ts
+│   │   ├── adapters/
+│   │   │   ├── email.adapter.ts          # Email notifications
+│   │   │   ├── sms.adapter.ts            # SMS notifications
+│   │   │   └── push.adapter.ts           # Push notifications
+│   │   ├── interfaces/
+│   │   │   └── notification-adapter.interface.ts
+│   │   ├── templates/
+│   │   │   ├── email/
+│   │   │   │   ├── welcome.html
+│   │   │   │   └── password-reset.html
+│   │   │   └── sms/
+│   │   │       └── verification-code.txt
+│   │   └── dto/
+│   │       ├── send-email.dto.ts
+│   │       └── send-sms.dto.ts
+│   │
 │   ├── common/                           # Common utilities & cross-cutting
 │   │   ├── decorators/
 │   │   │   ├── api-response.decorator.ts
 │   │   │   ├── current-user.decorator.ts
 │   │   │   ├── roles.decorator.ts
 │   │   │   ├── public.decorator.ts
-│   │   │   └── cache-key.decorator.ts
+│   │   │   ├── cache-key.decorator.ts
+│   │   │   └── aggregate-root.decorator.ts       # Mark aggregate roots
 │   │   ├── filters/
 │   │   │   ├── http-exception.filter.ts
 │   │   │   ├── all-exceptions.filter.ts
@@ -565,6 +672,8 @@ nestjs-clean-architecture/
 │   │   │   ├── api-response.interface.ts
 │   │   │   ├── pagination.interface.ts
 │   │   │   ├── base-entity.interface.ts
+│   │   │   ├── aggregate-root.interface.ts       # Base aggregate root interface
+│   │   │   ├── domain-event.interface.ts         # Domain event base
 │   │   │   └── repository.interface.ts
 │   │   ├── dto/
 │   │   │   ├── pagination.dto.ts
@@ -581,7 +690,8 @@ nestjs-clean-architecture/
 │   │       ├── hash.util.ts
 │   │       ├── date.util.ts
 │   │       ├── string.util.ts
-│   │       └── pagination.util.ts
+│   │       ├── pagination.util.ts
+│   │       └── event-dispatcher.util.ts          # Domain event dispatcher
 │   │
 │   ├── app.module.ts                     # Root application module
 │   ├── app.controller.ts                 # Root controller (health endpoint)
@@ -640,11 +750,11 @@ nestjs-clean-architecture/
 │
 ├── database/                             # Centralized database management
 │   ├── migrations/                       # All TypeORM migrations (centralized)
-│   │   ├── 1699000001000-create-users-table.ts
-│   │   ├── 1699000002000-create-sessions-table.ts
-│   │   ├── 1699000003000-create-chat-tables.ts
-│   │   ├── 1699000004000-create-blog-tables.ts
-│   │   └── 1699000005000-add-user-indexes.ts
+│   │   ├── 1731369600000-create-users-table.ts
+│   │   ├── 1731373200000-create-sessions-table.ts
+│   │   ├── 1731376800000-create-chat-tables.ts
+│   │   ├── 1731380400000-create-blog-tables.ts
+│   │   └── 1731384000000-add-user-indexes.ts
 │   ├── seeds/                            # Database seeders for development/testing
 │   │   ├── 001-user.seed.ts
 │   │   ├── 002-category.seed.ts
@@ -660,16 +770,22 @@ nestjs-clean-architecture/
 │   ├── architecture/
 │   │   ├── clean-architecture.md
 │   │   ├── module-structure.md
+│   │   ├── ddd-patterns.md
 │   │   └── diagrams/
 │   ├── api/
 │   │   ├── user-api.md
 │   │   ├── auth-api.md
 │   │   ├── chat-api.md
 │   │   └── blog-api.md
-│   └── development/
-│       ├── getting-started.md
-│       ├── module-creation.md
-│       └── testing-guide.md
+│   ├── development/
+│   │   ├── getting-started.md
+│   │   ├── module-creation.md
+│   │   ├── testing-guide.md
+│   │   └── i18n-guide.md
+│   └── guides/
+│       ├── file-upload.md
+│       ├── notifications.md
+│       └── oauth-integration.md
 │
 ├── scripts/
 │   ├── setup.sh
@@ -681,7 +797,8 @@ nestjs-clean-architecture/
 │   ├── default.yml
 │   ├── development.yml
 │   ├── staging.yml
-│   └── production.yml
+│   ├── production.yml
+│   └── i18n.config.ts                    # I18n configuration
 │
 ├── .husky/
 │   ├── pre-commit
@@ -728,6 +845,7 @@ nestjs-clean-architecture/
 ├── .env.example
 ├── .env.test
 ├── .editorconfig
+├── uploads/                              # Local file uploads directory (gitignored)
 ├── README.md
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
@@ -738,45 +856,68 @@ nestjs-clean-architecture/
 
 1. **Clean Architecture Layers**: Each module (user, auth, chat, blog) strictly follows the 4-layer pattern:
 
-   - **Domain**: Pure business logic, entities, value objects (framework-agnostic)
-   - **Application**: Use cases orchestrating domain logic, DTOs for data transfer
+   - **Domain**: Pure business logic, entities, value objects, **aggregates**, **domain events** (framework-agnostic)
+   - **Application**: Use cases orchestrating domain logic, DTOs for data transfer, **domain event handlers**
    - **Infrastructure**: External dependencies (TypeORM, Redis, Kafka, file storage)
    - **Interface**: Entry points (HTTP controllers, WebSocket gateways, GraphQL resolvers)
 
 2. **Real-World Examples**:
 
-   - **User**: Traditional CRUD with email/password value objects
-   - **Auth**: JWT tokens, sessions, refresh tokens with cache
-   - **Chat**: Real-time messaging with WebSocket gateway + Kafka events
-   - **Blog**: Content management with search (Elasticsearch), file storage (S3), job queue (view counter)
+   - **User**: Traditional CRUD with email/password value objects, simple entity (no aggregate needed for basic operations); includes notification service port for email/SMS
+   - **Auth**: JWT tokens, sessions, refresh tokens with cache; **Google OAuth integration** for social login; domain events for login/logout tracking
+   - **Chat**: **Aggregate example** - `ConversationAggregate` manages conversation + messages + participants as a consistency boundary; real-time messaging with WebSocket gateway + Kafka events (producer/consumer)
+   - **Blog**: **Aggregate example** - `PostAggregate` manages post + comments + tags; domain events for publishing and view counting; includes search (Elasticsearch), file storage (S3/local), job queue (BullMQ), Kafka consumer for async processing
 
-3. **Cross-Cutting Concerns**:
+3. **DDD Patterns** (when needed):
 
-   - Shared modules (database, cache, logger, messaging) are framework-aware but isolated
+   - **Aggregates**: Use `aggregates/` folder for complex entities that need transactional consistency (Chat, Blog examples)
+   - **Domain Events**: Use `events/` folder in domain layer to capture important business events
+   - **Event Handlers**: Use `event-handlers/` in application layer to react to domain events
+   - **Aggregate Rules**:
+     - Only modify aggregate through aggregate root
+     - Load and save aggregates as atomic units
+     - Keep aggregates small (don't span multiple bounded contexts)
+     - Use domain events for cross-aggregate communication
+
+4. **Cross-Cutting Concerns**:
+
+   - Shared modules (database, cache, logger, messaging, **i18n**, **storage**, **notification**) are framework-aware but isolated
    - Common utilities (guards, filters, interceptors) handle cross-cutting concerns
    - Each module can use shared infrastructure without coupling to other modules
    - **Migrations**: All database migrations centralized in `database/migrations/` (NOT in module folders) to maintain single source of truth and proper execution order
+   - **I18n**: Language detection via headers/query params; translation keys in JSON files; decorator-based translation
+   - **File Storage**: Abstracted via ports; supports local filesystem (default) and cloud storage (S3) via adapter pattern
+   - **Notifications**: Multi-channel support (email/SMS/push) via adapter interfaces; templates for each channel
 
-4. **Testing Organization**:
+5. **Testing Organization**:
 
    - Unit tests: Domain entities, value objects, use cases (mocked dependencies)
    - Integration tests: Repositories, adapters (real database/Redis via containers)
    - E2E tests: Complete flows with fixtures per feature
 
-5. **Technology Integration**:
+6. **Technology Integration**:
 
    - **WebSocket**: Chat module demonstrates Socket.IO gateway with Redis adapter
-   - **Kafka**: Chat and Blog modules show event producers for async workflows
+   - **Kafka**: Chat and Blog modules show event producers AND consumers for async workflows
    - **BullMQ**: Blog module has view counter processor for background jobs
    - **GraphQL**: Optional blog resolver for flexible API queries
+   - **OAuth**: Google OAuth integration in auth module (extensible to other providers)
+   - **I18n**: nestjs-i18n library integration with JSON translation files
+   - **File Storage**: Multi-adapter pattern (local filesystem + S3) with unified interface
+   - **Notifications**: Email (SMTP), SMS (Twilio/SNS), Push (FCM) adapters with template support
 
-6. **Naming Conventions** (Enforced):
+7. **Naming Conventions** (Enforced):
    - Folders: `kebab-case` (e.g., `user-management/`)
    - Classes: `PascalCase` (e.g., `CreateUserUseCase`)
    - Files: Match class names in `kebab-case` (e.g., `create-user.use-case.ts`)
    - TypeORM entities: `*.typeorm-entity.ts` to distinguish from domain entities
-   - Migrations: `{timestamp}{sequence}-{description}.ts` format (e.g., `1699000001000-create-users-table.ts`)
+   - Aggregates: `*.aggregate.ts` for aggregate root classes
+   - Domain events: `*.event.ts` for domain event classes
+   - Event handlers: `*.handler.ts` for event handler classes
+   - Migrations: `{timestamp}-{description}.ts` format (e.g., `1731369600000-create-users-table.ts`)
    - Seeds: `{sequence}-{entity}.seed.ts` format (e.g., `001-user.seed.ts`)
+   - Translation files: `{language}/{category}.json` format (e.g., `en/errors.json`)
+   - Adapters: `{service}-{type}.adapter.ts` format (e.g., `google-oauth.adapter.ts`, `local-storage.adapter.ts`)
 
 ## Success Criteria _(mandatory)_
 
@@ -797,12 +938,50 @@ nestjs-clean-architecture/
 - **SC-013**: 100% of API endpoints have OpenAPI documentation with examples
 - **SC-014**: Background jobs process at least 100 jobs per minute per worker instance
 - **SC-015**: System recovers automatically from transient infrastructure failures (database/Redis connection loss) within 30 seconds
+- **SC-016**: Domain events are dispatched and handled within the same transaction boundary
+- **SC-017**: Aggregate consistency is maintained across all operations (no partial updates)
+- **SC-018**: File uploads complete within 30 seconds for files up to 10MB
+- **SC-019**: Translation keys resolve correctly for all supported languages (en, vi, ja)
+- **SC-020**: OAuth login flow completes within 5 seconds from callback to JWT token generation
+- **SC-021**: Notification delivery (to adapter) completes within 2 seconds for all channels
+- **SC-022**: Local file storage access time is under 50ms; S3 storage under 200ms
+
+### Non-Functional Requirements
+
+- **NFR-001**: System MUST start within 10 seconds in development mode
+- **NFR-002**: System MUST gracefully shutdown within 5 seconds, completing in-flight requests
+- **NFR-003**: System MUST support at least 100 concurrent WebSocket connections per instance
+- **NFR-004**: System MUST maintain structured logs for at least 30 days (retention configurable)
+- **NFR-005**: System MUST support zero-downtime deployments via health checks and graceful shutdown
+- **NFR-006**: All uploaded files MUST be scanned for malware before storage (hook provided)
+- **NFR-007**: Translation files MUST be loaded at startup and cached in memory
+- **NFR-008**: OAuth tokens MUST be validated on every request requiring authentication
+- **NFR-009**: File storage MUST support streaming for large files (>100MB)
+- **NFR-010**: Notification templates MUST support variable interpolation and HTML rendering
+
+### Out of Scope
+
+This boilerplate intentionally excludes the following to maintain focus on architecture patterns:
+
+- **Payment Processing**: No Stripe/PayPal integration; ports can be added following notification pattern
+- **Advanced OAuth Providers**: Only Google OAuth implemented; Facebook/GitHub follow same pattern
+- **Email Service Implementation**: SMTP adapter is interface only; requires nodemailer or SendGrid configuration
+- **SMS Service Implementation**: SMS adapter is interface only; requires Twilio/AWS SNS configuration
+- **Push Notification Implementation**: Push adapter is interface only; requires FCM/APNS configuration
+- **Advanced File Processing**: Image resizing, video transcoding not included; can be added as BullMQ jobs
+- **Multi-tenancy**: Single-tenant architecture; tenant isolation requires additional modules
+- **Advanced Search**: Elasticsearch adapter shown but not fully implemented; requires cluster setup
+- **Rate Limiting Per User**: Basic IP-based rate limiting only; user-based limits require custom implementation
+- **Advanced Caching Strategies**: Only simple key-value caching; cache-aside pattern implemented
+- **Distributed Tracing**: Correlation IDs provided but OpenTelemetry/Jaeger integration not included
+- **Advanced Monitoring**: Health checks included but Prometheus metrics require additional setup
 
 ### Performance & Quality Standards (per Constitution)
 
-- **Architecture**: Feature MUST follow Clean Architecture layering (domain/application/infrastructure/interface)
+- **Architecture**: Feature MUST follow Clean Architecture layering (domain/application/infrastructure/interface) with DDD patterns where applicable
 - **Code Quality**: TypeScript strict mode, ESLint passing, no circular dependencies
 - **Testing**: >80% coverage target for critical modules; unit/integration/e2e tests required
 - **Performance**: Feature MUST meet 1,000 req/s baseline (if applicable to this feature type)
 - **API Consistency**: Responses follow standard format; errors use structured codes
 - **Security**: Input validation required; output sanitization via DTOs; no sensitive data exposure
+- **DDD Compliance**: Aggregates properly encapsulate invariants; domain events used for cross-aggregate communication; value objects are immutable
