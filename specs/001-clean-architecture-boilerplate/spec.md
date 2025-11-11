@@ -159,42 +159,76 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 
 ### Functional Requirements
 
+#### Core Architecture & Structure
+
 - **FR-001**: Project MUST follow Clean Architecture with four distinct layers: domain (business logic), application (use cases), infrastructure (external dependencies), interface (entry points)
 - **FR-002**: System MUST support dependency inversion where inner layers never depend on outer layers
-- **FR-003**: System MUST provide PostgreSQL database integration with TypeORM for data persistence
-- **FR-004**: System MUST support database migrations for schema evolution
-- **FR-005**: System MUST provide Redis integration for caching and session management
-- **FR-006**: System MUST support WebSocket communication using Socket.IO for real-time features
-- **FR-007**: System MUST support horizontal scaling for WebSockets using Redis pub/sub
-- **FR-008**: System MUST provide Kafka integration for event-driven architectures
-- **FR-009**: System MUST provide BullMQ integration for background job processing
-- **FR-010**: System MUST enforce standardized API response format for all endpoints
-- **FR-011**: System MUST provide global exception handling with structured error codes
-- **FR-012**: System MUST generate OpenAPI/Swagger documentation automatically
-- **FR-013**: System MUST validate all input data using class-validator decorators
-- **FR-014**: System MUST sanitize all output data to prevent sensitive information leaks
-- **FR-015**: System MUST support unit, integration, and e2e testing with proper isolation
-- **FR-016**: System MUST enforce TypeScript strict mode and ESLint rules
-- **FR-017**: System MUST prevent circular dependencies through automated detection
-- **FR-018**: System MUST provide pre-commit hooks for code quality enforcement
-- **FR-019**: System MUST include Docker configuration for development and production environments
-- **FR-020**: System MUST support environment-based configuration (development, staging, production)
-- **FR-021**: System MUST provide logging with correlation IDs for request tracing
-- **FR-022**: System MUST support transactional operations for data consistency
-- **FR-023**: System MUST implement rate limiting for public endpoints
-- **FR-024**: System MUST use pnpm for package management
-- **FR-025**: Shared modules (logger, config, database, cache, messaging, websocket, i18n, storage, notification) MUST be isolated and reusable
-- **FR-026**: System MUST support Domain-Driven Design (DDD) patterns including aggregates, value objects, and domain events
-- **FR-027**: System MUST implement domain event dispatching for cross-aggregate communication
-- **FR-028**: System MUST provide base interfaces for aggregate roots and domain events
-- **FR-029**: System MUST support internationalization (i18n) with multi-language support (English, Vietnamese, Japanese minimum)
-- **FR-030**: System MUST provide notification abstraction supporting email, SMS, and push notifications via adapter pattern
-- **FR-031**: System MUST provide file storage abstraction supporting local filesystem and cloud storage (S3)
-- **FR-032**: System MUST support OAuth 2.0 authentication with Google provider integration
-- **FR-033**: OAuth credentials (client ID and secret) MUST NOT be committed to version control and MUST be documented in .env.example (without actual values)
-- **FR-034**: System MUST automatically detect user language from Accept-Language header or query parameter
-- **FR-035**: System MUST support file upload with validation (size, type, virus scanning hooks)
-- **FR-036**: System MUST provide Kafka consumer examples alongside producers for event-driven architecture
+- **FR-003**: System MUST use pnpm for package management
+- **FR-004**: Shared modules (logger, config, database, cache, messaging, websocket, i18n, storage, notification) MUST be isolated and reusable
+- **FR-005**: System MUST support Domain-Driven Design (DDD) patterns including aggregates, value objects, and domain events
+- **FR-006**: System MUST implement domain event dispatching for cross-aggregate communication
+- **FR-007**: System MUST provide base interfaces for aggregate roots and domain events
+
+#### Database & Persistence
+
+- **FR-008**: System MUST provide PostgreSQL database integration with TypeORM for data persistence
+- **FR-009**: System MUST support database migrations for schema evolution
+- **FR-010**: System MUST support transactional operations for data consistency
+- **FR-011**: System MUST implement Transactional Outbox Pattern to guarantee atomic database writes and event publishing
+- **FR-012**: Domain events MUST be saved to outbox table in the same database transaction as aggregate state changes
+- **FR-013**: Background workers MUST poll outbox table and publish pending events to message bus (Kafka/BullMQ)
+- **FR-014**: System MUST support event retry mechanism with exponential backoff for failed event publishing
+- **FR-015**: Outbox table MUST include indexes for efficient polling and aggregate event history queries
+
+#### Caching & Performance
+
+- **FR-016**: System MUST provide Redis integration for caching and session management
+- **FR-017**: System MUST implement rate limiting for public endpoints
+
+#### Real-time & Message Queues
+
+- **FR-018**: System MUST support WebSocket communication using Socket.IO for real-time features
+- **FR-019**: System MUST support horizontal scaling for WebSockets using Redis pub/sub
+- **FR-020**: System MUST provide Kafka integration for event-driven architectures
+- **FR-021**: System MUST provide BullMQ integration for background job processing
+- **FR-022**: System MUST provide Kafka consumer examples alongside producers for event-driven architecture
+
+#### API Standards & Validation
+
+- **FR-023**: System MUST enforce standardized API response format for all endpoints
+- **FR-024**: System MUST provide global exception handling with structured error codes
+- **FR-025**: System MUST generate OpenAPI/Swagger documentation automatically
+- **FR-026**: System MUST validate all input data using class-validator decorators
+- **FR-027**: System MUST sanitize all output data to prevent sensitive information leaks
+
+#### Authentication & Security
+
+- **FR-028**: System MUST support OAuth 2.0 authentication with Google provider integration
+- **FR-029**: OAuth credentials (client ID and secret) MUST NOT be committed to version control and MUST be documented in .env.example (without actual values)
+- **FR-030**: System MUST implement JWT authentication without Passport library using pure NestJS guards and decorators
+- **FR-031**: Auth guards MUST validate JWT tokens, check expiration, and extract user payload from tokens
+- **FR-032**: System MUST support Google OAuth 2.0 flow without Passport strategies using direct HTTP calls to Google APIs
+
+#### Developer Experience & Tooling
+
+- **FR-033**: System MUST support unit, integration, and e2e testing with proper isolation
+- **FR-034**: System MUST enforce TypeScript strict mode and ESLint rules
+- **FR-035**: System MUST prevent circular dependencies through automated detection
+- **FR-036**: System MUST provide pre-commit hooks for code quality enforcement
+- **FR-037**: System MUST include Docker configuration for development and production environments
+- **FR-038**: System MUST support environment-based configuration (development, staging, production)
+- **FR-039**: System MUST provide logging with correlation IDs for request tracing
+- **FR-040**: Project MUST enforce Conventional Commits format using commitlint and husky pre-commit hooks
+- **FR-041**: Git commits MUST follow semantic types (feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert)
+- **FR-042**: Commit scopes MUST match module names (auth, user, chat, blog, database, cache, queue, etc.)
+
+#### Feature Extensions
+
+- **FR-043**: System MUST support internationalization (i18n) with multi-language support (English, Vietnamese, Japanese minimum)
+- **FR-044**: System MUST provide notification abstraction supporting email, SMS, and push notifications via adapter pattern
+- **FR-045**: System MUST provide file storage abstraction supporting local filesystem and cloud storage (S3)
+- **FR-046**: System MUST automatically detect user language from Accept-Language header or query parameter
+- **FR-047**: System MUST support file upload with validation (size, type, virus scanning hooks)
 
 ### Key Entities
 
@@ -202,10 +236,11 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 
 - **User** (Sample Entity): Demonstrates authentication and authorization patterns; attributes include unique identifier, authentication credentials (hashed), profile information, role/permissions, OAuth provider linkage (local, google)
 - **Post** (Sample Aggregate): Demonstrates DDD aggregate pattern with Post as root managing Comments and Tags; attributes include title, content (value object), slug (value object), status, author reference, timestamps, file attachments
+- **Conversation** (Sample Aggregate): Demonstrates real-time chat aggregate pattern with Conversation as root managing Messages and Participants; attributes include conversation type (direct, group), participant list, last message reference, created timestamp
 - **Session** (Sample Entity): Demonstrates authentication session management; attributes include user reference, access token (hashed/encrypted), refresh token (hashed/encrypted), provider type, expiration timestamps. Tokens MUST NOT be stored in plaintext—follow secure token storage patterns (e.g., hashing or encryption) as per security best practices.
-- **Session** (Sample Entity): Demonstrates authentication session management; attributes include user reference, access token, refresh token, provider type, expiration timestamps
 - **Notification** (System Entity): Demonstrates notification system; attributes include recipient, channel (email/SMS/push), template, payload, delivery status
 - **FileMetadata** (System Entity): Demonstrates file storage; attributes include filename, storage path, mime type, size, uploader reference, storage provider
+- **DomainEventOutbox** (System Entity): Transactional outbox for domain events; attributes include aggregate type, aggregate ID, event type, event data (JSONB), occurred timestamp, published timestamp, retry count, error message
 - **Configuration** (System Entity): Represents environment-specific settings; attributes include environment name, feature flags, and non-sensitive configuration values.
   > **Note:** Sensitive secrets such as API keys and credentials MUST NOT be stored as plain database attributes. Use environment variables or a secret management system (e.g., HashiCorp Vault, AWS Secrets Manager) for secret storage and retrieval.
 
@@ -214,7 +249,10 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 - Development teams are familiar with TypeScript and JavaScript ES2020+ (including async/await, modules, destructuring)
 - Docker is available in development environments for running PostgreSQL, Redis, and Kafka
 - Node.js 22+ (LTS) is the target runtime environment
-- Teams follow conventional commit standards and Git workflow practices
+- Teams follow **Conventional Commits** specification for semantic commit messages
+- Git workflow uses **rebase** strategy (no merge commits in feature branches)
+- **Husky** and **commitlint** are configured to enforce commit message format
+- **CHANGELOG.md** is auto-generated using standard-version or semantic-release
 - Authentication mechanisms will be implemented as separate feature modules using this boilerplate
 - Default caching strategy uses TTL-based expiration with manual invalidation hooks
 - Database connection pooling is configured for production-grade concurrent connections
@@ -235,6 +273,11 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 - OAuth credentials (client ID and secret) MUST NOT be committed to version control and MUST be documented in .env.example (without actual values)
 - Translation files support nested keys and pluralization rules
 - File size limits enforced at application layer (configurable, default 10MB); file uploads MUST be rate limited and infrastructure-level size limits (e.g., reverse proxy/load balancer) are RECOMMENDED in addition to application-layer validation to prevent resource exhaustion and denial-of-service.
+- JWT authentication is implemented without Passport library using pure NestJS guards and jsonwebtoken library
+- Access tokens expire after 15 minutes; refresh tokens expire after 7 days (configurable)
+- Token secrets are stored in environment variables and rotated regularly in production
+- Google OAuth uses direct HTTP calls to Google APIs without Passport strategies
+- User sessions can be revoked by removing from database or adding to Redis blacklist
 
 ### Project Structure
 
@@ -311,31 +354,46 @@ nestjs-clean-architecture/
 │   │   │   │   │   └── refresh-token.entity.ts
 │   │   │   │   ├── value-objects/
 │   │   │   │   │   ├── access-token.vo.ts
-│   │   │   │   │   └── token-payload.vo.ts
+│   │   │   │   │   ├── token-payload.vo.ts
+│   │   │   │   │   └── provider-type.vo.ts        # OAuth provider (local, google)
 │   │   │   │   ├── repositories/
 │   │   │   │   │   └── session.repository.interface.ts
 │   │   │   │   ├── services/
 │   │   │   │   │   ├── password-hash.service.ts
 │   │   │   │   │   └── token-validator.service.ts
+│   │   │   │   ├── events/                       # Domain events
+│   │   │   │   │   ├── user-logged-in.event.ts
+│   │   │   │   │   ├── user-logged-out.event.ts
+│   │   │   │   │   ├── token-refreshed.event.ts
+│   │   │   │   │   └── password-reset-requested.event.ts
 │   │   │   │   └── exceptions/
 │   │   │   │       ├── invalid-credentials.exception.ts
+│   │   │   │       ├── invalid-token.exception.ts
 │   │   │   │       └── token-expired.exception.ts
 │   │   │   ├── application/
 │   │   │   │   ├── use-cases/
 │   │   │   │   │   ├── login.use-case.ts
+│   │   │   │   │   ├── google-login.use-case.ts  # Google OAuth login
 │   │   │   │   │   ├── logout.use-case.ts
 │   │   │   │   │   ├── refresh-token.use-case.ts
 │   │   │   │   │   ├── verify-token.use-case.ts
 │   │   │   │   │   └── reset-password.use-case.ts
+│   │   │   │   ├── event-handlers/               # Domain event handlers
+│   │   │   │   │   ├── user-logged-in.handler.ts
+│   │   │   │   │   └── token-refreshed.handler.ts
 │   │   │   │   ├── dtos/
 │   │   │   │   │   ├── login.dto.ts
+│   │   │   │   │   ├── google-login.dto.ts
+│   │   │   │   │   ├── refresh-token.dto.ts
+│   │   │   │   │   ├── verified-user.dto.ts
 │   │   │   │   │   ├── token-response.dto.ts
 │   │   │   │   │   └── reset-password.dto.ts
 │   │   │   │   ├── ports/
 │   │   │   │   │   ├── jwt-service.port.ts
-│   │   │   │   │   └── hash-service.port.ts
-│   │   │   │   └── strategies/
-│   │   │   │       └── jwt.strategy.ts
+│   │   │   │   │   ├── hash-service.port.ts
+│   │   │   │   │   └── oauth-provider.port.ts    # OAuth provider interface
+│   │   │   │   └── guards/
+│   │   │   │       └── auth.guard.ts             # Pure NestJS auth guard (no Passport)
 │   │   │   ├── infrastructure/
 │   │   │   │   ├── persistence/
 │   │   │   │   │   ├── entities/
@@ -344,7 +402,8 @@ nestjs-clean-architecture/
 │   │   │   │   │       └── session.repository.ts
 │   │   │   │   ├── adapters/
 │   │   │   │   │   ├── jwt.adapter.ts
-│   │   │   │   │   └── bcrypt.adapter.ts
+│   │   │   │   │   ├── bcrypt.adapter.ts
+│   │   │   │   │   └── google-oauth.adapter.ts   # Google OAuth adapter
 │   │   │   │   └── cache/
 │   │   │   │       └── session-cache.service.ts
 │   │   │   ├── interface/
@@ -547,7 +606,10 @@ nestjs-clean-architecture/
 │   │   │   ├── database.module.ts
 │   │   │   ├── typeorm.config.ts
 │   │   │   ├── database.providers.ts
-│   │   │   └── base-repository.abstract.ts
+│   │   │   ├── base-repository.abstract.ts
+│   │   │   ├── domain-event-outbox.service.ts  # Transactional outbox service
+│   │   │   └── entities/
+│   │   │       └── domain-event-outbox.entity.ts
 │   │   ├── cache/                        # Redis cache module
 │   │   │   ├── cache.module.ts
 │   │   │   ├── cache.service.ts
@@ -574,70 +636,69 @@ nestjs-clean-architecture/
 │   │   │   │   ├── kafka.config.ts
 │   │   │   │   ├── kafka.producer.ts
 │   │   │   │   └── kafka.consumer.ts
-│   │   │   └── bullmq/
-│   │   │       ├── queue.module.ts
-│   │   │       ├── queue.service.ts
-│   │   │       ├── queue.config.ts
-│   │   │       └── processors/
-│   │   │           ├── email.processor.ts
-│   │   │           └── notification.processor.ts
-│   │   └── websocket/                    # WebSocket base module
-│   │       ├── websocket.module.ts
-│   │       ├── websocket.adapter.ts
-│   │       └── redis-io.adapter.ts       # Redis adapter for Socket.IO
-│   │
-│   ├── i18n/                             # Internationalization module
-│   │   ├── i18n.module.ts
-│   │   ├── i18n.service.ts
-│   │   ├── i18n.interceptor.ts           # Auto-detect language from headers
-│   │   ├── translations/
-│   │   │   ├── en/
-│   │   │   │   ├── common.json
-│   │   │   │   ├── errors.json
-│   │   │   │   └── validations.json
-│   │   │   ├── vi/
-│   │   │   │   ├── common.json
-│   │   │   │   ├── errors.json
-│   │   │   │   └── validations.json
-│   │   │   └── ja/
-│   │   │       ├── common.json
-│   │   │       ├── errors.json
-│   │   │       └── validations.json
-│   │   └── decorators/
-│   │       └── translate.decorator.ts
-│   │
-│   ├── storage/                          # File storage module
-│   │   ├── storage.module.ts
-│   │   ├── storage.service.ts
-│   │   ├── storage.config.ts
-│   │   ├── adapters/
-│   │   │   ├── local-storage.adapter.ts  # Local filesystem storage
-│   │   │   └── s3-storage.adapter.ts     # AWS S3 storage (optional)
-│   │   ├── interfaces/
-│   │   │   └── storage-adapter.interface.ts
-│   │   └── dto/
-│   │       ├── upload-file.dto.ts
-│   │       └── file-metadata.dto.ts
-│   │
-│   ├── notification/                     # Notification module
-│   │   ├── notification.module.ts
-│   │   ├── notification.service.ts
-│   │   ├── notification.config.ts
-│   │   ├── adapters/
-│   │   │   ├── email.adapter.ts          # Email notifications
-│   │   │   ├── sms.adapter.ts            # SMS notifications
-│   │   │   └── push.adapter.ts           # Push notifications
-│   │   ├── interfaces/
-│   │   │   └── notification-adapter.interface.ts
-│   │   ├── templates/
-│   │   │   ├── email/
-│   │   │   │   ├── welcome.html
-│   │   │   │   └── password-reset.html
-│   │   │   └── sms/
-│   │   │       └── verification-code.txt
-│   │   └── dto/
-│   │       ├── send-email.dto.ts
-│   │       └── send-sms.dto.ts
+│   │   │   ├── bullmq/
+│   │   │   │   ├── queue.module.ts
+│   │   │   │   ├── queue.service.ts
+│   │   │   │   ├── queue.config.ts
+│   │   │   │   └── processors/
+│   │   │   │       ├── email.processor.ts
+│   │   │   │       └── notification.processor.ts
+│   │   │   └── workers/
+│   │   │       └── outbox-publisher.worker.ts  # Background worker for outbox pattern
+│   │   ├── websocket/                    # WebSocket base module
+│   │   │   ├── websocket.module.ts
+│   │   │   ├── websocket.adapter.ts
+│   │   │   └── redis-io.adapter.ts       # Redis adapter for Socket.IO
+│   │   ├── i18n/                         # Internationalization module
+│   │   │   ├── i18n.module.ts
+│   │   │   ├── i18n.service.ts
+│   │   │   ├── i18n.interceptor.ts       # Auto-detect language from headers
+│   │   │   ├── translations/
+│   │   │   │   ├── en/
+│   │   │   │   │   ├── common.json
+│   │   │   │   │   ├── errors.json
+│   │   │   │   │   └── validations.json
+│   │   │   │   ├── vi/
+│   │   │   │   │   ├── common.json
+│   │   │   │   │   ├── errors.json
+│   │   │   │   │   └── validations.json
+│   │   │   │   └── ja/
+│   │   │   │       ├── common.json
+│   │   │   │       ├── errors.json
+│   │   │   │       └── validations.json
+│   │   │   └── decorators/
+│   │   │       └── translate.decorator.ts
+│   │   ├── storage/                      # File storage module
+│   │   │   ├── storage.module.ts
+│   │   │   ├── storage.service.ts
+│   │   │   ├── storage.config.ts
+│   │   │   ├── adapters/
+│   │   │   │   ├── local-storage.adapter.ts  # Local filesystem storage
+│   │   │   │   └── s3-storage.adapter.ts     # AWS S3 storage (optional)
+│   │   │   ├── interfaces/
+│   │   │   │   └── storage-adapter.interface.ts
+│   │   │   └── dto/
+│   │   │       ├── upload-file.dto.ts
+│   │   │       └── file-metadata.dto.ts
+│   │   └── notification/                 # Notification module
+│   │       ├── notification.module.ts
+│   │       ├── notification.service.ts
+│   │       ├── notification.config.ts
+│   │       ├── adapters/
+│   │       │   ├── email.adapter.ts      # Email notifications
+│   │       │   ├── sms.adapter.ts        # SMS notifications
+│   │       │   └── push.adapter.ts       # Push notifications
+│   │       ├── interfaces/
+│   │       │   └── notification-adapter.interface.ts
+│   │       ├── templates/
+│   │       │   ├── email/
+│   │       │   │   ├── welcome.html
+│   │       │   │   └── password-reset.html
+│   │       │   └── sms/
+│   │       │       └── verification-code.txt
+│   │       └── dto/
+│   │           ├── send-email.dto.ts
+│   │           └── send-sms.dto.ts
 │   │
 │   ├── common/                           # Common utilities & cross-cutting
 │   │   ├── decorators/
@@ -653,8 +714,7 @@ nestjs-clean-architecture/
 │   │   │   ├── validation.filter.ts
 │   │   │   └── domain-exception.filter.ts
 │   │   ├── guards/
-│   │   │   ├── jwt-auth.guard.ts
-│   │   │   ├── roles.guard.ts
+│   │   │   ├── roles.guard.ts            # RBAC guard (can be used with AuthGuard)
 │   │   │   ├── throttle.guard.ts
 │   │   │   └── websocket-auth.guard.ts
 │   │   ├── interceptors/
@@ -757,7 +817,8 @@ nestjs-clean-architecture/
 │   │   ├── 1731373200000-create-sessions-table.ts
 │   │   ├── 1731376800000-create-chat-tables.ts
 │   │   ├── 1731380400000-create-blog-tables.ts
-│   │   └── 1731384000000-add-user-indexes.ts
+│   │   ├── 1731384000000-add-user-indexes.ts
+│   │   └── 1731387600000-create-domain-events-outbox.ts  # Transactional outbox table
 │   ├── seeds/                            # Database seeders for development/testing
 │   │   ├── 001-user.seed.ts
 │   │   ├── 002-category.seed.ts
@@ -774,6 +835,8 @@ nestjs-clean-architecture/
 │   │   ├── clean-architecture.md
 │   │   ├── module-structure.md
 │   │   ├── ddd-patterns.md
+│   │   ├── transactional-outbox.md        # Transaction management guide
+│   │   ├── authentication-without-passport.md  # Pure NestJS auth guide
 │   │   └── diagrams/
 │   ├── api/
 │   │   ├── user-api.md
@@ -839,6 +902,10 @@ nestjs-clean-architecture/
 ├── nest-cli.json
 ├── jest.config.js
 ├── jest.e2e.config.js
+├── commitlint.config.js                 # Commit message linting config
+├── .husky/                               # Git hooks for commit validation
+│   ├── pre-commit
+│   └── commit-msg
 ├── docker-compose.yml
 ├── docker-compose.prod.yml
 ├── package.json
@@ -866,10 +933,10 @@ nestjs-clean-architecture/
 
 2. **Real-World Examples**:
 
-   - **User**: Traditional CRUD with email/password value objects, simple entity (no aggregate needed for basic operations); includes notification service port for email/SMS
-   - **Auth**: JWT tokens, sessions, refresh tokens with cache; **Google OAuth integration** for social login; domain events for login/logout tracking
-   - **Chat**: **Aggregate example** - `ConversationAggregate` manages conversation + messages + participants as a consistency boundary; real-time messaging with WebSocket gateway + Kafka events (producer/consumer)
-   - **Blog**: **Aggregate example** - `PostAggregate` manages post + comments + tags; domain events for publishing and view counting; includes search (Elasticsearch), file storage (S3/local), job queue (BullMQ), Kafka consumer for async processing
+   - **User**: Traditional CRUD with email/password value objects, simple entity (no aggregate needed for basic operations); includes notification service port for email/SMS; domain events for user lifecycle (created, updated, deleted)
+   - **Auth**: JWT tokens, sessions, refresh tokens with cache; **Google OAuth integration** for social login; **domain events for login/logout/token-refresh tracking**; **event handlers for audit logging**; implements custom JWT validation without Passport library
+   - **Chat**: **Aggregate example** - `ConversationAggregate` manages conversation + messages + participants as a consistency boundary; real-time messaging with WebSocket gateway + Kafka events (producer/consumer); **event handlers for push notifications**
+   - **Blog**: **Aggregate example** - `PostAggregate` manages post + comments + tags; **domain events for publishing and view counting**; **event handlers for search indexing and analytics**; includes search (Elasticsearch), file storage (S3/local), job queue (BullMQ), Kafka consumer for async processing
 
 3. **DDD Patterns** (when needed):
 
@@ -884,14 +951,14 @@ nestjs-clean-architecture/
 
 4. **Cross-Cutting Concerns**:
 
-   - Shared modules (database, cache, logger, messaging, **i18n**, **storage**, **notification**) are framework-aware but isolated
+   - Shared modules (database, cache, logger, messaging, websocket, **i18n**, **storage**, **notification**) are framework-aware but isolated
    - Common utilities (guards, filters, interceptors) handle cross-cutting concerns
    - **Migrations**: All database migrations are centralized in `database/migrations/` (NOT in module folders) to maintain a single source of truth and proper execution order.
      > **Note:** Centralizing migrations can conflict with modular Clean Architecture, as it introduces coupling and may hinder independent module development/deployment. To mitigate this, document migration ownership in each module's README, use clear naming conventions (e.g., prefix migration files with the module name), and establish a process for module authors to contribute migrations to the central folder. Consider using tooling/scripts to automate migration discovery and execution per module if future decoupling is required.
-   - **Migrations**: All database migrations centralized in `database/migrations/` (NOT in module folders) to maintain single source of truth and proper execution order
    - **I18n**: Language detection via headers/query params; translation keys in JSON files; decorator-based translation
    - **File Storage**: Abstracted via ports; supports local filesystem (default) and cloud storage (S3) via adapter pattern
    - **Notifications**: Multi-channel support (email/SMS/push) via adapter interfaces; templates for each channel
+   - **Transactional Outbox**: Domain events saved atomically with aggregate state; background worker publishes to message bus
 
 5. **Testing Organization**:
 
@@ -901,14 +968,16 @@ nestjs-clean-architecture/
 
 6. **Technology Integration**:
 
-   - **WebSocket**: Chat module demonstrates Socket.IO gateway with Redis adapter
-   - **Kafka**: Chat and Blog modules show event producers AND consumers for async workflows
-   - **BullMQ**: Blog module has view counter processor for background jobs
-   - **GraphQL**: Optional blog resolver for flexible API queries
-   - **OAuth**: Google OAuth integration in auth module (extensible to other providers)
-   - **I18n**: nestjs-i18n library integration with JSON translation files
-   - **File Storage**: Multi-adapter pattern (local filesystem + S3) with unified interface
-   - **Notifications**: Email (SMTP), SMS (Twilio/SNS), Push (FCM) adapters with template support
+   - **WebSocket**: Chat module demonstrates Socket.IO gateway with Redis adapter for horizontal scaling
+   - **Kafka**: Chat and Blog modules show event producers AND consumers for async workflows and event-driven architecture
+   - **BullMQ**: Blog module has view counter processor for background jobs; supports delayed jobs, retries, and priority queues
+   - **GraphQL**: Optional blog resolver for flexible API queries (demonstrates alternative to REST)
+   - **OAuth**: Google OAuth integration in auth module WITHOUT Passport (direct HTTP calls to Google APIs); extensible to other providers
+   - **JWT**: Pure NestJS implementation using jsonwebtoken library directly (no Passport); custom guards and decorators
+   - **I18n**: nestjs-i18n library integration with JSON translation files; supports nested keys and pluralization
+   - **File Storage**: Multi-adapter pattern (local filesystem + S3) with unified interface; supports streaming for large files
+   - **Notifications**: Email (SMTP), SMS (Twilio/SNS), Push (FCM) adapters with template support; adapter pattern for extensibility
+   - **Transactional Outbox**: Domain events persisted atomically with aggregate state; background worker publishes to Kafka/BullMQ
 
 7. **Naming Conventions** (Enforced):
    - Folders: `kebab-case` (e.g., `user-management/`)
@@ -922,6 +991,211 @@ nestjs-clean-architecture/
    - Seeds: `{sequence}-{entity}.seed.ts` format (e.g., `001-user.seed.ts`)
    - Translation files: `{language}/{category}.json` format (e.g., `en/errors.json`)
    - Adapters: `{service}-{type}.adapter.ts` format (e.g., `google-oauth.adapter.ts`, `local-storage.adapter.ts`)
+
+## Git Commit Convention
+
+This project follows **Conventional Commits** specification to maintain a clean and semantic commit history.
+
+### Commit Message Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### Commit Types
+
+| Type       | Description                                       | Example                                    |
+| ---------- | ------------------------------------------------- | ------------------------------------------ |
+| `feat`     | New feature or functionality                      | `feat(auth): add Google OAuth login`       |
+| `fix`      | Bug fix                                           | `fix(user): resolve duplicate email issue` |
+| `docs`     | Documentation changes only                        | `docs(readme): update installation steps`  |
+| `style`    | Code style changes (formatting, semicolons, etc.) | `style(auth): fix code formatting`         |
+| `refactor` | Code refactoring without feature/bug changes      | `refactor(chat): improve message mapper`   |
+| `perf`     | Performance improvements                          | `perf(blog): add caching for posts`        |
+| `test`     | Adding or updating tests                          | `test(user): add unit tests for service`   |
+| `build`    | Build system or dependencies changes              | `build: upgrade NestJS to 11.x`            |
+| `ci`       | CI/CD configuration changes                       | `ci: add GitHub Actions workflow`          |
+| `chore`    | Other changes (maintenance, tooling)              | `chore: update ESLint config`              |
+| `revert`   | Revert a previous commit                          | `revert: feat(auth): add Google OAuth`     |
+
+### Scope Guidelines
+
+Scopes should match module/feature names from the architecture:
+
+- **Modules**: `auth`, `user`, `chat`, `blog`
+- **Shared**: `database`, `cache`, `queue`, `i18n`, `storage`, `notification`
+- **Infrastructure**: `docker`, `config`, `logger`, `common`
+- **Project**: `spec`, `docs`, `ci`, `build`
+
+### Subject Guidelines
+
+- Use **imperative mood** ("add" not "added" or "adds")
+- Keep it **short** (50 characters or less)
+- **Lowercase** first letter
+- **No period** at the end
+
+### Body (Optional)
+
+- Provide **context** and **reasoning** for the change
+- Explain **what** and **why** (not how)
+- Wrap at **72 characters** per line
+
+### Footer (Optional)
+
+- Reference **issue numbers**: `Closes #123`, `Fixes #456`, `Refs #789`
+- Note **breaking changes**: `BREAKING CHANGE: description`
+
+### Examples
+
+#### Simple Feature
+
+```bash
+git commit -m "feat(auth): add JWT token refresh mechanism"
+```
+
+#### Bug Fix with Issue Reference
+
+```bash
+git commit -m "fix(chat): resolve message ordering in conversation
+
+Messages were appearing in incorrect order due to missing
+timestamp index on message entity.
+
+Fixes #234"
+```
+
+#### Breaking Change
+
+```bash
+git commit -m "feat(api): migrate to v2 response format
+
+BREAKING CHANGE: All API responses now use standardized envelope:
+{
+  data: T,
+  meta: { timestamp, requestId },
+  error: null
+}
+
+Migration guide: docs/migration-v2.md
+Refs #567"
+```
+
+#### Refactoring
+
+```bash
+git commit -m "refactor(user): extract password hashing to domain service
+
+Moved password hashing logic from use case to domain layer
+to comply with Clean Architecture principles."
+```
+
+#### Performance Improvement
+
+```bash
+git commit -m "perf(blog): add Redis caching for post listings
+
+Reduced database queries by 70% for frequently accessed posts.
+Cache TTL: 5 minutes with invalidation on post updates.
+
+Closes #345"
+```
+
+### Commit Rules
+
+1. **One commit per logical change** - Don't mix feature + fix in same commit
+2. **Atomic commits** - Each commit should be independently deployable
+3. **Test before commit** - Ensure all tests pass
+4. **No merge commits in feature branches** - Use rebase workflow
+5. **Sign commits** (recommended) - `git commit -S`
+
+### Branch Naming Convention
+
+```
+<type>/<ticket-number>-<short-description>
+```
+
+Examples:
+
+```bash
+feat/123-google-oauth-login
+fix/456-duplicate-email-validation
+refactor/789-extract-message-mapper
+docs/update-readme
+chore/upgrade-dependencies
+```
+
+### Pre-commit Hooks (Recommended)
+
+The project uses **Husky** + **commitlint** to enforce commit message format:
+
+```json
+// .commitlintrc.json
+{
+  "extends": ["@commitlint/config-conventional"],
+  "rules": {
+    "type-enum": [
+      2,
+      "always",
+      [
+        "feat",
+        "fix",
+        "docs",
+        "style",
+        "refactor",
+        "perf",
+        "test",
+        "build",
+        "ci",
+        "chore",
+        "revert"
+      ]
+    ],
+    "scope-enum": [
+      2,
+      "always",
+      [
+        "auth",
+        "user",
+        "chat",
+        "blog",
+        "database",
+        "cache",
+        "queue",
+        "i18n",
+        "storage",
+        "notification",
+        "docker",
+        "config",
+        "logger",
+        "common",
+        "spec",
+        "docs",
+        "ci",
+        "build"
+      ]
+    ],
+    "subject-case": [2, "never", ["upper-case"]],
+    "subject-full-stop": [2, "never", "."],
+    "subject-max-length": [2, "always", 50],
+    "body-max-line-length": [2, "always", 72]
+  }
+}
+```
+
+### Changelog Generation
+
+Commits following this convention enable automatic **CHANGELOG.md** generation using tools like `standard-version` or `semantic-release`:
+
+```bash
+# Generate changelog and bump version
+pnpm run release
+
+# Output: CHANGELOG.md updated with categorized changes
+```
 
 ## Success Criteria _(mandatory)_
 
@@ -949,6 +1223,11 @@ nestjs-clean-architecture/
 - **SC-020**: OAuth login flow completes within 5 seconds from callback to JWT token generation
 - **SC-021**: Notification delivery (to adapter) completes within 2 seconds for all channels
 - **SC-022**: Local file storage access time is under 50ms; S3 storage under 200ms
+- **SC-023**: Outbox events are published to message bus within 10 seconds of being created (99th percentile)
+- **SC-024**: Failed event publishing retries at least 3 times before moving to dead letter queue
+- **SC-025**: JWT token verification completes within 10ms for cached user lookups
+- **SC-026**: Login endpoint responds within 500ms including password hashing and token generation
+- **SC-027**: Google OAuth callback processes within 3 seconds including API calls to Google
 
 ### Non-Functional Requirements
 
@@ -989,3 +1268,1248 @@ This boilerplate intentionally excludes the following to maintain focus on archi
 - **API Consistency**: Responses follow standard format; errors use structured codes
 - **Security**: Input validation required; output sanitization via DTOs; no sensitive data exposure
 - **DDD Compliance**: Aggregates properly encapsulate invariants; domain events used for cross-aggregate communication; value objects are immutable
+
+## Transaction Management & Domain Events _(critical)_
+
+### Problem Statement
+
+When aggregates emit domain events during operations, we face a critical challenge: **How to ensure transactional consistency between database changes and event publishing?**
+
+**The Problem**:
+
+```typescript
+// ❌ PROBLEM: What if DB commits but event publishing fails?
+async publishPost(postId: string) {
+  const post = await this.postRepository.findById(postId);
+  post.publish(); // Emits PostPublishedEvent
+
+  await this.postRepository.save(post);           // DB transaction commits
+  await this.eventBus.publish(post.getDomainEvents()); // ❌ Network fails here!
+
+  // Result: Post is published in DB but subscribers never notified!
+  // Result: Inconsistent state - data saved but events lost
+}
+```
+
+### Solution: Transactional Outbox Pattern
+
+The boilerplate implements the **Transactional Outbox Pattern** to guarantee atomic database writes and event publishing:
+
+#### 1. Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Use Case (Application Layer)                                │
+│                                                              │
+│  1. Load Aggregate                                           │
+│  2. Execute Business Logic → Aggregate emits domain events   │
+│  3. Save Aggregate + Events in SAME transaction              │
+│     ├─ Save aggregate state to main table                    │
+│     └─ Save domain events to outbox table (same TX)          │
+│                                                              │
+│  ✅ Transaction commits atomically or rolls back completely  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Background Worker (Infrastructure Layer)                     │
+│                                                              │
+│  1. Poll outbox table for unpublished events                │
+│  2. Publish events to message bus (Kafka/BullMQ)            │
+│  3. Mark events as published in outbox                       │
+│  4. Retry failed events with exponential backoff             │
+│                                                              │
+│  ⚡ Eventually consistent: Events published within seconds   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 2. Database Schema
+
+```typescript
+// database/migrations/1731387600000-create-domain-events-outbox.ts
+import { MigrationInterface, QueryRunner, Table, Index } from "typeorm";
+
+export class CreateDomainEventsOutbox1731387600000
+  implements MigrationInterface
+{
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.createTable(
+      new Table({
+        name: "domain_events_outbox",
+        columns: [
+          {
+            name: "id",
+            type: "uuid",
+            isPrimary: true,
+            generationStrategy: "uuid",
+            default: "uuid_generate_v4()",
+          },
+          {
+            name: "aggregate_type",
+            type: "varchar",
+            length: "255",
+            comment: "Type of aggregate (e.g., Post, Conversation)",
+          },
+          {
+            name: "aggregate_id",
+            type: "uuid",
+            comment: "ID of the aggregate that emitted the event",
+          },
+          {
+            name: "event_type",
+            type: "varchar",
+            length: "255",
+            comment: "Type of domain event (e.g., PostPublishedEvent)",
+          },
+          {
+            name: "event_data",
+            type: "jsonb",
+            comment: "Serialized event payload",
+          },
+          {
+            name: "occurred_at",
+            type: "timestamp",
+            default: "CURRENT_TIMESTAMP",
+            comment: "When the event was emitted by aggregate",
+          },
+          {
+            name: "published_at",
+            type: "timestamp",
+            isNullable: true,
+            comment:
+              "When the event was published to message bus (NULL = pending)",
+          },
+          {
+            name: "retry_count",
+            type: "int",
+            default: 0,
+            comment: "Number of publish attempts",
+          },
+          {
+            name: "error_message",
+            type: "text",
+            isNullable: true,
+            comment: "Last error message if publish failed",
+          },
+        ],
+      }),
+      true
+    );
+
+    // Index for efficient polling of unpublished events
+    await queryRunner.createIndex(
+      "domain_events_outbox",
+      new Index({
+        name: "idx_outbox_unpublished",
+        columnNames: ["published_at", "occurred_at"],
+        where: "published_at IS NULL",
+      })
+    );
+
+    // Index for aggregate event history queries
+    await queryRunner.createIndex(
+      "domain_events_outbox",
+      new Index({
+        name: "idx_outbox_aggregate",
+        columnNames: ["aggregate_type", "aggregate_id", "occurred_at"],
+      })
+    );
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.dropTable("domain_events_outbox");
+  }
+}
+```
+
+#### 3. Implementation Example: Blog Post Publishing
+
+**Step 1: Aggregate Emits Events (Domain Layer)**
+
+```typescript
+// src/modules/blog/domain/aggregates/post.aggregate.ts
+import { AggregateRoot } from "@/common/types/aggregate-root.interface";
+import { DomainEvent } from "@/common/types/domain-event.interface";
+import { PostPublishedEvent } from "../events/post-published.event";
+import { PostStatus } from "../value-objects/post-status.vo";
+
+export class PostAggregate implements AggregateRoot {
+  private domainEvents: DomainEvent[] = [];
+
+  constructor(
+    private readonly id: string,
+    private title: string,
+    private content: string,
+    private status: PostStatus,
+    private publishedAt?: Date
+  ) {}
+
+  publish(): void {
+    // Business rule validation
+    if (this.status.value === "published") {
+      throw new Error("Post is already published");
+    }
+
+    // State change
+    this.status = new PostStatus("published");
+    this.publishedAt = new Date();
+
+    // Emit domain event
+    this.addDomainEvent(
+      new PostPublishedEvent({
+        postId: this.id,
+        title: this.title,
+        publishedAt: this.publishedAt,
+      })
+    );
+  }
+
+  getDomainEvents(): DomainEvent[] {
+    return [...this.domainEvents];
+  }
+
+  clearDomainEvents(): void {
+    this.domainEvents = [];
+  }
+
+  private addDomainEvent(event: DomainEvent): void {
+    this.domainEvents.push(event);
+  }
+}
+```
+
+**Step 2: Use Case Saves Aggregate + Events in Single Transaction (Application Layer)**
+
+```typescript
+// src/modules/blog/application/use-cases/publish-post.use-case.ts
+import { Injectable } from "@nestjs/common";
+import { InjectDataSource } from "@nestjs/typeorm";
+import { DataSource } from "typeorm";
+import { PostRepository } from "../../domain/repositories/post.repository.interface";
+import { DomainEventOutboxService } from "@/shared/database/domain-event-outbox.service";
+
+@Injectable()
+export class PublishPostUseCase {
+  constructor(
+    private readonly postRepository: PostRepository,
+    private readonly outboxService: DomainEventOutboxService,
+    @InjectDataSource() private readonly dataSource: DataSource
+  ) {}
+
+  async execute(postId: string): Promise<void> {
+    // Use TypeORM QueryRunner for transaction control
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 1. Load aggregate
+      const post = await this.postRepository.findById(postId, queryRunner);
+      if (!post) {
+        throw new Error("Post not found");
+      }
+
+      // 2. Execute business logic (aggregate emits events internally)
+      post.publish();
+
+      // 3. Save aggregate state (within transaction)
+      await this.postRepository.save(post, queryRunner);
+
+      // 4. Save domain events to outbox table (same transaction)
+      const events = post.getDomainEvents();
+      await this.outboxService.saveEvents(
+        "Post", // aggregate type
+        postId, // aggregate id
+        events, // domain events
+        queryRunner // same transaction
+      );
+
+      // 5. Clear events from aggregate (prevent re-publishing)
+      post.clearDomainEvents();
+
+      // ✅ Commit transaction atomically
+      await queryRunner.commitTransaction();
+
+      // Both post state AND events are now persisted consistently!
+    } catch (error) {
+      // ❌ Rollback everything on error
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+}
+```
+
+**Step 3: Outbox Service (Infrastructure Layer)**
+
+```typescript
+// src/shared/database/domain-event-outbox.service.ts
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, QueryRunner } from "typeorm";
+import { DomainEventOutboxEntity } from "./entities/domain-event-outbox.entity";
+import { DomainEvent } from "@/common/types/domain-event.interface";
+
+@Injectable()
+export class DomainEventOutboxService {
+  constructor(
+    @InjectRepository(DomainEventOutboxEntity)
+    private readonly outboxRepository: Repository<DomainEventOutboxEntity>
+  ) {}
+
+  /**
+   * Save domain events to outbox table within existing transaction
+   */
+  async saveEvents(
+    aggregateType: string,
+    aggregateId: string,
+    events: DomainEvent[],
+    queryRunner: QueryRunner
+  ): Promise<void> {
+    const outboxEntries = events.map((event) => {
+      return queryRunner.manager.create(DomainEventOutboxEntity, {
+        aggregateType,
+        aggregateId,
+        eventType: event.constructor.name,
+        eventData: event,
+        occurredAt: new Date(),
+        publishedAt: null, // NULL = not yet published
+        retryCount: 0,
+      });
+    });
+
+    await queryRunner.manager.save(DomainEventOutboxEntity, outboxEntries);
+  }
+
+  /**
+   * Get unpublished events (for background worker)
+   */
+  async getUnpublishedEvents(limit = 100): Promise<DomainEventOutboxEntity[]> {
+    return this.outboxRepository.find({
+      where: { publishedAt: null },
+      order: { occurredAt: "ASC" },
+      take: limit,
+    });
+  }
+
+  /**
+   * Mark event as published
+   */
+  async markAsPublished(eventId: string): Promise<void> {
+    await this.outboxRepository.update(eventId, {
+      publishedAt: new Date(),
+    });
+  }
+
+  /**
+   * Mark event as failed with error message
+   */
+  async markAsFailed(eventId: string, errorMessage: string): Promise<void> {
+    await this.outboxRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        retryCount: () => "retry_count + 1",
+        errorMessage,
+      })
+      .where("id = :eventId", { eventId })
+      .execute();
+  }
+}
+```
+
+**Step 4: Background Worker Publishes Events (Infrastructure Layer)**
+
+```typescript
+// src/shared/messaging/outbox-publisher.worker.ts
+import { Injectable, Logger } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { DomainEventOutboxService } from "@/shared/database/domain-event-outbox.service";
+import { KafkaService } from "@/shared/messaging/kafka/kafka.service";
+
+@Injectable()
+export class OutboxPublisherWorker {
+  private readonly logger = new Logger(OutboxPublisherWorker.name);
+
+  constructor(
+    private readonly outboxService: DomainEventOutboxService,
+    private readonly kafkaService: KafkaService
+  ) {}
+
+  /**
+   * Poll outbox every 5 seconds and publish pending events
+   */
+  @Cron(CronExpression.EVERY_5_SECONDS)
+  async publishPendingEvents(): Promise<void> {
+    try {
+      const events = await this.outboxService.getUnpublishedEvents(100);
+
+      if (events.length === 0) {
+        return; // No events to publish
+      }
+
+      this.logger.log(`Publishing ${events.length} pending events`);
+
+      for (const event of events) {
+        try {
+          // Publish to Kafka
+          await this.kafkaService.publish(
+            event.eventType, // topic
+            event.aggregateId, // key (for partitioning)
+            event.eventData // message
+          );
+
+          // Mark as published
+          await this.outboxService.markAsPublished(event.id);
+
+          this.logger.debug(`Published event ${event.id} (${event.eventType})`);
+        } catch (error) {
+          // Mark as failed (will retry in next poll)
+          await this.outboxService.markAsFailed(event.id, error.message);
+
+          this.logger.error(
+            `Failed to publish event ${event.id}: ${error.message}`
+          );
+
+          // Continue processing other events (don't fail entire batch)
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Outbox publisher error: ${error.message}`);
+    }
+  }
+}
+```
+
+#### 4. Key Benefits
+
+✅ **Atomicity**: Database changes and event storage commit together or rollback together  
+✅ **Reliability**: Events are never lost (persisted durably before publishing)  
+✅ **Retry Logic**: Failed publishes retry automatically via background worker  
+✅ **Idempotency**: Consumers can handle duplicate events (use event ID for deduplication)  
+✅ **Audit Trail**: Complete history of all domain events in outbox table  
+✅ **Performance**: Non-blocking - use case returns immediately, publishing happens async
+
+#### 5. Alternative: Synchronous Publishing (Not Recommended)
+
+```typescript
+// ❌ AVOID: Synchronous event publishing (breaks atomicity)
+async publishPost(postId: string): Promise<void> {
+  const post = await this.postRepository.findById(postId);
+  post.publish();
+
+  await this.postRepository.save(post);
+
+  // ❌ Problem: If this fails, DB changes are already committed!
+  await this.eventBus.publish(post.getDomainEvents());
+}
+```
+
+**Why this is bad**:
+
+- If event publishing fails, DB changes are permanent but events are lost
+- No retry mechanism for failed publishes
+- Can't rollback database changes after commit
+- Creates inconsistent state
+
+#### 6. Testing Strategy
+
+```typescript
+// test/integration/blog/publish-post.use-case.spec.ts
+describe("PublishPostUseCase - Transaction Safety", () => {
+  it("should rollback both post and events if transaction fails", async () => {
+    // Arrange
+    const post = await createDraftPost();
+
+    // Simulate database error during save
+    jest.spyOn(postRepository, "save").mockRejectedValue(new Error("DB Error"));
+
+    // Act & Assert
+    await expect(publishPostUseCase.execute(post.id)).rejects.toThrow();
+
+    // Verify: Post status NOT changed in DB
+    const unchangedPost = await postRepository.findById(post.id);
+    expect(unchangedPost.status).toBe("draft");
+
+    // Verify: NO events in outbox
+    const events = await outboxService.getUnpublishedEvents();
+    expect(events).toHaveLength(0);
+  });
+
+  it("should save both post and events atomically on success", async () => {
+    // Arrange
+    const post = await createDraftPost();
+
+    // Act
+    await publishPostUseCase.execute(post.id);
+
+    // Assert: Post status changed
+    const publishedPost = await postRepository.findById(post.id);
+    expect(publishedPost.status).toBe("published");
+
+    // Assert: Event saved to outbox
+    const events = await outboxService.getUnpublishedEvents();
+    expect(events).toHaveLength(1);
+    expect(events[0].eventType).toBe("PostPublishedEvent");
+    expect(events[0].aggregateId).toBe(post.id);
+  });
+});
+```
+
+### Best Practices
+
+1. **Always use QueryRunner for transactional operations**:
+
+   ```typescript
+   const queryRunner = this.dataSource.createQueryRunner();
+   await queryRunner.startTransaction();
+   // ... save aggregate + events
+   await queryRunner.commitTransaction();
+   ```
+
+2. **Clear domain events after saving**:
+
+   ```typescript
+   await outboxService.saveEvents(events, queryRunner);
+   aggregate.clearDomainEvents(); // Prevent duplicate saves
+   ```
+
+3. **Use polling interval based on latency requirements**:
+
+   - Real-time: Poll every 1-5 seconds
+   - Near real-time: Poll every 10-30 seconds
+   - Batch processing: Poll every 1-5 minutes
+
+4. **Implement retry limits**:
+
+   ```typescript
+   if (event.retryCount > MAX_RETRIES) {
+     await moveToDeadLetterQueue(event);
+   }
+   ```
+
+5. **Monitor outbox table growth**:
+   - Archive old published events periodically
+   - Alert on high retry counts
+   - Track publishing lag metrics
+
+### Related Requirements
+
+- **FR-010**: System MUST support transactional operations for data consistency ✅
+- **FR-020**: System MUST provide Kafka integration for event-driven architectures ✅
+- **FR-006**: System MUST implement domain event dispatching for cross-aggregate communication ✅
+- **SC-016**: Domain events are dispatched and handled within the same transaction boundary ✅
+
+## Authentication Without Passport _(critical)_
+
+### Problem Statement
+
+Most NestJS tutorials use Passport.js for authentication, but this adds unnecessary complexity and abstractions. This boilerplate implements **pure NestJS authentication** using native guards, decorators, and services.
+
+**Why avoid Passport?**
+
+- ❌ Extra dependency with its own abstractions (Strategy pattern)
+- ❌ Less control over authentication flow
+- ❌ More difficult to customize for domain-specific needs
+- ❌ Harder to integrate with Clean Architecture ports/adapters
+- ✅ **Our approach**: Direct control, cleaner code, better testability
+
+### Solution: Pure NestJS Authentication
+
+#### 1. Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ HTTP Request with Authorization: Bearer <token>             │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│ AuthGuard (Application Layer)                               │
+│  1. Extract token from Authorization header                 │
+│  2. Call VerifyTokenUseCase                                  │
+│  3. Attach user to request.user                              │
+│  4. Allow/Deny access                                        │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│ VerifyTokenUseCase (Application Layer)                      │
+│  1. Call JWT service port to verify token                   │
+│  2. Check token expiration                                   │
+│  3. Load user from repository (optional caching)             │
+│  4. Return user payload                                      │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│ JwtAdapter (Infrastructure Layer)                            │
+│  Uses jsonwebtoken library directly (not Passport)          │
+│  Implements JWT signing, verification, token generation     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 2. Implementation Example
+
+**Step 1: JWT Service Port (Application Layer)**
+
+```typescript
+// src/modules/auth/application/ports/jwt-service.port.ts
+export interface JwtPayload {
+  userId: string;
+  email: string;
+  role: string;
+  provider: "local" | "google";
+}
+
+export interface JwtServicePort {
+  /**
+   * Generate access token (short-lived: 15 minutes)
+   */
+  generateAccessToken(payload: JwtPayload): string;
+
+  /**
+   * Generate refresh token (long-lived: 7 days)
+   */
+  generateRefreshToken(payload: JwtPayload): string;
+
+  /**
+   * Verify and decode access token
+   * @throws TokenExpiredException if token expired
+   * @throws InvalidTokenException if token invalid
+   */
+  verifyAccessToken(token: string): JwtPayload;
+
+  /**
+   * Verify and decode refresh token
+   */
+  verifyRefreshToken(token: string): JwtPayload;
+
+  /**
+   * Decode token without verification (for debugging)
+   */
+  decodeToken(token: string): JwtPayload | null;
+}
+```
+
+**Step 2: JWT Adapter Implementation (Infrastructure Layer)**
+
+```typescript
+// src/modules/auth/infrastructure/adapters/jwt.adapter.ts
+import { Injectable } from "@nestjs/common";
+import * as jwt from "jsonwebtoken";
+import { ConfigService } from "@nestjs/config";
+import {
+  JwtServicePort,
+  JwtPayload,
+} from "../../application/ports/jwt-service.port";
+import { TokenExpiredException } from "../../domain/exceptions/token-expired.exception";
+import { InvalidTokenException } from "../../domain/exceptions/invalid-token.exception";
+
+@Injectable()
+export class JwtAdapter implements JwtServicePort {
+  private readonly accessTokenSecret: string;
+  private readonly refreshTokenSecret: string;
+  private readonly accessTokenExpiry: string = "15m";
+  private readonly refreshTokenExpiry: string = "7d";
+
+  constructor(private readonly configService: ConfigService) {
+    this.accessTokenSecret =
+      this.configService.get<string>("JWT_ACCESS_SECRET");
+    this.refreshTokenSecret =
+      this.configService.get<string>("JWT_REFRESH_SECRET");
+  }
+
+  generateAccessToken(payload: JwtPayload): string {
+    return jwt.sign(payload, this.accessTokenSecret, {
+      expiresIn: this.accessTokenExpiry,
+      issuer: "nestjs-clean-architecture",
+      audience: "api-access",
+    });
+  }
+
+  generateRefreshToken(payload: JwtPayload): string {
+    return jwt.sign(payload, this.refreshTokenSecret, {
+      expiresIn: this.refreshTokenExpiry,
+      issuer: "nestjs-clean-architecture",
+      audience: "api-refresh",
+    });
+  }
+
+  verifyAccessToken(token: string): JwtPayload {
+    try {
+      const decoded = jwt.verify(token, this.accessTokenSecret, {
+        issuer: "nestjs-clean-architecture",
+        audience: "api-access",
+      }) as JwtPayload;
+
+      return decoded;
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        throw new TokenExpiredException("Access token has expired");
+      }
+      throw new InvalidTokenException("Invalid access token");
+    }
+  }
+
+  verifyRefreshToken(token: string): JwtPayload {
+    try {
+      const decoded = jwt.verify(token, this.refreshTokenSecret, {
+        issuer: "nestjs-clean-architecture",
+        audience: "api-refresh",
+      }) as JwtPayload;
+
+      return decoded;
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        throw new TokenExpiredException("Refresh token has expired");
+      }
+      throw new InvalidTokenException("Invalid refresh token");
+    }
+  }
+
+  decodeToken(token: string): JwtPayload | null {
+    try {
+      return jwt.decode(token) as JwtPayload;
+    } catch {
+      return null;
+    }
+  }
+}
+```
+
+**Step 3: Verify Token Use Case (Application Layer)**
+
+```typescript
+// src/modules/auth/application/use-cases/verify-token.use-case.ts
+import { Injectable } from "@nestjs/common";
+import { JwtServicePort } from "../ports/jwt-service.port";
+import { UserRepository } from "@/modules/user/domain/repositories/user.repository.interface";
+import { CacheService } from "@/shared/cache/cache.service";
+
+export interface VerifiedUser {
+  userId: string;
+  email: string;
+  role: string;
+  provider: "local" | "google";
+}
+
+@Injectable()
+export class VerifyTokenUseCase {
+  constructor(
+    private readonly jwtService: JwtServicePort,
+    private readonly userRepository: UserRepository,
+    private readonly cacheService: CacheService
+  ) {}
+
+  async execute(token: string): Promise<VerifiedUser> {
+    // 1. Verify JWT token signature and expiration
+    const payload = this.jwtService.verifyAccessToken(token);
+
+    // 2. Check if user still exists (cached for performance)
+    const cacheKey = `user:${payload.userId}`;
+    let userExists = await this.cacheService.get<boolean>(cacheKey);
+
+    if (userExists === null) {
+      const user = await this.userRepository.findById(payload.userId);
+      userExists = !!user;
+
+      // Cache for 5 minutes
+      await this.cacheService.set(cacheKey, userExists, 300);
+    }
+
+    if (!userExists) {
+      throw new InvalidTokenException("User no longer exists");
+    }
+
+    // 3. Return verified user data
+    return {
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+      provider: payload.provider,
+    };
+  }
+}
+```
+
+**Step 4: Auth Guard (Application Layer)**
+
+```typescript
+// src/modules/auth/application/guards/auth.guard.ts
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { VerifyTokenUseCase } from "../use-cases/verify-token.use-case";
+import { IS_PUBLIC_KEY } from "@/common/decorators/public.decorator";
+
+@Injectable()
+export class AuthGuard implements CanActivate {
+  constructor(
+    private readonly verifyTokenUseCase: VerifyTokenUseCase,
+    private readonly reflector: Reflector
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Check if route is marked as public
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
+
+    const request = context.switchToHttp().getRequest();
+
+    // Extract token from Authorization header
+    const token = this.extractTokenFromHeader(request);
+
+    if (!token) {
+      throw new UnauthorizedException("No token provided");
+    }
+
+    try {
+      // Verify token and get user
+      const user = await this.verifyTokenUseCase.execute(token);
+
+      // Attach user to request for later use in controllers
+      request.user = user;
+
+      return true;
+    } catch (error) {
+      throw new UnauthorizedException(error.message);
+    }
+  }
+
+  private extractTokenFromHeader(request: any): string | undefined {
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader) {
+      return undefined;
+    }
+
+    const [type, token] = authHeader.split(" ");
+
+    return type === "Bearer" ? token : undefined;
+  }
+}
+```
+
+**Step 5: Login Use Case (Application Layer)**
+
+```typescript
+// src/modules/auth/application/use-cases/login.use-case.ts
+import { Injectable } from "@nestjs/common";
+import { UserRepository } from "@/modules/user/domain/repositories/user.repository.interface";
+import { HashServicePort } from "../ports/hash-service.port";
+import { JwtServicePort } from "../ports/jwt-service.port";
+import { SessionRepository } from "../../domain/repositories/session.repository.interface";
+import { Session } from "../../domain/entities/session.entity";
+import { UserLoggedInEvent } from "../../domain/events/user-logged-in.event";
+import { DomainEventOutboxService } from "@/shared/database/domain-event-outbox.service";
+import { DataSource } from "typeorm";
+
+export interface LoginDto {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number; // seconds
+}
+
+@Injectable()
+export class LoginUseCase {
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly hashService: HashServicePort,
+    private readonly jwtService: JwtServicePort,
+    private readonly sessionRepository: SessionRepository,
+    private readonly outboxService: DomainEventOutboxService,
+    private readonly dataSource: DataSource
+  ) {}
+
+  async execute(dto: LoginDto): Promise<LoginResponse> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 1. Find user by email
+      const user = await this.userRepository.findByEmail(dto.email);
+
+      if (!user) {
+        throw new InvalidCredentialsException("Invalid email or password");
+      }
+
+      // 2. Verify password
+      const isPasswordValid = await this.hashService.compare(
+        dto.password,
+        user.password
+      );
+
+      if (!isPasswordValid) {
+        throw new InvalidCredentialsException("Invalid email or password");
+      }
+
+      // 3. Generate tokens
+      const payload = {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        provider: "local" as const,
+      };
+
+      const accessToken = this.jwtService.generateAccessToken(payload);
+      const refreshToken = this.jwtService.generateRefreshToken(payload);
+
+      // 4. Create session
+      const session = new Session({
+        userId: user.id,
+        accessToken,
+        refreshToken,
+        providerType: "local",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      });
+
+      await this.sessionRepository.save(session, queryRunner);
+
+      // 5. Emit domain event
+      const loginEvent = new UserLoggedInEvent({
+        userId: user.id,
+        email: user.email,
+        provider: "local",
+        ipAddress: "request.ip", // Pass from controller
+        userAgent: "request.userAgent", // Pass from controller
+        loginAt: new Date(),
+      });
+
+      await this.outboxService.saveEvents(
+        "Session",
+        session.id,
+        [loginEvent],
+        queryRunner
+      );
+
+      await queryRunner.commitTransaction();
+
+      return {
+        accessToken,
+        refreshToken,
+        expiresIn: 900, // 15 minutes in seconds
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+}
+```
+
+**Step 6: Google OAuth Implementation (Without Passport)**
+
+```typescript
+// src/modules/auth/infrastructure/adapters/google-oauth.adapter.ts
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { HttpService } from "@nestjs/axios";
+import { firstValueFrom } from "rxjs";
+import {
+  OAuthProviderPort,
+  OAuthUserInfo,
+} from "../../application/ports/oauth-provider.port";
+
+@Injectable()
+export class GoogleOAuthAdapter implements OAuthProviderPort {
+  private readonly clientId: string;
+  private readonly clientSecret: string;
+  private readonly redirectUri: string;
+
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService
+  ) {
+    this.clientId = this.configService.get<string>("GOOGLE_CLIENT_ID");
+    this.clientSecret = this.configService.get<string>("GOOGLE_CLIENT_SECRET");
+    this.redirectUri = this.configService.get<string>("GOOGLE_REDIRECT_URI");
+  }
+
+  /**
+   * Generate Google OAuth authorization URL
+   */
+  getAuthorizationUrl(): string {
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      redirect_uri: this.redirectUri,
+      response_type: "code",
+      scope: "openid email profile",
+      access_type: "offline",
+      prompt: "consent",
+    });
+
+    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  }
+
+  /**
+   * Exchange authorization code for access token
+   */
+  async getAccessToken(code: string): Promise<string> {
+    const response = await firstValueFrom(
+      this.httpService.post("https://oauth2.googleapis.com/token", {
+        code,
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        redirect_uri: this.redirectUri,
+        grant_type: "authorization_code",
+      })
+    );
+
+    return response.data.access_token;
+  }
+
+  /**
+   * Get user info from Google using access token
+   */
+  async getUserInfo(accessToken: string): Promise<OAuthUserInfo> {
+    const response = await firstValueFrom(
+      this.httpService.get("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+    );
+
+    return {
+      providerId: response.data.id,
+      email: response.data.email,
+      name: response.data.name,
+      picture: response.data.picture,
+      emailVerified: response.data.verified_email,
+    };
+  }
+}
+```
+
+**Step 7: Controller Usage**
+
+```typescript
+// src/modules/auth/interface/http/controllers/auth.controller.ts
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Query,
+  Req,
+} from "@nestjs/common";
+import { LoginUseCase } from "../../application/use-cases/login.use-case";
+import { GoogleLoginUseCase } from "../../application/use-cases/google-login.use-case";
+import { RefreshTokenUseCase } from "../../application/use-cases/refresh-token.use-case";
+import { AuthGuard } from "../../application/guards/auth.guard";
+import { GoogleOAuthAdapter } from "../../infrastructure/adapters/google-oauth.adapter";
+import { Public } from "@/common/decorators/public.decorator";
+import { CurrentUser } from "@/common/decorators/current-user.decorator";
+import { LoginRequestDto } from "../../application/dtos/login.dto";
+import { RefreshTokenRequestDto } from "../../application/dtos/refresh-token.dto";
+import { VerifiedUser } from "../../application/dtos/verified-user.dto";
+
+@Controller("auth")
+export class AuthController {
+  constructor(
+    private readonly loginUseCase: LoginUseCase,
+    private readonly googleLoginUseCase: GoogleLoginUseCase,
+    private readonly refreshTokenUseCase: RefreshTokenUseCase,
+    private readonly googleOAuthAdapter: GoogleOAuthAdapter
+  ) {}
+
+  @Public()
+  @Post("login")
+  async login(@Body() dto: LoginRequestDto) {
+    return this.loginUseCase.execute(dto);
+  }
+
+  @Public()
+  @Get("google")
+  async googleAuth() {
+    // Return authorization URL for frontend to redirect
+    const authUrl = this.googleOAuthAdapter.getAuthorizationUrl();
+    return { authUrl };
+  }
+
+  @Public()
+  @Get("google/callback")
+  async googleCallback(@Query("code") code: string) {
+    return this.googleLoginUseCase.execute({ code });
+  }
+
+  @Public()
+  @Post("refresh")
+  async refresh(@Body() dto: RefreshTokenRequestDto) {
+    return this.refreshTokenUseCase.execute(dto);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get("profile")
+  async getProfile(@CurrentUser() user: VerifiedUser) {
+    // User is already verified and attached by AuthGuard
+    return user;
+  }
+
+  @UseGuards(AuthGuard)
+  @Post("logout")
+  async logout(@CurrentUser() user: VerifiedUser) {
+    // Implement logout logic
+  }
+}
+```
+
+**Step 8: Current User Decorator**
+
+```typescript
+// src/common/decorators/current-user.decorator.ts
+import { createParamDecorator, ExecutionContext } from "@nestjs/common";
+
+export const CurrentUser = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.user; // Set by AuthGuard
+  }
+);
+```
+
+**Step 9: Public Decorator**
+
+```typescript
+// src/common/decorators/public.decorator.ts
+import { SetMetadata } from "@nestjs/common";
+
+export const IS_PUBLIC_KEY = "isPublic";
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
+```
+
+#### 3. Key Benefits
+
+✅ **No Passport dependency** - Direct control over authentication flow  
+✅ **Clean Architecture compliance** - Ports/adapters pattern maintained  
+✅ **Better testability** - Easy to mock JWT service and use cases  
+✅ **Type safety** - Full TypeScript support without Passport abstractions  
+✅ **Flexibility** - Easy to add custom validation logic  
+✅ **Performance** - No unnecessary middleware layers  
+✅ **Domain events** - Login/logout tracked via event sourcing
+
+#### 4. Testing Strategy
+
+```typescript
+// test/unit/auth/verify-token.use-case.spec.ts
+describe("VerifyTokenUseCase", () => {
+  let useCase: VerifyTokenUseCase;
+  let jwtService: MockJwtService;
+  let userRepository: MockUserRepository;
+
+  beforeEach(() => {
+    jwtService = new MockJwtService();
+    userRepository = new MockUserRepository();
+    useCase = new VerifyTokenUseCase(jwtService, userRepository);
+  });
+
+  it("should verify valid token and return user", async () => {
+    // Arrange
+    const token = "valid.jwt.token";
+    const payload = { userId: "123", email: "test@example.com", role: "user" };
+    jwtService.verifyAccessToken.mockReturnValue(payload);
+    userRepository.findById.mockResolvedValue({ id: "123" });
+
+    // Act
+    const result = await useCase.execute(token);
+
+    // Assert
+    expect(result.userId).toBe("123");
+    expect(jwtService.verifyAccessToken).toHaveBeenCalledWith(token);
+  });
+
+  it("should throw error for expired token", async () => {
+    // Arrange
+    const token = "expired.jwt.token";
+    jwtService.verifyAccessToken.mockImplementation(() => {
+      throw new TokenExpiredException("Token expired");
+    });
+
+    // Act & Assert
+    await expect(useCase.execute(token)).rejects.toThrow(TokenExpiredException);
+  });
+});
+```
+
+### Package Dependencies
+
+```json
+{
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/config": "^3.0.0",
+    "@nestjs/axios": "^3.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcrypt": "^5.1.1",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/bcrypt": "^5.0.2",
+    "@commitlint/cli": "^18.4.0",
+    "@commitlint/config-conventional": "^18.4.0",
+    "husky": "^9.1.7",
+    "standard-version": "^9.5.0"
+  }
+}
+```
+
+**Note**: No `@nestjs/passport`, `passport`, `passport-jwt`, or `passport-google-oauth20` dependencies!
+
+### Environment Variables
+
+```env
+# JWT Configuration
+JWT_ACCESS_SECRET=your-super-secret-access-key-change-this-in-production
+JWT_REFRESH_SECRET=your-super-secret-refresh-key-change-this-in-production
+
+# Google OAuth (if using)
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
+```
+
+### Best Practices
+
+1. **Always use HTTPS in production** for token transmission
+2. **Store refresh tokens hashed** in database (like passwords)
+3. **Implement token rotation** for refresh tokens
+4. **Set appropriate token expiry times**:
+   - Access token: 15 minutes
+   - Refresh token: 7 days
+5. **Implement rate limiting** on login endpoints
+6. **Log all authentication attempts** via domain events
+7. **Validate token issuer and audience** for security
+8. **Cache user existence checks** to reduce DB queries
+9. **Implement token blacklist** for logout (store in Redis)
+10. **Use correlation IDs** for tracing auth requests
+
+### Related Requirements
+
+- **FR-030**: System MUST implement JWT authentication without Passport library ✅
+- **FR-031**: Auth guards MUST validate JWT tokens and extract user payload ✅
+- **FR-032**: System MUST support Google OAuth 2.0 without Passport strategies ✅
+- **SC-020**: OAuth login flow completes within 5 seconds ✅
