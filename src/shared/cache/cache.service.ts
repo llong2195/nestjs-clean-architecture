@@ -6,7 +6,7 @@ import { LoggerService } from '../logger/logger.service';
 @Injectable()
 export class CacheService {
   constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly logger: LoggerService,
   ) {}
 
@@ -58,7 +58,7 @@ export class CacheService {
    */
   async deletePattern(pattern: string): Promise<void> {
     try {
-      // For cache-manager v5+, this requires custom implementation
+      // For cache-manager v7+, this requires custom implementation
       this.logger.debug(`Cache DELETE pattern: ${pattern} (not implemented)`);
       await Promise.resolve();
     } catch (error) {

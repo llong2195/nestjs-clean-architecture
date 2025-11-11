@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v7 as uuidv7 } from 'uuid';
 import { Email } from '../value-objects/email.vo';
 import { Password } from '../value-objects/password.vo';
 import { UserRole } from '../value-objects/user-role.vo';
@@ -53,7 +53,7 @@ export class User {
     }
 
     return new User(
-      uuidv4(),
+      uuidv7(),
       emailVo,
       passwordVo,
       userName.trim(),

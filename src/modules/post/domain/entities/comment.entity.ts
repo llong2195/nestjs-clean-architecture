@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v7 as uuidv7 } from 'uuid';
 
 export class Comment {
   private constructor(
@@ -26,7 +26,7 @@ export class Comment {
       throw new Error('Author ID is required');
     }
 
-    return new Comment(uuidv4(), postId, authorId, content.trim(), new Date());
+    return new Comment(uuidv7(), postId, authorId, content.trim(), new Date());
   }
 
   static reconstitute(

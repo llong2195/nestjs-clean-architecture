@@ -16,16 +16,20 @@ export class LoggerService {
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
       winston.format.printf((info) => {
         const timestamp = info.timestamp as string;
-        const level = info.level as string;
+        const level = info.level;
         const message = info.message as string;
         const context = info.context as string | undefined;
         const requestId = info.requestId as string | undefined;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           timestamp: _,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           level: __,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           message: ___,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           context: ____,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           requestId: _____,
           ...meta
         } = info;

@@ -1,9 +1,10 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { v7 as uuidv7 } from 'uuid';
 
 // Extend Express Request to include requestId
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       id?: string;
@@ -15,7 +16,7 @@ declare global {
 export class RequestIdMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction): void {
     // Generate or use existing request ID from header
-    const requestId = (req.headers['x-request-id'] as string) || uuidv4();
+    const requestId = (req.headers['x-request-id'] as string) || uuidv7();
 
     // Attach to request object
     req.id = requestId;

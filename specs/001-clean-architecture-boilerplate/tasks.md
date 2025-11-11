@@ -47,7 +47,7 @@
   - printWidth: 100
 - [x] T006 [P] Install core NestJS dependencies (pnpm add @nestjs/common @nestjs/core @nestjs/platform-express rxjs reflect-metadata)
 - [x] T007 [P] Install TypeORM and PostgreSQL driver (pnpm add @nestjs/typeorm typeorm pg)
-- [x] T008 [P] Install Redis dependencies (pnpm add @nestjs/cache-manager cache-manager cache-manager-ioredis ioredis)
+- [x] T008 [P] Install Redis dependencies (pnpm add @nestjs/cache-manager cache-manager @keyv/redis)
 - [x] T009 [P] Install validation dependencies (pnpm add class-validator class-transformer @nestjs/mapped-types)
 - [x] T010 [P] Install testing dependencies (pnpm add -D jest @nestjs/testing supertest @types/jest @types/supertest @types/node ts-jest)
 - [x] T011 Configure Jest in jest.config.js with separate configs for:
@@ -288,14 +288,14 @@
   - Create DocumentBuilder with title, description, version
   - Set bearer auth security scheme
   - SwaggerModule.setup('/api/docs', app, document)
-- [ ] T059 [US1] Test User CRUD endpoints manually:
+- [x] T059 [US1] Test User CRUD endpoints manually:
   - Open http://localhost:3000/api/docs in browser
   - Test POST /users (create user)
   - Test GET /users/:id (retrieve user)
   - Test PATCH /users/:id (update user)
   - Verify responses follow standard format
 
-**Checkpoint**: User Story 1 complete - Basic CRUD with Clean Architecture layers verified
+**Checkpoint**: User Story 1 complete - Basic CRUD with Clean Architecture layers verified ✅
 
 ---
 
@@ -349,13 +349,13 @@
 - [x] T076 [P] [US2] Create PostTag junction table entity in src/modules/post/infrastructure/persistence/post-tag.orm-entity.ts
 - [x] T077 [US2] Implement PostRepository in src/modules/post/infrastructure/persistence/post.repository.ts
 - [x] T078 [US2] Create migration for posts, comments, tags, post_tags tables (pnpm migration:generate CreatePostTables)
-- [ ] T079 [US2] Run migrations (pnpm migration:run)
+- [x] T079 [US2] Run migrations (pnpm migration:run)
 
 ### Interface Layer
 
 - [x] T080 [P] [US2] Create PostController in src/modules/post/interface/http/post.controller.ts
-- [ ] T081 [P] [US2] Create CommentController in src/modules/post/interface/http/comment.controller.ts
-- [ ] T082 [P] [US2] Create TagController in src/modules/post/interface/http/tag.controller.ts
+- [x] T081 [P] [US2] Create CommentController in src/modules/post/interface/http/comment.controller.ts
+- [x] T082 [P] [US2] Create TagController in src/modules/post/interface/http/tag.controller.ts
 - [x] T083 [P] [US2] Add Swagger decorators to all controllers
 - [x] T084 [US2] Configure PostModule in src/modules/post/post.module.ts
 - [x] T085 [US2] Register PostModule in src/app.module.ts
@@ -371,7 +371,7 @@
   - Verify rollback if event save fails
   - Test concurrent transactions don't conflict
 
-**Checkpoint**: User Story 2 complete - Database persistence with transactions, migrations, and aggregate pattern working correctly
+**Checkpoint**: User Story 2 complete - Database persistence with transactions, migrations, and aggregate pattern working correctly ✅
 
 ---
 
@@ -387,7 +387,7 @@
 - [x] T089 [P] [US3] Create cache service wrapper in src/shared/cache/cache.service.ts
 - [x] T090 [P] [US3] Create Cacheable decorator in src/shared/cache/decorators/cacheable.decorator.ts
 - [x] T091 [P] [US3] Create cache configuration in src/shared/cache/cache.config.ts
-- [x] T092 [P] [US3] Install Redis adapter (pnpm add cache-manager-ioredis)
+- [x] T092 [P] [US3] Install Redis adapter (pnpm add @keyv/redis)
 - [x] T093 [US3] Configure Redis connection in cache module
 
 ### User Module Caching
@@ -395,7 +395,7 @@
 - [x] T094 [P] [US3] Create UserCacheService in src/modules/user/infrastructure/cache/user-cache.service.ts
 - [x] T095 [US3] Add caching to GetUserUseCase (cache by user ID)
 - [x] T096 [US3] Add cache invalidation to UpdateUserUseCase
-- [ ] T097 [US3] Add cache invalidation to DeleteUserUseCase
+- [x] T097 [US3] Add cache invalidation to DeleteUserUseCase
 - [x] T098 [US3] Test cache hit/miss behavior with logging
 
 ### Post Module Caching
@@ -413,7 +413,7 @@
 - [x] T106 [US3] Implement session storage in Redis for fast lookups
 - [x] T107 [US3] Add session expiration with TTL
 
-**Checkpoint**: User Story 3 complete - Redis caching improving performance measurably
+**Checkpoint**: User Story 3 complete - Redis caching improving performance measurably ✅
 
 ---
 

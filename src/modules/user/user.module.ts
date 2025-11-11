@@ -6,6 +6,7 @@ import { CreateUserUseCase } from './application/use-cases/create-user.use-case'
 import { GetUserUseCase } from './application/use-cases/get-user.use-case';
 import { UpdateUserUseCase } from './application/use-cases/update-user.use-case';
 import { ListUsersUseCase } from './application/use-cases/list-users.use-case';
+import { DeleteUserUseCase } from './application/use-cases/delete-user.use-case';
 import { UserController } from './interface/http/user.controller';
 import { UserCacheService } from './infrastructure/cache/user-cache.service';
 
@@ -19,11 +20,12 @@ import { UserCacheService } from './infrastructure/cache/user-cache.service';
       provide: 'IUserRepository',
       useClass: UserRepository,
     },
-    // Use cases
+    // Use cases - NestJS will automatically inject dependencies
     CreateUserUseCase,
     GetUserUseCase,
     UpdateUserUseCase,
     ListUsersUseCase,
+    DeleteUserUseCase,
   ],
   exports: [
     'IUserRepository',
@@ -31,6 +33,7 @@ import { UserCacheService } from './infrastructure/cache/user-cache.service';
     GetUserUseCase,
     UpdateUserUseCase,
     ListUsersUseCase,
+    DeleteUserUseCase,
   ],
 })
 export class UserModule {}

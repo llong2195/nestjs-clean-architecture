@@ -15,6 +15,7 @@ import { CreateUserUseCase } from '../../application/use-cases/create-user.use-c
 import { GetUserUseCase } from '../../application/use-cases/get-user.use-case';
 import { UpdateUserUseCase } from '../../application/use-cases/update-user.use-case';
 import { ListUsersUseCase } from '../../application/use-cases/list-users.use-case';
+import { DeleteUserUseCase } from '../../application/use-cases/delete-user.use-case';
 import { CreateUserDto } from '../../application/dtos/create-user.dto';
 import { UpdateUserDto } from '../../application/dtos/update-user.dto';
 import { UserResponseDto } from '../../application/dtos/user-response.dto';
@@ -30,6 +31,7 @@ export class UserController {
     private readonly getUserUseCase: GetUserUseCase,
     private readonly updateUserUseCase: UpdateUserUseCase,
     private readonly listUsersUseCase: ListUsersUseCase,
+    private readonly deleteUserUseCase: DeleteUserUseCase,
     private readonly cacheService: UserCacheService,
   ) {}
 
@@ -182,7 +184,6 @@ export class UserController {
   }
 
   @Delete(':id')
-  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft delete user' })
   @ApiParam({ name: 'id', description: 'User UUID' })
@@ -195,9 +196,10 @@ export class UserController {
     description: 'User not found',
   })
   async remove(@Param('id') id: string): Promise<void> {
-    const user = await this.getUserUseCase.execute(id);
-    user.deactivate();
-    // Note: In a real implementation, you'd have a DeleteUserUseCase
-    // For now, we just deactivate
+    // Delete user
+    await this.deleteUserUseCase.execute(id);
+
+    // Invalidate cache
+    await this.cacheService.invalidateUser(id);
   }
 }
