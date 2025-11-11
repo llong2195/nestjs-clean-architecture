@@ -283,8 +283,8 @@ userName: string;
 - **User** (Sample Entity): Demonstrates authentication and authorization patterns
 
   - Table: `users`
-  - Columns: `id` (uuid), `email` (varchar, unique), `password` (varchar, hashed), `name` (varchar), `role` (varchar), `provider` (varchar: local|google), `created_at` (timestamp), `updated_at` (timestamp), `deleted_at` (timestamp, nullable)
-  - Indexes: `idx_users_email`, `idx_users_provider`
+  - Columns: `id` (uuid), `email` (varchar, unique), `password` (varchar, hashed), `user_name` (varchar), `role` (varchar), `provider` (varchar: local|google), `created_at` (timestamp), `updated_at` (timestamp), `deleted_at` (timestamp, nullable)
+  - Indexes: `idx_users_email`, `idx_users_provider`, `idx_users_deleted_at`
 
 - **Session** (Sample Entity): Demonstrates authentication session management
 
@@ -325,20 +325,20 @@ userName: string;
 - **Conversation** (Sample Aggregate Root): Real-time chat aggregate
 
   - Table: `conversations`
-  - Columns: `id` (uuid), `type` (varchar: direct|group), `last_message_at` (timestamp), `created_at` (timestamp)
-  - Indexes: `idx_conversations_last_message_at`
+  - Columns: `id` (uuid), `title` (varchar, nullable - only for group chats), `type` (varchar: direct|group), `created_at` (timestamp), `updated_at` (timestamp)
+  - Indexes: `idx_conversations_type`
 
 - **Message** (Child Entity of Conversation Aggregate): Chat messages
 
   - Table: `messages`
-  - Columns: `id` (uuid), `conversation_id` (uuid, FK), `sender_id` (uuid, FK), `content` (text), `status` (varchar: sent|delivered|read), `sent_at` (timestamp)
-  - Indexes: `idx_messages_conversation_id_sent_at`, `idx_messages_sender_id`
+  - Columns: `id` (uuid), `conversation_id` (uuid, FK), `sender_id` (uuid, FK), `content` (text), `type` (varchar: text|image|file), `sent_at` (timestamp)
+  - Indexes: `idx_messages_conversation_id`, `idx_messages_sender_id`, `idx_messages_sent_at`
   - Foreign Keys: `conversation_id` → `conversations.id`, `sender_id` → `users.id`
 
 - **Participant** (Junction Table): EXPLICIT many-to-many between Users and Conversations
   - Table: `conversation_participants`
-  - Columns: `id` (uuid), `conversation_id` (uuid, FK), `user_id` (uuid, FK), `role` (varchar: admin|member), `joined_at` (timestamp)
-  - Indexes: `idx_conv_participants_conv_id`, `idx_conv_participants_user_id`, `unique_conversation_user` (composite unique)
+  - Columns: `id` (uuid), `conversation_id` (uuid, FK), `user_id` (uuid, FK), `role` (varchar: owner|admin|member), `joined_at` (timestamp)
+  - Indexes: `idx_participants_conversation_id`, `idx_participants_user_id`, `unique_conversation_user` (composite unique on conversation_id, user_id)
   - Foreign Keys: `conversation_id` → `conversations.id`, `user_id` → `users.id`
 
 #### System Entities
@@ -346,28 +346,28 @@ userName: string;
 - **Notification** (System Entity): Notification system
 
   - Table: `notifications`
-  - Columns: `id` (uuid), `recipient_id` (uuid, FK), `channel` (varchar: email|sms|push), `template` (varchar), `payload` (jsonb), `status` (varchar: pending|sent|failed), `sent_at` (timestamp, nullable), `created_at` (timestamp)
-  - Indexes: `idx_notifications_recipient_id`, `idx_notifications_status`
-  - Foreign Keys: `recipient_id` → `users.id`
+  - Columns: `id` (uuid), `user_id` (uuid, FK), `type` (varchar: email|push|websocket), `title` (varchar), `message` (text), `status` (varchar: pending|sent|failed), `sent_at` (timestamp, nullable), `created_at` (timestamp)
+  - Indexes: `idx_notifications_user_id`, `idx_notifications_status`
+  - Foreign Keys: `user_id` → `users.id`
 
 - **FileMetadata** (System Entity): File storage metadata
 
   - Table: `file_metadata`
-  - Columns: `id` (uuid), `uploader_id` (uuid, FK), `filename` (varchar), `storage_path` (varchar), `mime_type` (varchar), `size` (bigint), `storage_provider` (varchar: local|s3), `created_at` (timestamp)
-  - Indexes: `idx_file_metadata_uploader_id`
+  - Columns: `id` (uuid), `uploader_id` (uuid, FK), `file_name` (varchar), `mime_type` (varchar), `size` (bigint - bytes), `storage_path` (varchar), `checksum` (varchar - SHA-256 hash), `created_at` (timestamp)
+  - Indexes: `idx_file_uploader_id`, `idx_file_checksum`
   - Foreign Keys: `uploader_id` → `users.id`
 
 - **DomainEventOutbox** (System Entity): Transactional outbox pattern
 
-  - Table: `domain_events_outbox`
-  - Columns: `id` (uuid), `aggregate_type` (varchar), `aggregate_id` (uuid), `event_type` (varchar), `event_data` (jsonb), `occurred_at` (timestamp), `published_at` (timestamp, nullable), `retry_count` (integer), `error_message` (text, nullable)
-  - Indexes: `idx_outbox_unpublished` (WHERE published_at IS NULL), `idx_outbox_aggregate`
+  - Table: `domain_event_outbox`
+  - Columns: `id` (uuid), `aggregate_id` (uuid), `aggregate_type` (varchar), `event_type` (varchar), `event_data` (jsonb), `occurred_at` (timestamp), `published_at` (timestamp, nullable), `retry_count` (integer), `last_error` (text, nullable)
+  - Indexes: `idx_outbox_unpublished` (partial index WHERE published_at IS NULL), `idx_outbox_aggregate` (on aggregate_id, aggregate_type)
 
-- **Configuration** (System Entity): Environment-specific settings
-  - Table: `configurations`
-  - Columns: `id` (uuid), `environment` (varchar), `key` (varchar), `value` (text), `created_at` (timestamp), `updated_at` (timestamp)
-  - Indexes: `unique_env_key` (composite unique on environment, key)
-  - Note: Sensitive secrets MUST NOT be stored here. Use environment variables or secret management systems.
+- **Configuration** (System Entity): Runtime configuration management
+  - Table: `configuration`
+  - Columns: `key` (varchar, primary key), `value` (jsonb), `description` (text, nullable), `updated_at` (timestamp)
+  - Indexes: `pk_configuration_key` (primary key on key)
+  - Note: Sensitive secrets MUST NOT be stored here. Use environment variables or secret management systems (AWS Secrets Manager, HashiCorp Vault, etc.)
 
 ### Assumptions
 

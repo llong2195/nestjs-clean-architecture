@@ -1,0 +1,1040 @@
+openapi: 3.0.3
+info:
+  title: NestJS Clean Architecture Boilerplate API
+  description: |
+    Production-ready NestJS backend boilerplate following Clean Architecture principles.
+
+    **Features**:
+    - Clean Architecture with DDD patterns
+    - JWT + Google OAuth authentication
+    - Real-time WebSocket communication
+    - Event-driven architecture (Kafka)
+    - Background job processing (BullMQ)
+    - Comprehensive API documentation
+
+    **Base URL**: `http://localhost:3000/api`
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://staging.example.com/api
+    description: Staging server
+  - url: https://api.example.com/api
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Users
+    description: User management operations
+  - name: Posts
+    description: Blog post CRUD operations (demonstrates aggregate pattern)
+  - name: Comments
+    description: Comment operations
+  - name: Tags
+    description: Tag management
+  - name: Conversations
+    description: Real-time messaging conversations
+  - name: Messages
+    description: Message operations within conversations
+  - name: Notifications
+    description: User notification management
+  - name: Files
+    description: File upload and management
+  - name: Health
+    description: Service health checks
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token obtained from /auth/login or /auth/refresh
+
+  schemas:
+    # Standard Response Wrapper
+    SuccessResponse:
+      type: object
+      required:
+        - status
+        - data
+        - meta
+      properties:
+        status:
+          type: string
+          enum: [success]
+          example: success
+        data:
+          type: object
+          description: Response payload (varies by endpoint)
+        meta:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+              example: "2025-11-11T10:30:00Z"
+            requestId:
+              type: string
+              format: uuid
+              example: "123e4567-e89b-12d3-a456-426614174000"
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - error
+        - meta
+      properties:
+        status:
+          type: string
+          enum: [error]
+          example: error
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "Invalid email format"
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: "email"
+                  message:
+                    type: string
+                    example: "must be a valid email"
+        meta:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+              format: uuid
+
+    # Authentication DTOs
+    LoginRequestDto:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "SecurePass123!"
+
+    LoginResponseDto:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (15min expiry)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Refresh token (7 days expiry)
+          example: "refresh_abc123..."
+        user:
+          $ref: "#/components/schemas/UserDto"
+
+    RefreshTokenRequestDto:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          example: "refresh_abc123..."
+
+    # User DTOs
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        userName:
+          type: string
+          example: "John Doe"
+        role:
+          type: string
+          enum: [admin, user, moderator]
+          example: "user"
+        provider:
+          type: string
+          enum: [local, google]
+          example: "local"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:00:00Z"
+
+    CreateUserDto:
+      type: object
+      required:
+        - email
+        - password
+        - userName
+      properties:
+        email:
+          type: string
+          format: email
+          example: "newuser@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "SecurePass123!"
+        userName:
+          type: string
+          minLength: 3
+          maxLength: 255
+          example: "Jane Smith"
+
+    UpdateUserDto:
+      type: object
+      properties:
+        userName:
+          type: string
+          minLength: 3
+          maxLength: 255
+          example: "Updated Name"
+
+    # Post DTOs
+    PostDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        authorId:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Clean Architecture Best Practices"
+        content:
+          type: string
+          example: "In this post, we explore..."
+        slug:
+          type: string
+          example: "clean-architecture-best-practices"
+        status:
+          type: string
+          enum: [draft, published, archived]
+          example: "published"
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        viewCount:
+          type: integer
+          example: 42
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagDto"
+
+    CreatePostDto:
+      type: object
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 500
+        content:
+          type: string
+          minLength: 10
+        tagIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    UpdatePostDto:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 500
+        content:
+          type: string
+          minLength: 10
+
+    PublishPostDto:
+      type: object
+      description: Triggers PostPublishedEvent
+
+    # Comment DTOs
+    CommentDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        postId:
+          type: string
+          format: uuid
+        authorId:
+          type: string
+          format: uuid
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateCommentDto:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    # Tag DTOs
+    TagDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "TypeScript"
+        slug:
+          type: string
+          example: "typescript"
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateTagDto:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: "NestJS"
+
+    # Conversation DTOs
+    ConversationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [direct, group]
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParticipantDto"
+        createdAt:
+          type: string
+          format: date-time
+
+    ParticipantDto:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [owner, admin, member]
+        joinedAt:
+          type: string
+          format: date-time
+
+    CreateConversationDto:
+      type: object
+      required:
+        - type
+        - participantIds
+      properties:
+        type:
+          type: string
+          enum: [direct, group]
+        title:
+          type: string
+          description: Required for group conversations
+        participantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+
+    # Message DTOs
+    MessageDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+        senderId:
+          type: string
+          format: uuid
+        content:
+          type: string
+        type:
+          type: string
+          enum: [text, image, file]
+        sentAt:
+          type: string
+          format: date-time
+
+    CreateMessageDto:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum: [text, image, file]
+          default: text
+
+    # Notification DTOs
+    NotificationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [email, push, websocket]
+        title:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+          enum: [pending, sent, failed]
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    # File DTOs
+    FileMetadataDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        mimeType:
+          type: string
+        size:
+          type: integer
+          description: File size in bytes
+        url:
+          type: string
+          format: uri
+        createdAt:
+          type: string
+          format: date-time
+
+    # Pagination
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 100
+        totalPages:
+          type: integer
+          example: 5
+
+paths:
+  # Authentication Endpoints
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login with email and password
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequestDto"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/LoginResponseDto"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequestDto"
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          accessToken:
+                            type: string
+        "401":
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/google:
+    get:
+      tags:
+        - Authentication
+      summary: Initiate Google OAuth login
+      description: Redirects to Google OAuth consent page
+      operationId: googleAuth
+      responses:
+        "302":
+          description: Redirect to Google OAuth
+
+  /auth/google/callback:
+    get:
+      tags:
+        - Authentication
+      summary: Google OAuth callback
+      description: Handles Google OAuth callback and returns JWT tokens
+      operationId: googleAuthCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/LoginResponseDto"
+
+  # User Endpoints
+  /users:
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserDto"
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserDto"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      tags:
+        - Users
+      summary: List all users (paginated)
+      operationId: listUsers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/UserDto"
+                          pagination:
+                            $ref: "#/components/schemas/PaginationMeta"
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      operationId: getUserById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserDto"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      tags:
+        - Users
+      summary: Update user profile
+      operationId: updateUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserDto"
+      responses:
+        "200":
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserDto"
+
+    delete:
+      tags:
+        - Users
+      summary: Soft delete user
+      operationId: deleteUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: User deleted successfully
+
+  # Post Endpoints
+  /posts:
+    post:
+      tags:
+        - Posts
+      summary: Create a new post (draft)
+      operationId: createPost
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePostDto"
+      responses:
+        "201":
+          description: Post created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PostDto"
+
+    get:
+      tags:
+        - Posts
+      summary: List all posts (published only)
+      operationId: listPosts
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published, archived]
+      responses:
+        "200":
+          description: Posts retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/PostDto"
+                          pagination:
+                            $ref: "#/components/schemas/PaginationMeta"
+
+  /posts/{id}:
+    get:
+      tags:
+        - Posts
+      summary: Get post by ID
+      operationId: getPostById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Post found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PostDto"
+
+    patch:
+      tags:
+        - Posts
+      summary: Update post content
+      operationId: updatePost
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePostDto"
+      responses:
+        "200":
+          description: Post updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PostDto"
+
+  /posts/{id}/publish:
+    post:
+      tags:
+        - Posts
+      summary: Publish a post (triggers PostPublishedEvent)
+      description: Changes post status to 'published' and dispatches domain event to outbox
+      operationId: publishPost
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Post published
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PostDto"
+
+  /posts/{postId}/comments:
+    post:
+      tags:
+        - Comments
+      summary: Add comment to post
+      operationId: createComment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentDto"
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/CommentDto"
+
+    get:
+      tags:
+        - Comments
+      summary: List comments for post
+      operationId: listComments
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Comments retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/CommentDto"
+                          pagination:
+                            $ref: "#/components/schemas/PaginationMeta"
+
+  # Health Check
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+                    example: 123456
+                  database:
+                    type: string
+                    enum: [up, down]
+                  redis:
+                    type: string
+                    enum: [up, down]
+                  kafka:
+                    type: string
+                    enum: [up, down]
