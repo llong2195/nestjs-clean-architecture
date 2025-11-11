@@ -180,111 +180,111 @@
 
 ### Domain Layer
 
-- [ ] T034 [P] [US1] Create User domain entity in src/modules/user/domain/entities/user.entity.ts:
+- [x] T034 [P] [US1] Create User domain entity in src/modules/user/domain/entities/user.entity.ts:
   - Pure TypeScript class (NO TypeORM decorators)
   - Properties: id, email, password, userName, role, provider
   - Factory method: User.create()
   - Business methods: updateProfile(), changePassword()
-- [ ] T035 [P] [US1] Create Email value object in src/modules/user/domain/value-objects/email.vo.ts:
+- [x] T035 [P] [US1] Create Email value object in src/modules/user/domain/value-objects/email.vo.ts:
   - Validate email format (RFC 5322)
   - Immutable class
-- [ ] T036 [P] [US1] Create Password value object in src/modules/user/domain/value-objects/password.vo.ts:
+- [x] T036 [P] [US1] Create Password value object in src/modules/user/domain/value-objects/password.vo.ts:
   - Validate password strength (min 8 chars, uppercase, lowercase, number)
   - Hash password using bcrypt
   - Method: comparePassword()
-- [ ] T037 [P] [US1] Create UserRole enum in src/modules/user/domain/value-objects/user-role.vo.ts:
+- [x] T037 [P] [US1] Create UserRole enum in src/modules/user/domain/value-objects/user-role.vo.ts:
   - Values: ADMIN, USER, MODERATOR
-- [ ] T038 [P] [US1] Define IUserRepository interface in src/modules/user/domain/repositories/user.repository.interface.ts:
+- [x] T038 [P] [US1] Define IUserRepository interface in src/modules/user/domain/repositories/user.repository.interface.ts:
   - save(user: User): Promise<User>
   - findById(id: string): Promise<User | null>
   - findByEmail(email: string): Promise<User | null>
   - delete(id: string): Promise<void>
-- [ ] T039 [P] [US1] Create domain events in src/modules/user/domain/events/:
+- [x] T039 [P] [US1] Create domain events in src/modules/user/domain/events/:
   - UserCreatedEvent with userId, email, timestamp
   - UserUpdatedEvent with userId, changes, timestamp
   - UserDeletedEvent with userId, timestamp
 
 ### Application Layer
 
-- [ ] T040 [P] [US1] Create CreateUserDto in src/modules/user/application/dtos/create-user.dto.ts:
+- [x] T040 [P] [US1] Create CreateUserDto in src/modules/user/application/dtos/create-user.dto.ts:
   - Properties: email, password, userName
   - Validation decorators: @IsEmail(), @MinLength(8), @IsString()
   - Swagger decorators: @ApiProperty() with examples
-- [ ] T041 [P] [US1] Create UpdateUserDto in src/modules/user/application/dtos/update-user.dto.ts:
+- [x] T041 [P] [US1] Create UpdateUserDto in src/modules/user/application/dtos/update-user.dto.ts:
   - Properties: userName (optional)
   - Extend PartialType(CreateUserDto) for optional fields
-- [ ] T042 [P] [US1] Create UserResponseDto in src/modules/user/application/dtos/user-response.dto.ts:
+- [x] T042 [P] [US1] Create UserResponseDto in src/modules/user/application/dtos/user-response.dto.ts:
   - Exclude sensitive fields (password)
   - Properties: id, email, userName, role, createdAt
-- [ ] T043 [US1] Implement CreateUserUseCase in src/modules/user/application/use-cases/create-user.use-case.ts:
+- [x] T043 [US1] Implement CreateUserUseCase in src/modules/user/application/use-cases/create-user.use-case.ts:
   - Inject IUserRepository
   - Check if email already exists
   - Create User entity using factory method
   - Save to repository
   - Dispatch UserCreatedEvent
-- [ ] T044 [US1] Implement GetUserUseCase in src/modules/user/application/use-cases/get-user.use-case.ts:
+- [x] T044 [US1] Implement GetUserUseCase in src/modules/user/application/use-cases/get-user.use-case.ts:
   - Find user by ID
   - Throw NotFoundException if not found
-- [ ] T045 [US1] Implement UpdateUserUseCase in src/modules/user/application/use-cases/update-user.use-case.ts:
+- [x] T045 [US1] Implement UpdateUserUseCase in src/modules/user/application/use-cases/update-user.use-case.ts:
   - Find user, update properties, save
   - Dispatch UserUpdatedEvent
-- [ ] T046 [US1] Implement ListUsersUseCase in src/modules/user/application/use-cases/list-users.use-case.ts:
+- [x] T046 [US1] Implement ListUsersUseCase in src/modules/user/application/use-cases/list-users.use-case.ts:
   - Support pagination (page, limit)
   - Support filtering (role, provider)
   - Return paginated result
-- [ ] T047 [US1] Create UserMapper in src/modules/user/application/mappers/user.mapper.ts:
+- [x] T047 [US1] Create UserMapper in src/modules/user/application/mappers/user.mapper.ts:
   - toDto(user: User): UserResponseDto
   - toDomain(ormEntity: UserOrmEntity): User
 
 ### Infrastructure Layer
 
-- [ ] T048 [P] [US1] Create User TypeORM entity in src/modules/user/infrastructure/persistence/user.orm-entity.ts:
+- [x] T048 [P] [US1] Create User TypeORM entity in src/modules/user/infrastructure/persistence/user.orm-entity.ts:
   - Use @Entity({ name: 'users' }) decorator
   - Map properties to snake_case columns: @Column({ name: 'user_name' })
   - Include timestamps: @CreateDateColumn, @UpdateDateColumn, @DeleteDateColumn
   - Define relationships (sessions, posts)
-- [ ] T049 [US1] Implement UserRepository in src/modules/user/infrastructure/persistence/user.repository.ts:
+- [x] T049 [US1] Implement UserRepository in src/modules/user/infrastructure/persistence/user.repository.ts:
   - Implement IUserRepository interface
   - Use TypeORM Repository<UserOrmEntity>
   - Use UserMapper to convert between domain and ORM entities
   - Handle soft deletes
-- [ ] T050 [US1] Create database migration for users table:
+- [x] T050 [US1] Create database migration for users table:
   - Run: pnpm typeorm migration:generate -n CreateUsersTable
   - Verify migration SQL includes all columns, indexes, constraints
-- [ ] T051 [US1] Run migration to create users table:
+- [x] T051 [US1] Run migration to create users table:
   - Run: pnpm typeorm migration:run
   - Verify table exists in database
 
 ### Interface Layer
 
-- [ ] T052 [P] [US1] Create UserController in src/modules/user/interface/http/user.controller.ts:
+- [x] T052 [P] [US1] Create UserController in src/modules/user/interface/http/user.controller.ts:
   - @Controller('users')
   - POST /users (create)
   - GET /users/:id (get by ID)
   - PATCH /users/:id (update)
   - DELETE /users/:id (soft delete)
   - GET /users (list with pagination)
-- [ ] T053 [P] [US1] Add Swagger decorators to UserController:
+- [x] T053 [P] [US1] Add Swagger decorators to UserController:
   - @ApiTags('Users')
   - @ApiOperation() for each endpoint with summary
   - @ApiResponse() for 200, 201, 400, 404, 500
   - @ApiBearerAuth() for protected endpoints
-- [ ] T054 [US1] Configure UserModule in src/modules/user/user.module.ts:
+- [x] T054 [US1] Configure UserModule in src/modules/user/user.module.ts:
   - Import DatabaseModule, ConfigModule
   - Provide use cases, repository, mapper
   - Export UserRepository for other modules
-- [ ] T055 [US1] Register UserModule in src/app.module.ts imports array
+- [x] T055 [US1] Register UserModule in src/app.module.ts imports array
 
 ### Validation & Documentation
 
-- [ ] T056 [US1] Add validation decorators to CreateUserDto and UpdateUserDto:
+- [x] T056 [US1] Add validation decorators to CreateUserDto and UpdateUserDto:
   - @IsEmail() for email
   - @MinLength(8) @Matches() for password
   - @IsString() @MinLength(3) for userName
-- [ ] T057 [US1] Add Swagger property decorators to all DTOs:
+- [x] T057 [US1] Add Swagger property decorators to all DTOs:
   - @ApiProperty() with description, example, required
   - @ApiPropertyOptional() for optional fields
-- [ ] T058 [US1] Configure Swagger in src/main.ts:
+- [x] T058 [US1] Configure Swagger in src/main.ts:
   - Create DocumentBuilder with title, description, version
   - Set bearer auth security scheme
   - SwaggerModule.setup('/api/docs', app, document)

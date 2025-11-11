@@ -3,7 +3,7 @@ import { config } from 'dotenv';
 
 config();
 
-export const migrationDataSource = new DataSource({
+const migrationDataSource = new DataSource({
   type: 'postgres',
   host: process.env.DATABASE_HOST || 'localhost',
   port: parseInt(process.env.DATABASE_PORT || '5432', 10),
