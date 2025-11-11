@@ -457,15 +457,15 @@
 - [x] T128 [P] [US4] Create Conversation TypeORM entities in src/modules/conversation/infrastructure/persistence/
 - [x] T129 [P] [US4] Create ConversationParticipant junction table entity
 - [x] T130 [US4] Create migration for conversations, messages, conversation_participants tables
-- [ ] T131 [P] [US4] Create ConversationGateway in src/modules/conversation/interface/websocket/conversation.gateway.ts
-- [ ] T132 [US4] Implement send message handler with broadcast to conversation participants
-- [ ] T133 [US4] Configure NotificationModule and ConversationModule
-- [ ] T134 [US4] Register modules in src/app.module.ts
+- [x] T131 [P] [US4] Create ConversationGateway in src/modules/conversation/interface/websocket/conversation.gateway.ts
+- [x] T132 [US4] Implement send message handler with broadcast to conversation participants
+- [x] T133 [US4] Configure NotificationModule and ConversationModule
+- [x] T134 [US4] Register modules in src/app.module.ts
 
 ### Multi-instance Testing
 
-- [ ] T135 [US4] Test WebSocket broadcasting across multiple app instances (using Redis pub/sub)
-- [ ] T136 [US4] Verify client reconnection logic works correctly
+- [x] T135 [US4] Test WebSocket broadcasting across multiple app instances (using Redis pub/sub)
+- [x] T136 [US4] Verify client reconnection logic works correctly
 
 **Checkpoint**: User Story 4 complete - WebSocket real-time communication working with multi-instance support
 

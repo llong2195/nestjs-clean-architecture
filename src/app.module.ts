@@ -9,6 +9,7 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { UserModule } from './modules/user/user.module';
 import { PostModule } from './modules/post/post.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { ConversationModule } from './modules/conversation/conversation.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     UserModule,
     PostModule,
     NotificationModule,
+    ConversationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
