@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { PostRepository } from '../../src/modules/post/infrastructure/persistence/post.repository';
-import { PostOrmEntity } from '../../src/modules/post/infrastructure/persistence/post.orm-entity';
+import { v7 as uuid } from 'uuid';
 import { Post } from '../../src/modules/post/domain/aggregates/post.aggregate';
 import { PostStatus } from '../../src/modules/post/domain/value-objects/post-status.vo';
-import { v4 as uuid } from 'uuid';
+import { PostOrmEntity } from '../../src/modules/post/infrastructure/persistence/post.orm-entity';
+import { PostRepository } from '../../src/modules/post/infrastructure/persistence/post.repository';
 
 /**
  * Integration tests for Post transaction management

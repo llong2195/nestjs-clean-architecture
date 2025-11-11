@@ -1,4 +1,4 @@
-import { v7 as uuidv7 } from 'uuid';
+import { v7 as uuid } from 'uuid';
 import { PostStatus } from '../value-objects/post-status.vo';
 import { PostPublishedEvent, PostArchivedEvent } from '../events/post.events';
 
@@ -38,7 +38,7 @@ export class Post {
     const generatedSlug = slug || Post.generateSlug(title);
 
     return new Post(
-      uuidv7(),
+      uuid(),
       authorId,
       title.trim(),
       content.trim(),

@@ -1,4 +1,4 @@
-import { v7 as uuidv7 } from 'uuid';
+import { v7 as uuid } from 'uuid';
 
 export class Tag {
   private constructor(
@@ -18,7 +18,7 @@ export class Tag {
 
     const generatedSlug = slug || Tag.generateSlug(name);
 
-    return new Tag(uuidv7(), name.trim(), generatedSlug);
+    return new Tag(uuid(), name.trim(), generatedSlug);
   }
 
   static reconstitute(id: string, name: string, slug: string): Tag {

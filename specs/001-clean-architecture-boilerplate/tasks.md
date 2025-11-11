@@ -447,16 +447,16 @@
 - [x] T121 [US4] Implement connection/disconnection handlers
 - [x] T122 [US4] Implement broadcast notification event handler
 - [x] T123 [US4] Implement room-based messaging (user-specific notifications)
-- [ ] T124 [US4] Add authentication to WebSocket connections (JWT token validation)
+- [x] T124 [US4] Add authentication to WebSocket connections (JWT token validation)
 
 ### Conversation Module (Chat Example)
 
-- [ ] T125 [P] [US4] Create Conversation aggregate in src/modules/conversation/domain/aggregates/conversation.aggregate.ts
-- [ ] T126 [P] [US4] Create Message entity in src/modules/conversation/domain/entities/message.entity.ts
-- [ ] T127 [P] [US4] Create ConversationType enum in src/modules/conversation/domain/value-objects/conversation-type.vo.ts
-- [ ] T128 [P] [US4] Create Conversation TypeORM entities in src/modules/conversation/infrastructure/persistence/
-- [ ] T129 [P] [US4] Create ConversationParticipant junction table entity
-- [ ] T130 [US4] Create migration for conversations, messages, conversation_participants tables
+- [x] T125 [P] [US4] Create Conversation aggregate in src/modules/conversation/domain/aggregates/conversation.aggregate.ts
+- [x] T126 [P] [US4] Create Message entity in src/modules/conversation/domain/entities/message.entity.ts
+- [x] T127 [P] [US4] Create ConversationType enum in src/modules/conversation/domain/value-objects/conversation-type.vo.ts
+- [x] T128 [P] [US4] Create Conversation TypeORM entities in src/modules/conversation/infrastructure/persistence/
+- [x] T129 [P] [US4] Create ConversationParticipant junction table entity
+- [x] T130 [US4] Create migration for conversations, messages, conversation_participants tables
 - [ ] T131 [P] [US4] Create ConversationGateway in src/modules/conversation/interface/websocket/conversation.gateway.ts
 - [ ] T132 [US4] Implement send message handler with broadcast to conversation participants
 - [ ] T133 [US4] Configure NotificationModule and ConversationModule

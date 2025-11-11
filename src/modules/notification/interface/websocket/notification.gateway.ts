@@ -2,19 +2,22 @@ import {
   WebSocketGateway,
   WebSocketServer,
   SubscribeMessage,
-  MessageBody,
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
+import { WsJwtAuthGuard } from '../../../../common/guards/ws-jwt-auth.guard';
+import { WsCurrentUser } from '../../../../common/decorators/ws-current-user.decorator';
+import type { JwtPayload } from '../../../../common/guards/ws-jwt-auth.guard';
 
 /**
  * Notification WebSocket Gateway
  *
  * Handles real-time notification delivery to connected clients.
  * Supports room-based messaging for user-specific notifications.
+ * Requires JWT authentication for all connections.
  *
  * Events:
  * - join_room: Client joins their user-specific notification room
@@ -27,6 +30,7 @@ import { Logger } from '@nestjs/common';
     origin: '*', // Configure for production
   },
 })
+@UseGuards(WsJwtAuthGuard)
 export class NotificationGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
@@ -49,28 +53,25 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 
   /**
    * Client joins their notification room
-   * Room name format: `user:{userId}`
+   * Automatically uses authenticated user's ID from JWT token
    */
   @SubscribeMessage('join_room')
-  handleJoinRoom(@MessageBody() data: { userId: string }, @ConnectedSocket() client: Socket): void {
-    const roomName = `user:${data.userId}`;
+  handleJoinRoom(@WsCurrentUser() user: JwtPayload, @ConnectedSocket() client: Socket): void {
+    const roomName = `user:${user.sub}`;
     void client.join(roomName);
-    this.logger.log(`Client ${client.id} joined room: ${roomName}`);
-    client.emit('room_joined', { room: roomName });
+    this.logger.log(`Client ${client.id} (user: ${user.email}) joined room: ${roomName}`);
+    client.emit('room_joined', { room: roomName, userId: user.sub });
   }
 
   /**
-   * Client leaves a notification room
+   * Client leaves their notification room
    */
   @SubscribeMessage('leave_room')
-  handleLeaveRoom(
-    @MessageBody() data: { userId: string },
-    @ConnectedSocket() client: Socket,
-  ): void {
-    const roomName = `user:${data.userId}`;
+  handleLeaveRoom(@WsCurrentUser() user: JwtPayload, @ConnectedSocket() client: Socket): void {
+    const roomName = `user:${user.sub}`;
     void client.leave(roomName);
-    this.logger.log(`Client ${client.id} left room: ${roomName}`);
-    client.emit('room_left', { room: roomName });
+    this.logger.log(`Client ${client.id} (user: ${user.email}) left room: ${roomName}`);
+    client.emit('room_left', { room: roomName, userId: user.sub });
   }
 
   /**
