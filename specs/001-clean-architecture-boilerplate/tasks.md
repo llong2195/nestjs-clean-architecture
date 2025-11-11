@@ -307,66 +307,66 @@
 
 ### Sample Aggregate: Post
 
-- [ ] T060 [P] [US2] Create Post domain aggregate in src/modules/post/domain/aggregates/post.aggregate.ts:
+- [x] T060 [P] [US2] Create Post domain aggregate in src/modules/post/domain/aggregates/post.aggregate.ts:
   - Extend AggregateRoot base class
   - Properties: id, authorId, title, content, slug, status, publishedAt, viewCount
   - Factory method: Post.create()
   - Business methods: publish(), archive(), incrementViewCount()
   - Dispatch PostPublishedEvent when status changes to published
-- [ ] T061 [P] [US2] Create Comment domain entity in src/modules/post/domain/entities/comment.entity.ts:
+- [x] T061 [P] [US2] Create Comment domain entity in src/modules/post/domain/entities/comment.entity.ts:
   - Properties: id, postId, authorId, content, createdAt
   - Validation: content min 1 character
-- [ ] T062 [P] [US2] Create Tag domain entity in src/modules/post/domain/entities/tag.entity.ts:
+- [x] T062 [P] [US2] Create Tag domain entity in src/modules/post/domain/entities/tag.entity.ts:
   - Properties: id, name, slug
   - Auto-generate slug from name
-- [ ] T063 [P] [US2] Create PostStatus enum in src/modules/post/domain/value-objects/post-status.vo.ts:
+- [x] T063 [P] [US2] Create PostStatus enum in src/modules/post/domain/value-objects/post-status.vo.ts:
   - Values: DRAFT, PUBLISHED, ARCHIVED
-- [ ] T064 [P] [US2] Define IPostRepository interface in src/modules/post/domain/repositories/post.repository.interface.ts:
+- [x] T064 [P] [US2] Define IPostRepository interface in src/modules/post/domain/repositories/post.repository.interface.ts:
   - save(post: Post): Promise<Post>
   - findById(id: string): Promise<Post | null>
   - findBySlug(slug: string): Promise<Post | null>
   - findPublished(pagination): Promise<Post[]>
-- [ ] T065 [P] [US2] Create domain events in src/modules/post/domain/events/:
+- [x] T065 [P] [US2] Create domain events in src/modules/post/domain/events/:
   - PostPublishedEvent with postId, authorId, timestamp
   - PostArchivedEvent with postId, timestamp
   - CommentAddedEvent with postId, commentId, timestamp
 
 ### Application Layer
 
-- [ ] T066 [P] [US2] Create CreatePostDto in src/modules/post/application/dtos/create-post.dto.ts
-- [ ] T067 [P] [US2] Create UpdatePostDto in src/modules/post/application/dtos/update-post.dto.ts
-- [ ] T068 [P] [US2] Create PublishPostDto in src/modules/post/application/dtos/publish-post.dto.ts
-- [ ] T069 [US2] Implement CreatePostUseCase in src/modules/post/application/use-cases/create-post.use-case.ts
-- [ ] T070 [US2] Implement PublishPostUseCase in src/modules/post/application/use-cases/publish-post.use-case.ts
-- [ ] T071 [US2] Implement GetPostUseCase in src/modules/post/application/use-cases/get-post.use-case.ts
-- [ ] T072 [US2] Create PostMapper in src/modules/post/application/mappers/post.mapper.ts
+- [x] T066 [P] [US2] Create CreatePostDto in src/modules/post/application/dtos/create-post.dto.ts
+- [x] T067 [P] [US2] Create UpdatePostDto in src/modules/post/application/dtos/update-post.dto.ts
+- [x] T068 [P] [US2] Create PublishPostDto in src/modules/post/application/dtos/publish-post.dto.ts
+- [x] T069 [US2] Implement CreatePostUseCase in src/modules/post/application/use-cases/create-post.use-case.ts
+- [x] T070 [US2] Implement PublishPostUseCase in src/modules/post/application/use-cases/publish-post.use-case.ts
+- [x] T071 [US2] Implement GetPostUseCase in src/modules/post/application/use-cases/get-post.use-case.ts
+- [x] T072 [US2] Create PostMapper in src/modules/post/application/mappers/post.mapper.ts
 
 ### Infrastructure Layer
 
-- [ ] T073 [P] [US2] Create Post TypeORM entity in src/modules/post/infrastructure/persistence/post.orm-entity.ts
-- [ ] T074 [P] [US2] Create Comment TypeORM entity in src/modules/post/infrastructure/persistence/comment.orm-entity.ts
-- [ ] T075 [P] [US2] Create Tag TypeORM entity in src/modules/post/infrastructure/persistence/tag.orm-entity.ts
-- [ ] T076 [P] [US2] Create PostTag junction table entity in src/modules/post/infrastructure/persistence/post-tag.orm-entity.ts
-- [ ] T077 [US2] Implement PostRepository in src/modules/post/infrastructure/persistence/post.repository.ts
-- [ ] T078 [US2] Create migration for posts, comments, tags, post_tags tables (pnpm migration:generate CreatePostTables)
+- [x] T073 [P] [US2] Create Post TypeORM entity in src/modules/post/infrastructure/persistence/post.orm-entity.ts
+- [x] T074 [P] [US2] Create Comment TypeORM entity in src/modules/post/infrastructure/persistence/comment.orm-entity.ts
+- [x] T075 [P] [US2] Create Tag TypeORM entity in src/modules/post/infrastructure/persistence/tag.orm-entity.ts
+- [x] T076 [P] [US2] Create PostTag junction table entity in src/modules/post/infrastructure/persistence/post-tag.orm-entity.ts
+- [x] T077 [US2] Implement PostRepository in src/modules/post/infrastructure/persistence/post.repository.ts
+- [x] T078 [US2] Create migration for posts, comments, tags, post_tags tables (pnpm migration:generate CreatePostTables)
 - [ ] T079 [US2] Run migrations (pnpm migration:run)
 
 ### Interface Layer
 
-- [ ] T080 [P] [US2] Create PostController in src/modules/post/interface/http/post.controller.ts
+- [x] T080 [P] [US2] Create PostController in src/modules/post/interface/http/post.controller.ts
 - [ ] T081 [P] [US2] Create CommentController in src/modules/post/interface/http/comment.controller.ts
 - [ ] T082 [P] [US2] Create TagController in src/modules/post/interface/http/tag.controller.ts
-- [ ] T083 [P] [US2] Add Swagger decorators to all controllers
-- [ ] T084 [US2] Configure PostModule in src/modules/post/post.module.ts
-- [ ] T085 [US2] Register PostModule in src/app.module.ts
+- [x] T083 [P] [US2] Add Swagger decorators to all controllers
+- [x] T084 [US2] Configure PostModule in src/modules/post/post.module.ts
+- [x] T085 [US2] Register PostModule in src/app.module.ts
 
 ### Transaction Management
 
-- [ ] T086 [US2] Add transaction support to PostRepository:
+- [x] T086 [US2] Add transaction support to PostRepository:
   - Use TypeORM EntityManager for transactions
   - Wrap publish operation in transaction (update post + save to outbox)
   - Ensure rollback on error
-- [ ] T087 [US2] Test transactional operations:
+- [x] T087 [US2] Test transactional operations:
   - Publish a post (should update status + save event to outbox atomically)
   - Verify rollback if event save fails
   - Test concurrent transactions don't conflict

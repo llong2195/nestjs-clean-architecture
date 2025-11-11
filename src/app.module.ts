@@ -6,9 +6,10 @@ import { DatabaseModule } from './shared/database/database.module';
 import { LoggerModule } from './shared/logger/logger.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { UserModule } from './modules/user/user.module';
+import { PostModule } from './modules/post/post.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, LoggerModule, UserModule],
+  imports: [ConfigModule, DatabaseModule, LoggerModule, UserModule, PostModule],
   controllers: [AppController],
   providers: [AppService],
 })
