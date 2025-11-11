@@ -11,6 +11,7 @@ import { UpdatePostUseCase } from './application/use-cases/update-post.use-case'
 import { PublishPostUseCase } from './application/use-cases/publish-post.use-case';
 import { ListPostsUseCase } from './application/use-cases/list-posts.use-case';
 import { PostController } from './interface/http/post.controller';
+import { PostCacheService } from './infrastructure/cache/post-cache.service';
 import type { IPostRepository } from './domain/repositories/post.repository.interface';
 
 @Module({
@@ -19,6 +20,7 @@ import type { IPostRepository } from './domain/repositories/post.repository.inte
   ],
   controllers: [PostController],
   providers: [
+    PostCacheService,
     {
       provide: 'IPostRepository',
       useClass: PostRepository,

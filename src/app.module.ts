@@ -4,12 +4,13 @@ import { AppService } from './app.service';
 import { ConfigModule } from './shared/config/config.module';
 import { DatabaseModule } from './shared/database/database.module';
 import { LoggerModule } from './shared/logger/logger.module';
+import { CacheModule } from './shared/cache/cache.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { UserModule } from './modules/user/user.module';
 import { PostModule } from './modules/post/post.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, LoggerModule, UserModule, PostModule],
+  imports: [ConfigModule, DatabaseModule, LoggerModule, CacheModule, UserModule, PostModule],
   controllers: [AppController],
   providers: [AppService],
 })

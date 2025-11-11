@@ -7,12 +7,14 @@ import { GetUserUseCase } from './application/use-cases/get-user.use-case';
 import { UpdateUserUseCase } from './application/use-cases/update-user.use-case';
 import { ListUsersUseCase } from './application/use-cases/list-users.use-case';
 import { UserController } from './interface/http/user.controller';
+import { UserCacheService } from './infrastructure/cache/user-cache.service';
 import { IUserRepository } from './domain/repositories/user.repository.interface';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserOrmEntity])],
   controllers: [UserController],
   providers: [
+    UserCacheService,
     {
       provide: 'IUserRepository',
       useClass: UserRepository,

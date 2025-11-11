@@ -20,6 +20,7 @@ import { CreatePostDto } from '../../application/dtos/create-post.dto';
 import { UpdatePostDto } from '../../application/dtos/update-post.dto';
 import { PostResponseDto } from '../../application/dtos/post-response.dto';
 import { PostMapper } from '../../application/mappers/post.mapper';
+import { PostCacheService } from '../../infrastructure/cache/post-cache.service';
 import { ApiResponse as ApiResponseType } from '../../../../common/types/response.types';
 
 @ApiTags('posts')
@@ -31,6 +32,7 @@ export class PostController {
     private readonly updatePostUseCase: UpdatePostUseCase,
     private readonly publishPostUseCase: PublishPostUseCase,
     private readonly listPostsUseCase: ListPostsUseCase,
+    private readonly cacheService: PostCacheService,
   ) {}
 
   @Post()
@@ -74,10 +76,29 @@ export class PostController {
     description: 'Post not found',
   })
   async findOne(@Param('id') id: string): Promise<ApiResponseType<PostResponseDto>> {
+    // Try cache first
+    const cachedPost = await this.cacheService.getPost(id);
+    if (cachedPost) {
+      return {
+        status: 'success',
+        data: cachedPost,
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: '',
+        },
+      };
+    }
+
+    // Cache miss - fetch from database
     const post = await this.getPostUseCase.execute(id);
+    const postDto = PostMapper.toDto(post);
+
+    // Cache for future requests
+    await this.cacheService.setPost(id, postDto);
+
     return {
       status: 'success',
-      data: PostMapper.toDto(post),
+      data: postDto,
       meta: {
         timestamp: new Date().toISOString(),
         requestId: '',
@@ -98,10 +119,30 @@ export class PostController {
     description: 'Post not found',
   })
   async findBySlug(@Param('slug') slug: string): Promise<ApiResponseType<PostResponseDto>> {
+    // Try cache first (by slug)
+    const cachedPost = await this.cacheService.getPostBySlug(slug);
+    if (cachedPost) {
+      return {
+        status: 'success',
+        data: cachedPost,
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: '',
+        },
+      };
+    }
+
+    // Cache miss - fetch from database (and increment view count)
     const post = await this.getPostUseCase.findBySlug(slug);
+    const postDto = PostMapper.toDto(post);
+
+    // Cache for future requests (both by slug and ID)
+    await this.cacheService.setPostBySlug(slug, postDto);
+    await this.cacheService.setPost(post.id, postDto);
+
     return {
       status: 'success',
-      data: PostMapper.toDto(post),
+      data: postDto,
       meta: {
         timestamp: new Date().toISOString(),
         requestId: '',
@@ -139,22 +180,46 @@ export class PostController {
     @Query('limit') limit?: number,
     @Query('authorId') authorId?: string,
   ): Promise<ApiResponseType<any>> {
+    // Default values for pagination
+    const currentPage = page || 1;
+    const currentLimit = limit || 10;
+
+    // Try cache first
+    const cachedList = await this.cacheService.getPostList(currentPage, currentLimit, authorId);
+    if (cachedList) {
+      return {
+        status: 'success',
+        data: cachedList,
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: '',
+        },
+      };
+    }
+
+    // Cache miss - fetch from database
     const result = await this.listPostsUseCase.execute({
-      page,
-      limit,
+      page: currentPage,
+      limit: currentLimit,
       authorId,
     });
+
+    const responseData = {
+      posts: PostMapper.toDtoList(result.data),
+      pagination: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+      },
+    };
+
+    // Cache for future requests
+    await this.cacheService.setPostList(currentPage, currentLimit, responseData.posts, authorId);
+
     return {
       status: 'success',
-      data: {
-        posts: PostMapper.toDtoList(result.data),
-        pagination: {
-          total: result.total,
-          page: result.page,
-          limit: result.limit,
-          totalPages: result.totalPages,
-        },
-      },
+      data: responseData,
       meta: {
         timestamp: new Date().toISOString(),
         requestId: '',
@@ -183,9 +248,14 @@ export class PostController {
     @Body() updatePostDto: UpdatePostDto,
   ): Promise<ApiResponseType<PostResponseDto>> {
     const post = await this.updatePostUseCase.execute(id, updatePostDto);
+    const postDto = PostMapper.toDto(post);
+
+    // Invalidate cache after update
+    await this.cacheService.invalidateAll(id, post.slug);
+
     return {
       status: 'success',
-      data: PostMapper.toDto(post),
+      data: postDto,
       meta: {
         timestamp: new Date().toISOString(),
         requestId: '',
@@ -211,9 +281,14 @@ export class PostController {
   })
   async publish(@Param('id') id: string): Promise<ApiResponseType<PostResponseDto>> {
     const post = await this.publishPostUseCase.execute(id);
+    const postDto = PostMapper.toDto(post);
+
+    // Invalidate cache after publishing (status changed)
+    await this.cacheService.invalidateAll(id, post.slug);
+
     return {
       status: 'success',
-      data: PostMapper.toDto(post),
+      data: postDto,
       meta: {
         timestamp: new Date().toISOString(),
         requestId: '',

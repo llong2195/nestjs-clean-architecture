@@ -23,32 +23,152 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Production-ready NestJS Clean Architecture Boilerplate with TypeScript, PostgreSQL, Redis, and comprehensive caching.
 
-## Project setup
+### ✨ Features
+
+- 🏗️ **Clean Architecture** (4-layer: Domain/Application/Infrastructure/Interface)
+- 📦 **Domain-Driven Design** with Aggregates and Value Objects
+- 🔄 **Redis Caching** with read-through and write-through patterns
+- 🗃️ **PostgreSQL + TypeORM** with migrations
+- 🔐 **Session Management** with Redis TTL
+- 📝 **Swagger/OpenAPI** documentation
+- 🧪 **Jest** testing setup
+- 📊 **Winston** structured logging
+- ✅ **Class-validator** DTO validation
+
+## Prerequisites
+
+- Node.js 22+ (LTS)
+- pnpm 10.x+
+- PostgreSQL 16+ OR Docker
+- Redis 7+ OR Docker
+
+## Quick Start
+
+### Option 1: Local PostgreSQL/Redis (Recommended for Development)
+
+If you have PostgreSQL and Redis installed locally, see **[LOCAL_SETUP.md](LOCAL_SETUP.md)** for detailed instructions.
+
+**Quick steps:**
+
+1. Configure PostgreSQL password in `.env`
+2. Create database: `psql -U postgres -c "CREATE DATABASE nestjs_clean_architecture;"`
+3. Run migrations: `pnpm migration:run`
+4. Start server: `pnpm start:dev`
+
+### Option 2: Docker
+
+### 1. Install Dependencies
 
 ```bash
-$ pnpm install
+pnpm install
 ```
 
-## Compile and run the project
+### 2. Start Infrastructure (Docker)
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+docker-compose up -d
 ```
 
-## Run tests
+This starts:
+
+- PostgreSQL (port 5432)
+- Redis (port 6379)
+
+### 3. Configure Environment
+
+Copy `.env.example` to `.env` (already configured for local development):
+
+```bash
+cp .env.example .env
+```
+
+### 4. Run Database Migrations
+
+```bash
+pnpm migration:run
+```
+
+This creates tables:
+
+- `users` - User accounts
+- `posts` - Blog posts with status
+- `comments` - Post comments
+- `tags` - Post tags
+- `post_tags` - Junction table
+- `sessions` - User sessions
+
+### 5. Start Development Server
+
+```bash
+pnpm start:dev
+```
+
+Server runs at: http://localhost:3000
+
+API Documentation (Swagger): http://localhost:3000/api/docs
+
+## Documentation
+
+- **[LOCAL_SETUP.md](LOCAL_SETUP.md)** - Running with local PostgreSQL/Redis
+- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - What's completed and next steps
+- **[QUICKSTART.md](QUICKSTART.md)** - Step-by-step checklist
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Detailed development guide
+- **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - Current features and architecture
+
+## Project Setup (Manual)
+
+If you prefer to run services manually:
+
+### PostgreSQL
+
+```bash
+# Create database
+createdb nestjs_clean_architecture
+
+# Or using psql
+psql -U postgres -c "CREATE DATABASE nestjs_clean_architecture;"
+```
+
+### Redis
+
+```bash
+# Start Redis server
+redis-server
+```
+
+## Available Scripts
+
+```bash
+# Development
+pnpm start:dev          # Start with hot-reload
+
+# Build
+pnpm build              # Compile TypeScript
+pnpm start:prod         # Start production build
+
+# Database
+pnpm migration:generate src/shared/database/migrations/MigrationName
+pnpm migration:run      # Run pending migrations
+pnpm migration:revert   # Rollback last migration
+
+# Testing
+pnpm test               # Unit tests
+pnpm test:e2e           # End-to-end tests
+pnpm test:cov           # Coverage report
+
+# Code Quality
+pnpm lint               # Run ESLint
+pnpm lint:fix           # Auto-fix issues
+pnpm format             # Format with Prettier
+```
+
+## Run Tests
 
 ```bash
 # unit tests
-$ pnpm run test
+pnpm test
 
 # e2e tests
 $ pnpm run test:e2e

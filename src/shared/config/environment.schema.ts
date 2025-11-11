@@ -10,13 +10,16 @@ export const environmentSchema = Joi.object({
   DATABASE_HOST: Joi.string().default('localhost'),
   DATABASE_PORT: Joi.number().default(5432),
   DATABASE_USER: Joi.string().required(),
-  DATABASE_PASSWORD: Joi.string().required(),
+  DATABASE_PASSWORD: Joi.string().optional().allow(''),
   DATABASE_NAME: Joi.string().required(),
 
   // Redis
   REDIS_URL: Joi.string().required(),
   REDIS_HOST: Joi.string().default('localhost'),
   REDIS_PORT: Joi.number().default(6379),
+  REDIS_PASSWORD: Joi.string().optional().allow(''),
+  REDIS_DB: Joi.number().default(0),
+  CACHE_TTL: Joi.number().default(3600), // 1 hour default
 
   // JWT
   JWT_SECRET: Joi.string().required(),

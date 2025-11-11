@@ -19,6 +19,7 @@ import { CreateUserDto } from '../../application/dtos/create-user.dto';
 import { UpdateUserDto } from '../../application/dtos/update-user.dto';
 import { UserResponseDto } from '../../application/dtos/user-response.dto';
 import { UserMapper } from '../../application/mappers/user.mapper';
+import { UserCacheService } from '../../infrastructure/cache/user-cache.service';
 import { ApiResponse as ApiResponseType } from '../../../../common/types/response.types';
 
 @ApiTags('users')
@@ -29,6 +30,7 @@ export class UserController {
     private readonly getUserUseCase: GetUserUseCase,
     private readonly updateUserUseCase: UpdateUserUseCase,
     private readonly listUsersUseCase: ListUsersUseCase,
+    private readonly cacheService: UserCacheService,
   ) {}
 
   @Post()
@@ -72,10 +74,29 @@ export class UserController {
     description: 'User not found',
   })
   async findOne(@Param('id') id: string): Promise<ApiResponseType<UserResponseDto>> {
+    // Try cache first
+    const cachedUser = await this.cacheService.getUser(id);
+    if (cachedUser) {
+      return {
+        status: 'success',
+        data: cachedUser,
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: '',
+        },
+      };
+    }
+
+    // Cache miss - fetch from database
     const user = await this.getUserUseCase.execute(id);
+    const userDto = UserMapper.toDto(user);
+
+    // Cache for future requests
+    await this.cacheService.setUser(id, userDto);
+
     return {
       status: 'success',
-      data: UserMapper.toDto(user),
+      data: userDto,
       meta: {
         timestamp: new Date().toISOString(),
         requestId: '',
@@ -146,6 +167,10 @@ export class UserController {
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<ApiResponseType<UserResponseDto>> {
     const user = await this.updateUserUseCase.execute(id, updateUserDto);
+
+    // Invalidate cache after update
+    await this.cacheService.invalidateAll(id);
+
     return {
       status: 'success',
       data: UserMapper.toDto(user),
@@ -156,6 +181,7 @@ export class UserController {
     };
   }
 
+  @Delete(':id')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft delete user' })

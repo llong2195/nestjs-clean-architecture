@@ -49,12 +49,12 @@
 - [x] T007 [P] Install TypeORM and PostgreSQL driver (pnpm add @nestjs/typeorm typeorm pg)
 - [x] T008 [P] Install Redis dependencies (pnpm add @nestjs/cache-manager cache-manager cache-manager-ioredis ioredis)
 - [x] T009 [P] Install validation dependencies (pnpm add class-validator class-transformer @nestjs/mapped-types)
-- [ ] T010 [P] Install testing dependencies (pnpm add -D jest @nestjs/testing supertest @types/jest @types/supertest @types/node ts-jest)
-- [ ] T011 Configure Jest in jest.config.js with separate configs for:
+- [x] T010 [P] Install testing dependencies (pnpm add -D jest @nestjs/testing supertest @types/jest @types/supertest @types/node ts-jest)
+- [x] T011 Configure Jest in jest.config.js with separate configs for:
   - Unit tests: testMatch for test/unit/\*_/_.spec.ts
   - Integration tests: testMatch for test/integration/\*_/_.spec.ts
   - E2E tests: testMatch for test/e2e/\*_/_.e2e-spec.ts
-- [ ] T012 Create .env.example with documented environment variables:
+- [x] T012 Create .env.example with documented environment variables:
   - NODE_ENV (development, staging, production)
   - PORT (default: 3000)
   - DATABASE_URL (postgresql://user:password@localhost:5432/dbname)
@@ -65,7 +65,7 @@
   - GOOGLE_CLIENT_ID (your-google-client-id)
   - GOOGLE_CLIENT_SECRET (your-google-client-secret)
   - KAFKA_BROKERS (localhost:9092)
-- [ ] T013 Create .gitignore with essential ignores:
+- [x] T013 Create .gitignore with essential ignores:
   - node_modules/
   - dist/
   - .env
@@ -383,35 +383,35 @@
 
 ### Cache Infrastructure
 
-- [ ] T088 [P] [US3] Create cache module in src/shared/cache/cache.module.ts
-- [ ] T089 [P] [US3] Create cache service wrapper in src/shared/cache/cache.service.ts
-- [ ] T090 [P] [US3] Create Cacheable decorator in src/shared/cache/decorators/cacheable.decorator.ts
-- [ ] T091 [P] [US3] Create cache configuration in src/shared/cache/cache.config.ts
-- [ ] T092 [P] [US3] Install Redis adapter (pnpm add cache-manager-ioredis)
-- [ ] T093 [US3] Configure Redis connection in cache module
+- [x] T088 [P] [US3] Create cache module in src/shared/cache/cache.module.ts
+- [x] T089 [P] [US3] Create cache service wrapper in src/shared/cache/cache.service.ts
+- [x] T090 [P] [US3] Create Cacheable decorator in src/shared/cache/decorators/cacheable.decorator.ts
+- [x] T091 [P] [US3] Create cache configuration in src/shared/cache/cache.config.ts
+- [x] T092 [P] [US3] Install Redis adapter (pnpm add cache-manager-ioredis)
+- [x] T093 [US3] Configure Redis connection in cache module
 
 ### User Module Caching
 
-- [ ] T094 [P] [US3] Create UserCacheService in src/modules/user/infrastructure/cache/user-cache.service.ts
-- [ ] T095 [US3] Add caching to GetUserUseCase (cache by user ID)
-- [ ] T096 [US3] Add cache invalidation to UpdateUserUseCase
+- [x] T094 [P] [US3] Create UserCacheService in src/modules/user/infrastructure/cache/user-cache.service.ts
+- [x] T095 [US3] Add caching to GetUserUseCase (cache by user ID)
+- [x] T096 [US3] Add cache invalidation to UpdateUserUseCase
 - [ ] T097 [US3] Add cache invalidation to DeleteUserUseCase
-- [ ] T098 [US3] Test cache hit/miss behavior with logging
+- [x] T098 [US3] Test cache hit/miss behavior with logging
 
 ### Post Module Caching
 
-- [ ] T099 [P] [US3] Create PostCacheService in src/modules/post/infrastructure/cache/post-cache.service.ts
-- [ ] T100 [US3] Add caching to GetPostUseCase (cache by post ID and slug)
-- [ ] T101 [US3] Add caching to ListPostsUseCase (cache paginated results)
-- [ ] T102 [US3] Add cache invalidation to PublishPostUseCase
-- [ ] T103 [US3] Implement cache warming strategy for popular posts
+- [x] T099 [P] [US3] Create PostCacheService in src/modules/post/infrastructure/cache/post-cache.service.ts
+- [x] T100 [US3] Add caching to GetPostUseCase (cache by post ID and slug)
+- [x] T101 [US3] Add caching to ListPostsUseCase (cache paginated results)
+- [x] T102 [US3] Add cache invalidation to PublishPostUseCase
+- [x] T103 [US3] Implement cache warming strategy for popular posts
 
 ### Session Storage
 
-- [ ] T104 [P] [US3] Create Session TypeORM entity in src/modules/auth/infrastructure/persistence/session.orm-entity.ts
-- [ ] T105 [US3] Create migration for sessions table (pnpm migration:generate CreateSessionsTable)
-- [ ] T106 [US3] Implement session storage in Redis for fast lookups
-- [ ] T107 [US3] Add session expiration with TTL
+- [x] T104 [P] [US3] Create Session TypeORM entity in src/modules/auth/infrastructure/persistence/session.orm-entity.ts
+- [x] T105 [US3] Create migration for sessions table (pnpm migration:generate CreateSessionsTable)
+- [x] T106 [US3] Implement session storage in Redis for fast lookups
+- [x] T107 [US3] Add session expiration with TTL
 
 **Checkpoint**: User Story 3 complete - Redis caching improving performance measurably
 
