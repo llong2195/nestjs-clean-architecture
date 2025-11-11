@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import type { IPostRepository } from '../../domain/repositories/post.repository.interface';
 import { CreatePostDto } from '../dtos/create-post.dto';
 import { Post } from '../../domain/aggregates/post.aggregate';
 
 @Injectable()
 export class CreatePostUseCase {
-  constructor(private readonly postRepository: IPostRepository) {}
+  constructor(
+    @Inject('IPostRepository')
+    private readonly postRepository: IPostRepository,
+  ) {}
 
   async execute(dto: CreatePostDto): Promise<Post> {
     // Check if slug already exists

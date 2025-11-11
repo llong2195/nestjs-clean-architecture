@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import type { IPostRepository } from '../../domain/repositories/post.repository.interface';
 import { Post } from '../../domain/aggregates/post.aggregate';
 
@@ -18,7 +18,10 @@ export interface PaginatedPostsResult {
 
 @Injectable()
 export class ListPostsUseCase {
-  constructor(private readonly postRepository: IPostRepository) {}
+  constructor(
+    @Inject('IPostRepository')
+    private readonly postRepository: IPostRepository,
+  ) {}
 
   async execute(options?: ListPostsOptions): Promise<PaginatedPostsResult> {
     const page = options?.page || 1;

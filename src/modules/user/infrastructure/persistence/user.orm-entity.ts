@@ -12,13 +12,13 @@ export class UserOrmEntity {
   @PrimaryColumn({ type: 'uuid' })
   id!: string;
 
-  @Column({ name: 'email', unique: true, length: 255 })
+  @Column({ name: 'email', type: 'varchar', unique: true, length: 255 })
   email!: string;
 
-  @Column({ name: 'password', nullable: true, length: 255 })
+  @Column({ name: 'password', type: 'varchar', nullable: true, length: 255 })
   password!: string | null;
 
-  @Column({ name: 'user_name', length: 100 })
+  @Column({ name: 'user_name', type: 'varchar', length: 100 })
   userName!: string;
 
   @Column({ name: 'role', type: 'varchar', length: 50, default: 'USER' })

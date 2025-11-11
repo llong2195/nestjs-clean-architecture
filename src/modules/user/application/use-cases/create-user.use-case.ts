@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import type { IUserRepository } from '../../domain/repositories/user.repository.interface';
 import { User } from '../../domain/entities/user.entity';
 import { CreateUserDto } from '../dtos/create-user.dto';
@@ -6,7 +6,10 @@ import { UserRole } from '../../domain/value-objects/user-role.vo';
 
 @Injectable()
 export class CreateUserUseCase {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    @Inject('IUserRepository')
+    private readonly userRepository: IUserRepository,
+  ) {}
 
   async execute(dto: CreateUserDto): Promise<User> {
     // Check if user with email already exists

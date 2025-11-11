@@ -1,11 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import type { IPostRepository } from '../../domain/repositories/post.repository.interface';
 import { UpdatePostDto } from '../dtos/update-post.dto';
 import { Post } from '../../domain/aggregates/post.aggregate';
 
 @Injectable()
 export class UpdatePostUseCase {
-  constructor(private readonly postRepository: IPostRepository) {}
+  constructor(
+    @Inject('IPostRepository')
+    private readonly postRepository: IPostRepository,
+  ) {}
 
   async execute(id: string, dto: UpdatePostDto): Promise<Post> {
     const post = await this.postRepository.findById(id);

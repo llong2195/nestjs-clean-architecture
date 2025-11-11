@@ -12,7 +12,6 @@ import { PublishPostUseCase } from './application/use-cases/publish-post.use-cas
 import { ListPostsUseCase } from './application/use-cases/list-posts.use-case';
 import { PostController } from './interface/http/post.controller';
 import { PostCacheService } from './infrastructure/cache/post-cache.service';
-import type { IPostRepository } from './domain/repositories/post.repository.interface';
 
 @Module({
   imports: [
@@ -21,45 +20,17 @@ import type { IPostRepository } from './domain/repositories/post.repository.inte
   controllers: [PostController],
   providers: [
     PostCacheService,
+    // Repository implementation
     {
       provide: 'IPostRepository',
       useClass: PostRepository,
     },
-    {
-      provide: CreatePostUseCase,
-      useFactory: (postRepository: IPostRepository) => {
-        return new CreatePostUseCase(postRepository);
-      },
-      inject: ['IPostRepository'],
-    },
-    {
-      provide: GetPostUseCase,
-      useFactory: (postRepository: IPostRepository) => {
-        return new GetPostUseCase(postRepository);
-      },
-      inject: ['IPostRepository'],
-    },
-    {
-      provide: UpdatePostUseCase,
-      useFactory: (postRepository: IPostRepository) => {
-        return new UpdatePostUseCase(postRepository);
-      },
-      inject: ['IPostRepository'],
-    },
-    {
-      provide: PublishPostUseCase,
-      useFactory: (postRepository: IPostRepository) => {
-        return new PublishPostUseCase(postRepository);
-      },
-      inject: ['IPostRepository'],
-    },
-    {
-      provide: ListPostsUseCase,
-      useFactory: (postRepository: IPostRepository) => {
-        return new ListPostsUseCase(postRepository);
-      },
-      inject: ['IPostRepository'],
-    },
+    // Use cases
+    CreatePostUseCase,
+    GetPostUseCase,
+    UpdatePostUseCase,
+    PublishPostUseCase,
+    ListPostsUseCase,
   ],
   exports: [
     'IPostRepository',

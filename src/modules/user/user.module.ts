@@ -8,45 +8,22 @@ import { UpdateUserUseCase } from './application/use-cases/update-user.use-case'
 import { ListUsersUseCase } from './application/use-cases/list-users.use-case';
 import { UserController } from './interface/http/user.controller';
 import { UserCacheService } from './infrastructure/cache/user-cache.service';
-import { IUserRepository } from './domain/repositories/user.repository.interface';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserOrmEntity])],
   controllers: [UserController],
   providers: [
     UserCacheService,
+    // Repository implementation
     {
       provide: 'IUserRepository',
       useClass: UserRepository,
     },
-    {
-      provide: CreateUserUseCase,
-      useFactory: (userRepository: IUserRepository) => {
-        return new CreateUserUseCase(userRepository);
-      },
-      inject: ['IUserRepository'],
-    },
-    {
-      provide: GetUserUseCase,
-      useFactory: (userRepository: IUserRepository) => {
-        return new GetUserUseCase(userRepository);
-      },
-      inject: ['IUserRepository'],
-    },
-    {
-      provide: UpdateUserUseCase,
-      useFactory: (userRepository: IUserRepository) => {
-        return new UpdateUserUseCase(userRepository);
-      },
-      inject: ['IUserRepository'],
-    },
-    {
-      provide: ListUsersUseCase,
-      useFactory: (userRepository: IUserRepository) => {
-        return new ListUsersUseCase(userRepository);
-      },
-      inject: ['IUserRepository'],
-    },
+    // Use cases
+    CreateUserUseCase,
+    GetUserUseCase,
+    UpdateUserUseCase,
+    ListUsersUseCase,
   ],
   exports: [
     'IUserRepository',

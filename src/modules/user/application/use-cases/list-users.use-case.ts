@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import type { IUserRepository } from '../../domain/repositories/user.repository.interface';
 import { User } from '../../domain/entities/user.entity';
 
@@ -17,7 +17,10 @@ export interface PaginatedResult<T> {
 
 @Injectable()
 export class ListUsersUseCase {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    @Inject('IUserRepository')
+    private readonly userRepository: IUserRepository,
+  ) {}
 
   async execute(options: ListUsersOptions = {}): Promise<PaginatedResult<User>> {
     const page = options.page || 1;
