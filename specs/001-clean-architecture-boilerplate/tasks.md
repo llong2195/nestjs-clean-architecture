@@ -425,28 +425,28 @@
 
 ### WebSocket Infrastructure
 
-- [ ] T108 [P] [US4] Install Socket.IO dependencies (pnpm add @nestjs/websockets @nestjs/platform-socket.io socket.io)
-- [ ] T109 [P] [US4] Install Redis adapter for Socket.IO (pnpm add @socket.io/redis-adapter)
-- [ ] T110 [P] [US4] Create WebSocket module in src/shared/websocket/websocket.module.ts
-- [ ] T111 [P] [US4] Configure Socket.IO with Redis adapter in src/shared/websocket/websocket.adapter.ts
-- [ ] T112 [US4] Register WebSocket adapter in src/main.ts
+- [x] T108 [P] [US4] Install Socket.IO dependencies (pnpm add @nestjs/websockets @nestjs/platform-socket.io socket.io)
+- [x] T109 [P] [US4] Install Redis adapter for Socket.IO (pnpm add @socket.io/redis-adapter)
+- [x] T110 [P] [US4] Create WebSocket module in src/shared/websocket/websocket.module.ts
+- [x] T111 [P] [US4] Configure Socket.IO with Redis adapter in src/shared/websocket/websocket.adapter.ts
+- [x] T112 [US4] Register WebSocket adapter in src/main.ts
 
 ### Notification Module (WebSocket)
 
-- [ ] T113 [P] [US4] Create Notification domain entity in src/modules/notification/domain/entities/notification.entity.ts
-- [ ] T114 [P] [US4] Create NotificationType enum in src/modules/notification/domain/value-objects/notification-type.vo.ts
-- [ ] T115 [P] [US4] Define INotificationRepository in src/modules/notification/domain/repositories/notification.repository.interface.ts
-- [ ] T116 [US4] Implement SendNotificationUseCase in src/modules/notification/application/use-cases/send-notification.use-case.ts
-- [ ] T117 [P] [US4] Create Notification TypeORM entity in src/modules/notification/infrastructure/persistence/notification.orm-entity.ts
-- [ ] T118 [US4] Implement NotificationRepository in src/modules/notification/infrastructure/persistence/notification.repository.ts
-- [ ] T119 [US4] Create migration for notifications table (pnpm migration:generate CreateNotificationsTable)
+- [x] T113 [P] [US4] Create Notification domain entity in src/modules/notification/domain/entities/notification.entity.ts
+- [x] T114 [P] [US4] Create NotificationType enum in src/modules/notification/domain/value-objects/notification-type.vo.ts
+- [x] T115 [P] [US4] Define INotificationRepository in src/modules/notification/domain/repositories/notification.repository.interface.ts
+- [x] T116 [US4] Implement SendNotificationUseCase in src/modules/notification/application/use-cases/send-notification.use-case.ts
+- [x] T117 [P] [US4] Create Notification TypeORM entity in src/modules/notification/infrastructure/persistence/notification.orm-entity.ts
+- [x] T118 [US4] Implement NotificationRepository in src/modules/notification/infrastructure/persistence/notification.repository.ts
+- [x] T119 [US4] Create migration for notifications table (pnpm migration:generate CreateNotificationsTable)
 
 ### WebSocket Gateway
 
-- [ ] T120 [P] [US4] Create NotificationGateway in src/modules/notification/interface/websocket/notification.gateway.ts
-- [ ] T121 [US4] Implement connection/disconnection handlers
-- [ ] T122 [US4] Implement broadcast notification event handler
-- [ ] T123 [US4] Implement room-based messaging (user-specific notifications)
+- [x] T120 [P] [US4] Create NotificationGateway in src/modules/notification/interface/websocket/notification.gateway.ts
+- [x] T121 [US4] Implement connection/disconnection handlers
+- [x] T122 [US4] Implement broadcast notification event handler
+- [x] T123 [US4] Implement room-based messaging (user-specific notifications)
 - [ ] T124 [US4] Add authentication to WebSocket connections (JWT token validation)
 
 ### Conversation Module (Chat Example)

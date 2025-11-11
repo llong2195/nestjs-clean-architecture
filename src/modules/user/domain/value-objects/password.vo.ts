@@ -24,8 +24,8 @@ export class Password {
     }
 
     const saltRounds = 10;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const hashedPassword = (await bcrypt.hash(plainPassword, saltRounds)) as string;
+
+    const hashedPassword = await bcrypt.hash(plainPassword, saltRounds);
 
     return new Password(hashedPassword);
   }
@@ -38,7 +38,6 @@ export class Password {
   }
 
   async comparePassword(plainPassword: string): Promise<boolean> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     return await bcrypt.compare(plainPassword, this._hashedValue);
   }
 

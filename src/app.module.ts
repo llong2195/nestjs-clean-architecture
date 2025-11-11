@@ -8,9 +8,18 @@ import { CacheModule } from './shared/cache/cache.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { UserModule } from './modules/user/user.module';
 import { PostModule } from './modules/post/post.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, LoggerModule, CacheModule, UserModule, PostModule],
+  imports: [
+    ConfigModule,
+    DatabaseModule,
+    LoggerModule,
+    CacheModule,
+    UserModule,
+    PostModule,
+    NotificationModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
