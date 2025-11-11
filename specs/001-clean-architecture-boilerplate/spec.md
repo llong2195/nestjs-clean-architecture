@@ -10,12 +10,10 @@
 ## Table of Contents
 
 1. [User Scenarios & Testing](#user-scenarios--testing-mandatory)
-
    - User Stories (P1, P2, P3)
    - Edge Cases
 
 2. [Requirements](#requirements-mandatory)
-
    - [Functional Requirements](#functional-requirements) (47 FRs organized by category)
    - [Key Entities](#key-entities) (Database schema with snake_case, junction tables)
    - [Assumptions](#assumptions) (Development guidelines and constraints)
@@ -23,7 +21,6 @@
    - [Git Commit Convention](#git-commit-convention) (Conventional Commits with commitlint)
 
 3. [Success Criteria](#success-criteria-mandatory)
-
    - Measurable Outcomes (27 success criteria)
    - Non-Functional Requirements
    - Out of Scope
@@ -281,13 +278,11 @@ userName: string;
 #### Core Entities
 
 - **User** (Sample Entity): Demonstrates authentication and authorization patterns
-
   - Table: `users`
   - Columns: `id` (uuid), `email` (varchar, unique), `password` (varchar, hashed), `user_name` (varchar), `role` (varchar), `provider` (varchar: local|google), `created_at` (timestamp), `updated_at` (timestamp), `deleted_at` (timestamp, nullable)
   - Indexes: `idx_users_email`, `idx_users_provider`, `idx_users_deleted_at`
 
 - **Session** (Sample Entity): Demonstrates authentication session management
-
   - Table: `sessions`
   - Columns: `id` (uuid), `user_id` (uuid, FK), `access_token` (text, hashed), `refresh_token` (text, hashed), `provider_type` (varchar), `expires_at` (timestamp), `created_at` (timestamp)
   - Indexes: `idx_sessions_user_id`, `idx_sessions_expires_at`
@@ -295,27 +290,23 @@ userName: string;
   - Note: Tokens MUST NOT be stored in plaintext
 
 - **Post** (Sample Aggregate Root): Demonstrates DDD aggregate pattern
-
   - Table: `posts`
   - Columns: `id` (uuid), `author_id` (uuid, FK), `title` (varchar), `content` (text), `slug` (varchar, unique), `status` (varchar: draft|published|archived), `published_at` (timestamp, nullable), `view_count` (integer), `created_at` (timestamp), `updated_at` (timestamp)
   - Indexes: `idx_posts_author_id`, `idx_posts_slug`, `idx_posts_status_published_at`
   - Foreign Keys: `author_id` → `users.id`
 
 - **Comment** (Child Entity of Post Aggregate): Blog post comments
-
   - Table: `comments`
   - Columns: `id` (uuid), `post_id` (uuid, FK), `author_id` (uuid, FK), `content` (text), `created_at` (timestamp)
   - Indexes: `idx_comments_post_id`, `idx_comments_author_id`
   - Foreign Keys: `post_id` → `posts.id`, `author_id` → `users.id`
 
 - **Tag** (Child Entity of Post Aggregate): Post tagging system
-
   - Table: `tags`
   - Columns: `id` (uuid), `name` (varchar, unique), `slug` (varchar, unique), `created_at` (timestamp)
   - Indexes: `idx_tags_name`, `idx_tags_slug`
 
 - **PostTag** (Junction Table): EXPLICIT many-to-many relationship between Posts and Tags
-
   - Table: `post_tags`
   - Columns: `id` (uuid), `post_id` (uuid, FK), `tag_id` (uuid, FK), `created_at` (timestamp)
   - Indexes: `idx_post_tags_post_id`, `idx_post_tags_tag_id`, `unique_post_tag` (composite unique on post_id, tag_id)
@@ -323,13 +314,11 @@ userName: string;
   - Note: This replaces @ManyToMany decorator for better control
 
 - **Conversation** (Sample Aggregate Root): Real-time chat aggregate
-
   - Table: `conversations`
   - Columns: `id` (uuid), `title` (varchar, nullable - only for group chats), `type` (varchar: direct|group), `created_at` (timestamp), `updated_at` (timestamp)
   - Indexes: `idx_conversations_type`
 
 - **Message** (Child Entity of Conversation Aggregate): Chat messages
-
   - Table: `messages`
   - Columns: `id` (uuid), `conversation_id` (uuid, FK), `sender_id` (uuid, FK), `content` (text), `type` (varchar: text|image|file), `sent_at` (timestamp)
   - Indexes: `idx_messages_conversation_id`, `idx_messages_sender_id`, `idx_messages_sent_at`
@@ -344,21 +333,18 @@ userName: string;
 #### System Entities
 
 - **Notification** (System Entity): Notification system
-
   - Table: `notifications`
   - Columns: `id` (uuid), `user_id` (uuid, FK), `type` (varchar: email|push|websocket), `title` (varchar), `message` (text), `status` (varchar: pending|sent|failed), `sent_at` (timestamp, nullable), `created_at` (timestamp)
   - Indexes: `idx_notifications_user_id`, `idx_notifications_status`
   - Foreign Keys: `user_id` → `users.id`
 
 - **FileMetadata** (System Entity): File storage metadata
-
   - Table: `file_metadata`
   - Columns: `id` (uuid), `uploader_id` (uuid, FK), `file_name` (varchar), `mime_type` (varchar), `size` (bigint - bytes), `storage_path` (varchar), `checksum` (varchar - SHA-256 hash), `created_at` (timestamp)
   - Indexes: `idx_file_uploader_id`, `idx_file_checksum`
   - Foreign Keys: `uploader_id` → `users.id`
 
 - **DomainEventOutbox** (System Entity): Transactional outbox pattern
-
   - Table: `domain_event_outbox`
   - Columns: `id` (uuid), `aggregate_id` (uuid), `aggregate_type` (varchar), `event_type` (varchar), `event_data` (jsonb), `occurred_at` (timestamp), `published_at` (timestamp, nullable), `retry_count` (integer), `last_error` (text, nullable)
   - Indexes: `idx_outbox_unpublished` (partial index WHERE published_at IS NULL), `idx_outbox_aggregate` (on aggregate_id, aggregate_type)
@@ -1055,21 +1041,18 @@ nestjs-clean-architecture/
 **Key Structure Principles**:
 
 1. **Clean Architecture Layers**: Each module (user, auth, chat, blog) strictly follows the 4-layer pattern:
-
    - **Domain**: Pure business logic, entities, value objects, **aggregates**, **domain events** (framework-agnostic)
    - **Application**: Use cases orchestrating domain logic, DTOs for data transfer, **domain event handlers**
    - **Infrastructure**: External dependencies (TypeORM, Redis, Kafka, file storage)
    - **Interface**: Entry points (HTTP controllers, WebSocket gateways, GraphQL resolvers)
 
 2. **Real-World Examples**:
-
    - **User**: Traditional CRUD with email/password value objects, simple entity (no aggregate needed for basic operations); includes notification service port for email/SMS; domain events for user lifecycle (created, updated, deleted)
    - **Auth**: JWT tokens, sessions, refresh tokens with cache; **Google OAuth integration** for social login; **domain events for login/logout/token-refresh tracking**; **event handlers for audit logging**; implements custom JWT validation without Passport library
    - **Chat**: **Aggregate example** - `ConversationAggregate` manages conversation + messages + participants as a consistency boundary; real-time messaging with WebSocket gateway + Kafka events (producer/consumer); **event handlers for push notifications**
    - **Blog**: **Aggregate example** - `PostAggregate` manages post + comments + tags; **domain events for publishing and view counting**; **event handlers for search indexing and analytics**; includes search (Elasticsearch), file storage (S3/local), job queue (BullMQ), Kafka consumer for async processing
 
 3. **DDD Patterns** (when needed):
-
    - **Aggregates**: Use `aggregates/` folder for complex entities that need transactional consistency (Chat, Blog examples)
    - **Domain Events**: Use `events/` folder in domain layer to capture important business events
    - **Event Handlers**: Use `event-handlers/` in application layer to react to domain events
@@ -1080,7 +1063,6 @@ nestjs-clean-architecture/
      - Use domain events for cross-aggregate communication
 
 4. **Cross-Cutting Concerns**:
-
    - Shared modules (database, cache, logger, messaging, websocket, **i18n**, **storage**, **notification**) are framework-aware but isolated
    - Common utilities (guards, filters, interceptors) handle cross-cutting concerns
    - **Migrations**: All database migrations are centralized in `database/migrations/` (NOT in module folders) to maintain a single source of truth and proper execution order.
@@ -1091,13 +1073,11 @@ nestjs-clean-architecture/
    - **Transactional Outbox**: Domain events saved atomically with aggregate state; background worker publishes to message bus
 
 5. **Testing Organization**:
-
    - Unit tests: Domain entities, value objects, use cases (mocked dependencies)
    - Integration tests: Repositories, adapters (real database/Redis via containers)
    - E2E tests: Complete flows with fixtures per feature
 
 6. **Technology Integration**:
-
    - **WebSocket**: Chat module demonstrates Socket.IO gateway with Redis adapter for horizontal scaling
    - **Kafka**: Chat and Blog modules show event producers AND consumers for async workflows and event-driven architecture
    - **BullMQ**: Blog module has view counter processor for background jobs; supports delayed jobs, retries, and priority queues
@@ -1270,19 +1250,7 @@ The project uses **Husky** + **commitlint** to enforce commit message format:
     "type-enum": [
       2,
       "always",
-      [
-        "feat",
-        "fix",
-        "docs",
-        "style",
-        "refactor",
-        "perf",
-        "test",
-        "build",
-        "ci",
-        "chore",
-        "revert"
-      ]
+      ["feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert"]
     ],
     "scope-enum": [
       2,
@@ -1463,97 +1431,94 @@ The boilerplate implements the **Transactional Outbox Pattern** to guarantee ato
 
 ```typescript
 // database/migrations/1731387600000-create-domain-events-outbox.ts
-import { MigrationInterface, QueryRunner, Table, Index } from "typeorm";
+import { MigrationInterface, QueryRunner, Table, Index } from 'typeorm';
 
-export class CreateDomainEventsOutbox1731387600000
-  implements MigrationInterface
-{
+export class CreateDomainEventsOutbox1731387600000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: "domain_events_outbox",
+        name: 'domain_events_outbox',
         columns: [
           {
-            name: "id",
-            type: "uuid",
+            name: 'id',
+            type: 'uuid',
             isPrimary: true,
-            generationStrategy: "uuid",
-            default: "uuid_generate_v4()",
+            generationStrategy: 'uuid',
+            default: 'uuid_generate_v7()',
           },
           {
-            name: "aggregate_type",
-            type: "varchar",
-            length: "255",
-            comment: "Type of aggregate (e.g., Post, Conversation)",
+            name: 'aggregate_type',
+            type: 'varchar',
+            length: '255',
+            comment: 'Type of aggregate (e.g., Post, Conversation)',
           },
           {
-            name: "aggregate_id",
-            type: "uuid",
-            comment: "ID of the aggregate that emitted the event",
+            name: 'aggregate_id',
+            type: 'uuid',
+            comment: 'ID of the aggregate that emitted the event',
           },
           {
-            name: "event_type",
-            type: "varchar",
-            length: "255",
-            comment: "Type of domain event (e.g., PostPublishedEvent)",
+            name: 'event_type',
+            type: 'varchar',
+            length: '255',
+            comment: 'Type of domain event (e.g., PostPublishedEvent)',
           },
           {
-            name: "event_data",
-            type: "jsonb",
-            comment: "Serialized event payload",
+            name: 'event_data',
+            type: 'jsonb',
+            comment: 'Serialized event payload',
           },
           {
-            name: "occurred_at",
-            type: "timestamp",
-            default: "CURRENT_TIMESTAMP",
-            comment: "When the event was emitted by aggregate",
+            name: 'occurred_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+            comment: 'When the event was emitted by aggregate',
           },
           {
-            name: "published_at",
-            type: "timestamp",
+            name: 'published_at',
+            type: 'timestamp',
             isNullable: true,
-            comment:
-              "When the event was published to message bus (NULL = pending)",
+            comment: 'When the event was published to message bus (NULL = pending)',
           },
           {
-            name: "retry_count",
-            type: "int",
+            name: 'retry_count',
+            type: 'int',
             default: 0,
-            comment: "Number of publish attempts",
+            comment: 'Number of publish attempts',
           },
           {
-            name: "error_message",
-            type: "text",
+            name: 'error_message',
+            type: 'text',
             isNullable: true,
-            comment: "Last error message if publish failed",
+            comment: 'Last error message if publish failed',
           },
         ],
       }),
-      true
+      true,
     );
 
     // Index for efficient polling of unpublished events
     await queryRunner.createIndex(
-      "domain_events_outbox",
+      'domain_events_outbox',
       new Index({
-        name: "idx_outbox_unpublished",
-        columnNames: ["published_at", "occurred_at"],
-        where: "published_at IS NULL",
-      })
+        name: 'idx_outbox_unpublished',
+        columnNames: ['published_at', 'occurred_at'],
+        where: 'published_at IS NULL',
+      }),
     );
 
     // Index for aggregate event history queries
     await queryRunner.createIndex(
-      "domain_events_outbox",
+      'domain_events_outbox',
       new Index({
-        name: "idx_outbox_aggregate",
-        columnNames: ["aggregate_type", "aggregate_id", "occurred_at"],
-      })
+        name: 'idx_outbox_aggregate',
+        columnNames: ['aggregate_type', 'aggregate_id', 'occurred_at'],
+      }),
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable("domain_events_outbox");
+    await queryRunner.dropTable('domain_events_outbox');
   }
 }
 ```
@@ -1564,10 +1529,10 @@ export class CreateDomainEventsOutbox1731387600000
 
 ```typescript
 // src/modules/blog/domain/aggregates/post.aggregate.ts
-import { AggregateRoot } from "@/common/types/aggregate-root.interface";
-import { DomainEvent } from "@/common/types/domain-event.interface";
-import { PostPublishedEvent } from "../events/post-published.event";
-import { PostStatus } from "../value-objects/post-status.vo";
+import { AggregateRoot } from '@/common/types/aggregate-root.interface';
+import { DomainEvent } from '@/common/types/domain-event.interface';
+import { PostPublishedEvent } from '../events/post-published.event';
+import { PostStatus } from '../value-objects/post-status.vo';
 
 export class PostAggregate implements AggregateRoot {
   private domainEvents: DomainEvent[] = [];
@@ -1577,17 +1542,17 @@ export class PostAggregate implements AggregateRoot {
     private title: string,
     private content: string,
     private status: PostStatus,
-    private publishedAt?: Date
+    private publishedAt?: Date,
   ) {}
 
   publish(): void {
     // Business rule validation
-    if (this.status.value === "published") {
-      throw new Error("Post is already published");
+    if (this.status.value === 'published') {
+      throw new Error('Post is already published');
     }
 
     // State change
-    this.status = new PostStatus("published");
+    this.status = new PostStatus('published');
     this.publishedAt = new Date();
 
     // Emit domain event
@@ -1596,7 +1561,7 @@ export class PostAggregate implements AggregateRoot {
         postId: this.id,
         title: this.title,
         publishedAt: this.publishedAt,
-      })
+      }),
     );
   }
 
@@ -1618,18 +1583,18 @@ export class PostAggregate implements AggregateRoot {
 
 ```typescript
 // src/modules/blog/application/use-cases/publish-post.use-case.ts
-import { Injectable } from "@nestjs/common";
-import { InjectDataSource } from "@nestjs/typeorm";
-import { DataSource } from "typeorm";
-import { PostRepository } from "../../domain/repositories/post.repository.interface";
-import { DomainEventOutboxService } from "@/shared/database/domain-event-outbox.service";
+import { Injectable } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { PostRepository } from '../../domain/repositories/post.repository.interface';
+import { DomainEventOutboxService } from '@/shared/database/domain-event-outbox.service';
 
 @Injectable()
 export class PublishPostUseCase {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly outboxService: DomainEventOutboxService,
-    @InjectDataSource() private readonly dataSource: DataSource
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   async execute(postId: string): Promise<void> {
@@ -1642,7 +1607,7 @@ export class PublishPostUseCase {
       // 1. Load aggregate
       const post = await this.postRepository.findById(postId, queryRunner);
       if (!post) {
-        throw new Error("Post not found");
+        throw new Error('Post not found');
       }
 
       // 2. Execute business logic (aggregate emits events internally)
@@ -1654,10 +1619,10 @@ export class PublishPostUseCase {
       // 4. Save domain events to outbox table (same transaction)
       const events = post.getDomainEvents();
       await this.outboxService.saveEvents(
-        "Post", // aggregate type
+        'Post', // aggregate type
         postId, // aggregate id
         events, // domain events
-        queryRunner // same transaction
+        queryRunner, // same transaction
       );
 
       // 5. Clear events from aggregate (prevent re-publishing)
@@ -1682,17 +1647,17 @@ export class PublishPostUseCase {
 
 ```typescript
 // src/shared/database/domain-event-outbox.service.ts
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, QueryRunner } from "typeorm";
-import { DomainEventOutboxEntity } from "./entities/domain-event-outbox.entity";
-import { DomainEvent } from "@/common/types/domain-event.interface";
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, QueryRunner } from 'typeorm';
+import { DomainEventOutboxEntity } from './entities/domain-event-outbox.entity';
+import { DomainEvent } from '@/common/types/domain-event.interface';
 
 @Injectable()
 export class DomainEventOutboxService {
   constructor(
     @InjectRepository(DomainEventOutboxEntity)
-    private readonly outboxRepository: Repository<DomainEventOutboxEntity>
+    private readonly outboxRepository: Repository<DomainEventOutboxEntity>,
   ) {}
 
   /**
@@ -1702,7 +1667,7 @@ export class DomainEventOutboxService {
     aggregateType: string,
     aggregateId: string,
     events: DomainEvent[],
-    queryRunner: QueryRunner
+    queryRunner: QueryRunner,
   ): Promise<void> {
     const outboxEntries = events.map((event) => {
       return queryRunner.manager.create(DomainEventOutboxEntity, {
@@ -1725,7 +1690,7 @@ export class DomainEventOutboxService {
   async getUnpublishedEvents(limit = 100): Promise<DomainEventOutboxEntity[]> {
     return this.outboxRepository.find({
       where: { publishedAt: null },
-      order: { occurredAt: "ASC" },
+      order: { occurredAt: 'ASC' },
       take: limit,
     });
   }
@@ -1747,10 +1712,10 @@ export class DomainEventOutboxService {
       .createQueryBuilder()
       .update()
       .set({
-        retryCount: () => "retry_count + 1",
+        retryCount: () => 'retry_count + 1',
         errorMessage,
       })
-      .where("id = :eventId", { eventId })
+      .where('id = :eventId', { eventId })
       .execute();
   }
 }
@@ -1760,10 +1725,10 @@ export class DomainEventOutboxService {
 
 ```typescript
 // src/shared/messaging/outbox-publisher.worker.ts
-import { Injectable, Logger } from "@nestjs/common";
-import { Cron, CronExpression } from "@nestjs/schedule";
-import { DomainEventOutboxService } from "@/shared/database/domain-event-outbox.service";
-import { KafkaService } from "@/shared/messaging/kafka/kafka.service";
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { DomainEventOutboxService } from '@/shared/database/domain-event-outbox.service';
+import { KafkaService } from '@/shared/messaging/kafka/kafka.service';
 
 @Injectable()
 export class OutboxPublisherWorker {
@@ -1771,7 +1736,7 @@ export class OutboxPublisherWorker {
 
   constructor(
     private readonly outboxService: DomainEventOutboxService,
-    private readonly kafkaService: KafkaService
+    private readonly kafkaService: KafkaService,
   ) {}
 
   /**
@@ -1794,7 +1759,7 @@ export class OutboxPublisherWorker {
           await this.kafkaService.publish(
             event.eventType, // topic
             event.aggregateId, // key (for partitioning)
-            event.eventData // message
+            event.eventData, // message
           );
 
           // Mark as published
@@ -1805,9 +1770,7 @@ export class OutboxPublisherWorker {
           // Mark as failed (will retry in next poll)
           await this.outboxService.markAsFailed(event.id, error.message);
 
-          this.logger.error(
-            `Failed to publish event ${event.id}: ${error.message}`
-          );
+          this.logger.error(`Failed to publish event ${event.id}: ${error.message}`);
 
           // Continue processing other events (don't fail entire batch)
         }
@@ -1854,27 +1817,27 @@ async publishPost(postId: string): Promise<void> {
 
 ```typescript
 // test/integration/blog/publish-post.use-case.spec.ts
-describe("PublishPostUseCase - Transaction Safety", () => {
-  it("should rollback both post and events if transaction fails", async () => {
+describe('PublishPostUseCase - Transaction Safety', () => {
+  it('should rollback both post and events if transaction fails', async () => {
     // Arrange
     const post = await createDraftPost();
 
     // Simulate database error during save
-    jest.spyOn(postRepository, "save").mockRejectedValue(new Error("DB Error"));
+    jest.spyOn(postRepository, 'save').mockRejectedValue(new Error('DB Error'));
 
     // Act & Assert
     await expect(publishPostUseCase.execute(post.id)).rejects.toThrow();
 
     // Verify: Post status NOT changed in DB
     const unchangedPost = await postRepository.findById(post.id);
-    expect(unchangedPost.status).toBe("draft");
+    expect(unchangedPost.status).toBe('draft');
 
     // Verify: NO events in outbox
     const events = await outboxService.getUnpublishedEvents();
     expect(events).toHaveLength(0);
   });
 
-  it("should save both post and events atomically on success", async () => {
+  it('should save both post and events atomically on success', async () => {
     // Arrange
     const post = await createDraftPost();
 
@@ -1883,12 +1846,12 @@ describe("PublishPostUseCase - Transaction Safety", () => {
 
     // Assert: Post status changed
     const publishedPost = await postRepository.findById(post.id);
-    expect(publishedPost.status).toBe("published");
+    expect(publishedPost.status).toBe('published');
 
     // Assert: Event saved to outbox
     const events = await outboxService.getUnpublishedEvents();
     expect(events).toHaveLength(1);
-    expect(events[0].eventType).toBe("PostPublishedEvent");
+    expect(events[0].eventType).toBe('PostPublishedEvent');
     expect(events[0].aggregateId).toBe(post.id);
   });
 });
@@ -1913,7 +1876,6 @@ describe("PublishPostUseCase - Transaction Safety", () => {
    ```
 
 3. **Use polling interval based on latency requirements**:
-
    - Real-time: Poll every 1-5 seconds
    - Near real-time: Poll every 10-30 seconds
    - Batch processing: Poll every 1-5 minutes
@@ -1999,7 +1961,7 @@ export interface JwtPayload {
   userId: string;
   email: string;
   role: string;
-  provider: "local" | "google";
+  provider: 'local' | 'google';
 }
 
 export interface JwtServicePort {
@@ -2036,75 +1998,70 @@ export interface JwtServicePort {
 
 ```typescript
 // src/modules/auth/infrastructure/adapters/jwt.adapter.ts
-import { Injectable } from "@nestjs/common";
-import * as jwt from "jsonwebtoken";
-import { ConfigService } from "@nestjs/config";
-import {
-  JwtServicePort,
-  JwtPayload,
-} from "../../application/ports/jwt-service.port";
-import { TokenExpiredException } from "../../domain/exceptions/token-expired.exception";
-import { InvalidTokenException } from "../../domain/exceptions/invalid-token.exception";
+import { Injectable } from '@nestjs/common';
+import * as jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
+import { JwtServicePort, JwtPayload } from '../../application/ports/jwt-service.port';
+import { TokenExpiredException } from '../../domain/exceptions/token-expired.exception';
+import { InvalidTokenException } from '../../domain/exceptions/invalid-token.exception';
 
 @Injectable()
 export class JwtAdapter implements JwtServicePort {
   private readonly accessTokenSecret: string;
   private readonly refreshTokenSecret: string;
-  private readonly accessTokenExpiry: string = "15m";
-  private readonly refreshTokenExpiry: string = "7d";
+  private readonly accessTokenExpiry: string = '15m';
+  private readonly refreshTokenExpiry: string = '7d';
 
   constructor(private readonly configService: ConfigService) {
-    this.accessTokenSecret =
-      this.configService.get<string>("JWT_ACCESS_SECRET");
-    this.refreshTokenSecret =
-      this.configService.get<string>("JWT_REFRESH_SECRET");
+    this.accessTokenSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
+    this.refreshTokenSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
   }
 
   generateAccessToken(payload: JwtPayload): string {
     return jwt.sign(payload, this.accessTokenSecret, {
       expiresIn: this.accessTokenExpiry,
-      issuer: "nestjs-clean-architecture",
-      audience: "api-access",
+      issuer: 'nestjs-clean-architecture',
+      audience: 'api-access',
     });
   }
 
   generateRefreshToken(payload: JwtPayload): string {
     return jwt.sign(payload, this.refreshTokenSecret, {
       expiresIn: this.refreshTokenExpiry,
-      issuer: "nestjs-clean-architecture",
-      audience: "api-refresh",
+      issuer: 'nestjs-clean-architecture',
+      audience: 'api-refresh',
     });
   }
 
   verifyAccessToken(token: string): JwtPayload {
     try {
       const decoded = jwt.verify(token, this.accessTokenSecret, {
-        issuer: "nestjs-clean-architecture",
-        audience: "api-access",
+        issuer: 'nestjs-clean-architecture',
+        audience: 'api-access',
       }) as JwtPayload;
 
       return decoded;
     } catch (error) {
-      if (error.name === "TokenExpiredError") {
-        throw new TokenExpiredException("Access token has expired");
+      if (error.name === 'TokenExpiredError') {
+        throw new TokenExpiredException('Access token has expired');
       }
-      throw new InvalidTokenException("Invalid access token");
+      throw new InvalidTokenException('Invalid access token');
     }
   }
 
   verifyRefreshToken(token: string): JwtPayload {
     try {
       const decoded = jwt.verify(token, this.refreshTokenSecret, {
-        issuer: "nestjs-clean-architecture",
-        audience: "api-refresh",
+        issuer: 'nestjs-clean-architecture',
+        audience: 'api-refresh',
       }) as JwtPayload;
 
       return decoded;
     } catch (error) {
-      if (error.name === "TokenExpiredError") {
-        throw new TokenExpiredException("Refresh token has expired");
+      if (error.name === 'TokenExpiredError') {
+        throw new TokenExpiredException('Refresh token has expired');
       }
-      throw new InvalidTokenException("Invalid refresh token");
+      throw new InvalidTokenException('Invalid refresh token');
     }
   }
 
@@ -2122,16 +2079,16 @@ export class JwtAdapter implements JwtServicePort {
 
 ```typescript
 // src/modules/auth/application/use-cases/verify-token.use-case.ts
-import { Injectable } from "@nestjs/common";
-import { JwtServicePort } from "../ports/jwt-service.port";
-import { UserRepository } from "@/modules/user/domain/repositories/user.repository.interface";
-import { CacheService } from "@/shared/cache/cache.service";
+import { Injectable } from '@nestjs/common';
+import { JwtServicePort } from '../ports/jwt-service.port';
+import { UserRepository } from '@/modules/user/domain/repositories/user.repository.interface';
+import { CacheService } from '@/shared/cache/cache.service';
 
 export interface VerifiedUser {
   userId: string;
   email: string;
   role: string;
-  provider: "local" | "google";
+  provider: 'local' | 'google';
 }
 
 @Injectable()
@@ -2139,7 +2096,7 @@ export class VerifyTokenUseCase {
   constructor(
     private readonly jwtService: JwtServicePort,
     private readonly userRepository: UserRepository,
-    private readonly cacheService: CacheService
+    private readonly cacheService: CacheService,
   ) {}
 
   async execute(token: string): Promise<VerifiedUser> {
@@ -2159,7 +2116,7 @@ export class VerifyTokenUseCase {
     }
 
     if (!userExists) {
-      throw new InvalidTokenException("User no longer exists");
+      throw new InvalidTokenException('User no longer exists');
     }
 
     // 3. Return verified user data
@@ -2177,21 +2134,16 @@ export class VerifyTokenUseCase {
 
 ```typescript
 // src/modules/auth/application/guards/auth.guard.ts
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  UnauthorizedException,
-} from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { VerifyTokenUseCase } from "../use-cases/verify-token.use-case";
-import { IS_PUBLIC_KEY } from "@/common/decorators/public.decorator";
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { VerifyTokenUseCase } from '../use-cases/verify-token.use-case';
+import { IS_PUBLIC_KEY } from '@/common/decorators/public.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly verifyTokenUseCase: VerifyTokenUseCase,
-    private readonly reflector: Reflector
+    private readonly reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -2211,7 +2163,7 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException("No token provided");
+      throw new UnauthorizedException('No token provided');
     }
 
     try {
@@ -2234,9 +2186,9 @@ export class AuthGuard implements CanActivate {
       return undefined;
     }
 
-    const [type, token] = authHeader.split(" ");
+    const [type, token] = authHeader.split(' ');
 
-    return type === "Bearer" ? token : undefined;
+    return type === 'Bearer' ? token : undefined;
   }
 }
 ```
@@ -2245,15 +2197,15 @@ export class AuthGuard implements CanActivate {
 
 ```typescript
 // src/modules/auth/application/use-cases/login.use-case.ts
-import { Injectable } from "@nestjs/common";
-import { UserRepository } from "@/modules/user/domain/repositories/user.repository.interface";
-import { HashServicePort } from "../ports/hash-service.port";
-import { JwtServicePort } from "../ports/jwt-service.port";
-import { SessionRepository } from "../../domain/repositories/session.repository.interface";
-import { Session } from "../../domain/entities/session.entity";
-import { UserLoggedInEvent } from "../../domain/events/user-logged-in.event";
-import { DomainEventOutboxService } from "@/shared/database/domain-event-outbox.service";
-import { DataSource } from "typeorm";
+import { Injectable } from '@nestjs/common';
+import { UserRepository } from '@/modules/user/domain/repositories/user.repository.interface';
+import { HashServicePort } from '../ports/hash-service.port';
+import { JwtServicePort } from '../ports/jwt-service.port';
+import { SessionRepository } from '../../domain/repositories/session.repository.interface';
+import { Session } from '../../domain/entities/session.entity';
+import { UserLoggedInEvent } from '../../domain/events/user-logged-in.event';
+import { DomainEventOutboxService } from '@/shared/database/domain-event-outbox.service';
+import { DataSource } from 'typeorm';
 
 export interface LoginDto {
   email: string;
@@ -2274,7 +2226,7 @@ export class LoginUseCase {
     private readonly jwtService: JwtServicePort,
     private readonly sessionRepository: SessionRepository,
     private readonly outboxService: DomainEventOutboxService,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
   ) {}
 
   async execute(dto: LoginDto): Promise<LoginResponse> {
@@ -2287,17 +2239,14 @@ export class LoginUseCase {
       const user = await this.userRepository.findByEmail(dto.email);
 
       if (!user) {
-        throw new InvalidCredentialsException("Invalid email or password");
+        throw new InvalidCredentialsException('Invalid email or password');
       }
 
       // 2. Verify password
-      const isPasswordValid = await this.hashService.compare(
-        dto.password,
-        user.password
-      );
+      const isPasswordValid = await this.hashService.compare(dto.password, user.password);
 
       if (!isPasswordValid) {
-        throw new InvalidCredentialsException("Invalid email or password");
+        throw new InvalidCredentialsException('Invalid email or password');
       }
 
       // 3. Generate tokens
@@ -2305,7 +2254,7 @@ export class LoginUseCase {
         userId: user.id,
         email: user.email,
         role: user.role,
-        provider: "local" as const,
+        provider: 'local' as const,
       };
 
       const accessToken = this.jwtService.generateAccessToken(payload);
@@ -2316,7 +2265,7 @@ export class LoginUseCase {
         userId: user.id,
         accessToken,
         refreshToken,
-        providerType: "local",
+        providerType: 'local',
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       });
 
@@ -2326,18 +2275,13 @@ export class LoginUseCase {
       const loginEvent = new UserLoggedInEvent({
         userId: user.id,
         email: user.email,
-        provider: "local",
-        ipAddress: "request.ip", // Pass from controller
-        userAgent: "request.userAgent", // Pass from controller
+        provider: 'local',
+        ipAddress: 'request.ip', // Pass from controller
+        userAgent: 'request.userAgent', // Pass from controller
         loginAt: new Date(),
       });
 
-      await this.outboxService.saveEvents(
-        "Session",
-        session.id,
-        [loginEvent],
-        queryRunner
-      );
+      await this.outboxService.saveEvents('Session', session.id, [loginEvent], queryRunner);
 
       await queryRunner.commitTransaction();
 
@@ -2360,14 +2304,11 @@ export class LoginUseCase {
 
 ```typescript
 // src/modules/auth/infrastructure/adapters/google-oauth.adapter.ts
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { HttpService } from "@nestjs/axios";
-import { firstValueFrom } from "rxjs";
-import {
-  OAuthProviderPort,
-  OAuthUserInfo,
-} from "../../application/ports/oauth-provider.port";
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { OAuthProviderPort, OAuthUserInfo } from '../../application/ports/oauth-provider.port';
 
 @Injectable()
 export class GoogleOAuthAdapter implements OAuthProviderPort {
@@ -2377,11 +2318,11 @@ export class GoogleOAuthAdapter implements OAuthProviderPort {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly httpService: HttpService
+    private readonly httpService: HttpService,
   ) {
-    this.clientId = this.configService.get<string>("GOOGLE_CLIENT_ID");
-    this.clientSecret = this.configService.get<string>("GOOGLE_CLIENT_SECRET");
-    this.redirectUri = this.configService.get<string>("GOOGLE_REDIRECT_URI");
+    this.clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    this.clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET');
+    this.redirectUri = this.configService.get<string>('GOOGLE_REDIRECT_URI');
   }
 
   /**
@@ -2391,10 +2332,10 @@ export class GoogleOAuthAdapter implements OAuthProviderPort {
     const params = new URLSearchParams({
       client_id: this.clientId,
       redirect_uri: this.redirectUri,
-      response_type: "code",
-      scope: "openid email profile",
-      access_type: "offline",
-      prompt: "consent",
+      response_type: 'code',
+      scope: 'openid email profile',
+      access_type: 'offline',
+      prompt: 'consent',
     });
 
     return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
@@ -2405,13 +2346,13 @@ export class GoogleOAuthAdapter implements OAuthProviderPort {
    */
   async getAccessToken(code: string): Promise<string> {
     const response = await firstValueFrom(
-      this.httpService.post("https://oauth2.googleapis.com/token", {
+      this.httpService.post('https://oauth2.googleapis.com/token', {
         code,
         client_id: this.clientId,
         client_secret: this.clientSecret,
         redirect_uri: this.redirectUri,
-        grant_type: "authorization_code",
-      })
+        grant_type: 'authorization_code',
+      }),
     );
 
     return response.data.access_token;
@@ -2422,11 +2363,11 @@ export class GoogleOAuthAdapter implements OAuthProviderPort {
    */
   async getUserInfo(accessToken: string): Promise<OAuthUserInfo> {
     const response = await firstValueFrom(
-      this.httpService.get("https://www.googleapis.com/oauth2/v2/userinfo", {
+      this.httpService.get('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      })
+      }),
     );
 
     return {
@@ -2444,43 +2385,35 @@ export class GoogleOAuthAdapter implements OAuthProviderPort {
 
 ```typescript
 // src/modules/auth/interface/http/controllers/auth.controller.ts
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Get,
-  Query,
-  Req,
-} from "@nestjs/common";
-import { LoginUseCase } from "../../application/use-cases/login.use-case";
-import { GoogleLoginUseCase } from "../../application/use-cases/google-login.use-case";
-import { RefreshTokenUseCase } from "../../application/use-cases/refresh-token.use-case";
-import { AuthGuard } from "../../application/guards/auth.guard";
-import { GoogleOAuthAdapter } from "../../infrastructure/adapters/google-oauth.adapter";
-import { Public } from "@/common/decorators/public.decorator";
-import { CurrentUser } from "@/common/decorators/current-user.decorator";
-import { LoginRequestDto } from "../../application/dtos/login.dto";
-import { RefreshTokenRequestDto } from "../../application/dtos/refresh-token.dto";
-import { VerifiedUser } from "../../application/dtos/verified-user.dto";
+import { Controller, Post, Body, UseGuards, Get, Query, Req } from '@nestjs/common';
+import { LoginUseCase } from '../../application/use-cases/login.use-case';
+import { GoogleLoginUseCase } from '../../application/use-cases/google-login.use-case';
+import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.use-case';
+import { AuthGuard } from '../../application/guards/auth.guard';
+import { GoogleOAuthAdapter } from '../../infrastructure/adapters/google-oauth.adapter';
+import { Public } from '@/common/decorators/public.decorator';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { LoginRequestDto } from '../../application/dtos/login.dto';
+import { RefreshTokenRequestDto } from '../../application/dtos/refresh-token.dto';
+import { VerifiedUser } from '../../application/dtos/verified-user.dto';
 
-@Controller("auth")
+@Controller('auth')
 export class AuthController {
   constructor(
     private readonly loginUseCase: LoginUseCase,
     private readonly googleLoginUseCase: GoogleLoginUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
-    private readonly googleOAuthAdapter: GoogleOAuthAdapter
+    private readonly googleOAuthAdapter: GoogleOAuthAdapter,
   ) {}
 
   @Public()
-  @Post("login")
+  @Post('login')
   async login(@Body() dto: LoginRequestDto) {
     return this.loginUseCase.execute(dto);
   }
 
   @Public()
-  @Get("google")
+  @Get('google')
   async googleAuth() {
     // Return authorization URL for frontend to redirect
     const authUrl = this.googleOAuthAdapter.getAuthorizationUrl();
@@ -2488,26 +2421,26 @@ export class AuthController {
   }
 
   @Public()
-  @Get("google/callback")
-  async googleCallback(@Query("code") code: string) {
+  @Get('google/callback')
+  async googleCallback(@Query('code') code: string) {
     return this.googleLoginUseCase.execute({ code });
   }
 
   @Public()
-  @Post("refresh")
+  @Post('refresh')
   async refresh(@Body() dto: RefreshTokenRequestDto) {
     return this.refreshTokenUseCase.execute(dto);
   }
 
   @UseGuards(AuthGuard)
-  @Get("profile")
+  @Get('profile')
   async getProfile(@CurrentUser() user: VerifiedUser) {
     // User is already verified and attached by AuthGuard
     return user;
   }
 
   @UseGuards(AuthGuard)
-  @Post("logout")
+  @Post('logout')
   async logout(@CurrentUser() user: VerifiedUser) {
     // Implement logout logic
   }
@@ -2518,23 +2451,21 @@ export class AuthController {
 
 ```typescript
 // src/common/decorators/current-user.decorator.ts
-import { createParamDecorator, ExecutionContext } from "@nestjs/common";
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-export const CurrentUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.user; // Set by AuthGuard
-  }
-);
+export const CurrentUser = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
+  const request = ctx.switchToHttp().getRequest();
+  return request.user; // Set by AuthGuard
+});
 ```
 
 **Step 9: Public Decorator**
 
 ```typescript
 // src/common/decorators/public.decorator.ts
-import { SetMetadata } from "@nestjs/common";
+import { SetMetadata } from '@nestjs/common';
 
-export const IS_PUBLIC_KEY = "isPublic";
+export const IS_PUBLIC_KEY = 'isPublic';
 export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 ```
 
@@ -2552,7 +2483,7 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
 ```typescript
 // test/unit/auth/verify-token.use-case.spec.ts
-describe("VerifyTokenUseCase", () => {
+describe('VerifyTokenUseCase', () => {
   let useCase: VerifyTokenUseCase;
   let jwtService: MockJwtService;
   let userRepository: MockUserRepository;
@@ -2563,26 +2494,26 @@ describe("VerifyTokenUseCase", () => {
     useCase = new VerifyTokenUseCase(jwtService, userRepository);
   });
 
-  it("should verify valid token and return user", async () => {
+  it('should verify valid token and return user', async () => {
     // Arrange
-    const token = "valid.jwt.token";
-    const payload = { userId: "123", email: "test@example.com", role: "user" };
+    const token = 'valid.jwt.token';
+    const payload = { userId: '123', email: 'test@example.com', role: 'user' };
     jwtService.verifyAccessToken.mockReturnValue(payload);
-    userRepository.findById.mockResolvedValue({ id: "123" });
+    userRepository.findById.mockResolvedValue({ id: '123' });
 
     // Act
     const result = await useCase.execute(token);
 
     // Assert
-    expect(result.userId).toBe("123");
+    expect(result.userId).toBe('123');
     expect(jwtService.verifyAccessToken).toHaveBeenCalledWith(token);
   });
 
-  it("should throw error for expired token", async () => {
+  it('should throw error for expired token', async () => {
     // Arrange
-    const token = "expired.jwt.token";
+    const token = 'expired.jwt.token';
     jwtService.verifyAccessToken.mockImplementation(() => {
-      throw new TokenExpiredException("Token expired");
+      throw new TokenExpiredException('Token expired');
     });
 
     // Act & Assert
@@ -2674,10 +2605,10 @@ API documentation is critical for developer experience but often becomes outdate
 
 ```typescript
 // src/main.ts
-import { NestFactory } from "@nestjs/core";
-import { ValidationPipe } from "@nestjs/common";
-import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { AppModule } from "./app.module";
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -2688,55 +2619,51 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-    })
+    }),
   );
 
   // Swagger configuration
   const config = new DocumentBuilder()
-    .setTitle("NestJS Clean Architecture API")
+    .setTitle('NestJS Clean Architecture API')
     .setDescription(
-      "Production-ready boilerplate with Clean Architecture, PostgreSQL, Redis, WebSocket, Kafka"
+      'Production-ready boilerplate with Clean Architecture, PostgreSQL, Redis, WebSocket, Kafka',
     )
-    .setVersion("1.0.0")
+    .setVersion('1.0.0')
     .addBearerAuth(
       {
-        type: "http",
-        scheme: "bearer",
-        bearerFormat: "JWT",
-        name: "Authorization",
-        description: "Enter JWT access token",
-        in: "header",
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'Enter JWT access token',
+        in: 'header',
       },
-      "JWT-auth" // This name must match @ApiBearerAuth() in controllers
+      'JWT-auth', // This name must match @ApiBearerAuth() in controllers
     )
-    .addServer("http://localhost:3000", "Development")
-    .addServer("https://staging.example.com", "Staging")
-    .addServer("https://api.example.com", "Production")
-    .addTag(
-      "Authentication",
-      "User authentication endpoints (register, login, OAuth)"
-    )
-    .addTag("Users", "User management CRUD operations")
-    .addTag("Blog", "Blog posts, comments, and tags")
-    .addTag("Chat", "Real-time chat conversations and messages")
-    .addTag("Notifications", "User notifications (email, SMS, push)")
-    .addTag("Files", "File upload and download operations")
-    .addTag("Health", "Health check endpoints")
+    .addServer('http://localhost:3000', 'Development')
+    .addServer('https://staging.example.com', 'Staging')
+    .addServer('https://api.example.com', 'Production')
+    .addTag('Authentication', 'User authentication endpoints (register, login, OAuth)')
+    .addTag('Users', 'User management CRUD operations')
+    .addTag('Blog', 'Blog posts, comments, and tags')
+    .addTag('Chat', 'Real-time chat conversations and messages')
+    .addTag('Notifications', 'User notifications (email, SMS, push)')
+    .addTag('Files', 'File upload and download operations')
+    .addTag('Health', 'Health check endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
 
   // Serve Swagger UI at /api/docs (development and staging only)
-  if (process.env.NODE_ENV !== "production") {
-    SwaggerModule.setup("api/docs", app, document, {
+  if (process.env.NODE_ENV !== 'production') {
+    SwaggerModule.setup('api/docs', app, document, {
       swaggerOptions: {
         persistAuthorization: true, // Keep auth token after page refresh
-        tagsSorter: "alpha",
-        operationsSorter: "alpha",
+        tagsSorter: 'alpha',
+        operationsSorter: 'alpha',
       },
-      customCssUrl:
-        "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css",
-      customSiteTitle: "NestJS Clean Architecture API Docs",
+      customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
+      customSiteTitle: 'NestJS Clean Architecture API Docs',
     });
   }
 
@@ -2764,7 +2691,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
-} from "@nestjs/common";
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -2774,22 +2701,22 @@ import {
   ApiQuery,
   ApiExtraModels,
   getSchemaPath,
-} from "@nestjs/swagger";
-import { CreateUserUseCase } from "../../../application/use-cases/create-user.use-case";
-import { GetUserUseCase } from "../../../application/use-cases/get-user.use-case";
-import { ListUsersUseCase } from "../../../application/use-cases/list-users.use-case";
-import { UpdateUserUseCase } from "../../../application/use-cases/update-user.use-case";
-import { DeleteUserUseCase } from "../../../application/use-cases/delete-user.use-case";
-import { CreateUserRequestDto } from "../dtos/create-user-request.dto";
-import { UpdateUserRequestDto } from "../dtos/update-user-request.dto";
-import { UserResponseDto } from "../dtos/user-response.dto";
-import { PaginatedUsersResponseDto } from "../dtos/paginated-users-response.dto";
-import { JwtAuthGuard } from "@/modules/auth/infrastructure/guards/jwt-auth.guard";
-import { RolesGuard } from "@/modules/auth/infrastructure/guards/roles.guard";
-import { Roles } from "@/common/decorators/roles.decorator";
+} from '@nestjs/swagger';
+import { CreateUserUseCase } from '../../../application/use-cases/create-user.use-case';
+import { GetUserUseCase } from '../../../application/use-cases/get-user.use-case';
+import { ListUsersUseCase } from '../../../application/use-cases/list-users.use-case';
+import { UpdateUserUseCase } from '../../../application/use-cases/update-user.use-case';
+import { DeleteUserUseCase } from '../../../application/use-cases/delete-user.use-case';
+import { CreateUserRequestDto } from '../dtos/create-user-request.dto';
+import { UpdateUserRequestDto } from '../dtos/update-user-request.dto';
+import { UserResponseDto } from '../dtos/user-response.dto';
+import { PaginatedUsersResponseDto } from '../dtos/paginated-users-response.dto';
+import { JwtAuthGuard } from '@/modules/auth/infrastructure/guards/jwt-auth.guard';
+import { RolesGuard } from '@/modules/auth/infrastructure/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
 
-@ApiTags("Users")
-@Controller("users")
+@ApiTags('Users')
+@Controller('users')
 @ApiExtraModels(UserResponseDto, PaginatedUsersResponseDto)
 export class UserController {
   constructor(
@@ -2797,164 +2724,161 @@ export class UserController {
     private readonly getUserUseCase: GetUserUseCase,
     private readonly listUsersUseCase: ListUsersUseCase,
     private readonly updateUserUseCase: UpdateUserUseCase,
-    private readonly deleteUserUseCase: DeleteUserUseCase
+    private readonly deleteUserUseCase: DeleteUserUseCase,
   ) {}
 
   @Post()
   @ApiOperation({
-    summary: "Create new user",
-    description:
-      "Creates a new user account with email and password. Admin-only endpoint.",
+    summary: 'Create new user',
+    description: 'Creates a new user account with email and password. Admin-only endpoint.',
   })
   @ApiResponse({
     status: 201,
-    description: "User created successfully",
+    description: 'User created successfully',
     type: UserResponseDto,
   })
   @ApiResponse({
     status: 400,
-    description: "Invalid request body or validation error",
+    description: 'Invalid request body or validation error',
     schema: {
       example: {
         statusCode: 400,
-        message: ["email must be a valid email", "name should not be empty"],
-        error: "Bad Request",
+        message: ['email must be a valid email', 'name should not be empty'],
+        error: 'Bad Request',
       },
     },
   })
   @ApiResponse({
     status: 409,
-    description: "Email already exists",
+    description: 'Email already exists',
     schema: {
       example: {
         statusCode: 409,
-        message: "Email already registered",
-        error: "Conflict",
+        message: 'Email already registered',
+        error: 'Conflict',
       },
     },
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles("admin")
-  @ApiBearerAuth("JWT-auth")
-  async createUser(
-    @Body() dto: CreateUserRequestDto
-  ): Promise<UserResponseDto> {
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  async createUser(@Body() dto: CreateUserRequestDto): Promise<UserResponseDto> {
     return this.createUserUseCase.execute(dto);
   }
 
   @Get()
   @ApiOperation({
-    summary: "List all users (paginated)",
-    description: "Retrieve paginated list of users with optional filters",
+    summary: 'List all users (paginated)',
+    description: 'Retrieve paginated list of users with optional filters',
   })
   @ApiQuery({
-    name: "page",
+    name: 'page',
     required: false,
     type: Number,
     example: 1,
-    description: "Page number",
+    description: 'Page number',
   })
   @ApiQuery({
-    name: "limit",
+    name: 'limit',
     required: false,
     type: Number,
     example: 10,
-    description: "Items per page",
+    description: 'Items per page',
   })
   @ApiQuery({
-    name: "role",
+    name: 'role',
     required: false,
-    enum: ["user", "admin", "moderator"],
-    description: "Filter by role",
+    enum: ['user', 'admin', 'moderator'],
+    description: 'Filter by role',
   })
   @ApiResponse({
     status: 200,
-    description: "Users retrieved successfully",
+    description: 'Users retrieved successfully',
     type: PaginatedUsersResponseDto,
   })
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth("JWT-auth")
+  @ApiBearerAuth('JWT-auth')
   async listUsers(
-    @Query("page") page: number = 1,
-    @Query("limit") limit: number = 10,
-    @Query("role") role?: string
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('role') role?: string,
   ): Promise<PaginatedUsersResponseDto> {
     return this.listUsersUseCase.execute({ page, limit, role });
   }
 
-  @Get(":id")
+  @Get(':id')
   @ApiOperation({
-    summary: "Get user by ID",
-    description: "Retrieve single user details by UUID",
+    summary: 'Get user by ID',
+    description: 'Retrieve single user details by UUID',
   })
   @ApiParam({
-    name: "id",
-    type: "string",
-    format: "uuid",
-    description: "User UUID",
+    name: 'id',
+    type: 'string',
+    format: 'uuid',
+    description: 'User UUID',
   })
   @ApiResponse({
     status: 200,
-    description: "User found",
+    description: 'User found',
     type: UserResponseDto,
   })
   @ApiResponse({
     status: 404,
-    description: "User not found",
+    description: 'User not found',
     schema: {
       example: {
         statusCode: 404,
-        message: "User not found",
-        error: "Not Found",
+        message: 'User not found',
+        error: 'Not Found',
       },
     },
   })
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth("JWT-auth")
-  async getUser(@Param("id") id: string): Promise<UserResponseDto> {
+  @ApiBearerAuth('JWT-auth')
+  async getUser(@Param('id') id: string): Promise<UserResponseDto> {
     return this.getUserUseCase.execute(id);
   }
 
-  @Patch(":id")
+  @Patch(':id')
   @ApiOperation({
-    summary: "Update user",
+    summary: 'Update user',
     description:
-      "Update user profile information. Users can update their own profile; admins can update any user.",
+      'Update user profile information. Users can update their own profile; admins can update any user.',
   })
-  @ApiParam({ name: "id", type: "string", format: "uuid" })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
   @ApiResponse({
     status: 200,
-    description: "User updated successfully",
+    description: 'User updated successfully',
     type: UserResponseDto,
   })
   @ApiResponse({
     status: 403,
-    description: "Forbidden - Cannot update other users",
+    description: 'Forbidden - Cannot update other users',
   })
-  @ApiResponse({ status: 404, description: "User not found" })
+  @ApiResponse({ status: 404, description: 'User not found' })
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth("JWT-auth")
+  @ApiBearerAuth('JWT-auth')
   async updateUser(
-    @Param("id") id: string,
-    @Body() dto: UpdateUserRequestDto
+    @Param('id') id: string,
+    @Body() dto: UpdateUserRequestDto,
   ): Promise<UserResponseDto> {
     return this.updateUserUseCase.execute(id, dto);
   }
 
-  @Delete(":id")
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: "Delete user",
-    description: "Soft delete user account. Admin-only endpoint.",
+    summary: 'Delete user',
+    description: 'Soft delete user account. Admin-only endpoint.',
   })
-  @ApiParam({ name: "id", type: "string", format: "uuid" })
-  @ApiResponse({ status: 204, description: "User deleted successfully" })
-  @ApiResponse({ status: 403, description: "Forbidden - Admin only" })
-  @ApiResponse({ status: 404, description: "User not found" })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  @ApiResponse({ status: 204, description: 'User deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin only' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles("admin")
-  @ApiBearerAuth("JWT-auth")
-  async deleteUser(@Param("id") id: string): Promise<void> {
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  async deleteUser(@Param('id') id: string): Promise<void> {
     return this.deleteUserUseCase.execute(id);
   }
 }
@@ -2964,39 +2888,32 @@ export class UserController {
 
 ```typescript
 // src/modules/user/interface/http/dtos/create-user-request.dto.ts
-import { ApiProperty } from "@nestjs/swagger";
-import {
-  IsEmail,
-  IsString,
-  MinLength,
-  MaxLength,
-  IsOptional,
-  IsEnum,
-} from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsString, MinLength, MaxLength, IsOptional, IsEnum } from 'class-validator';
 
 export class CreateUserRequestDto {
   @ApiProperty({
-    description: "User email address (must be unique)",
-    example: "john.doe@example.com",
-    format: "email",
+    description: 'User email address (must be unique)',
+    example: 'john.doe@example.com',
+    format: 'email',
     uniqueItems: true,
   })
   @IsEmail()
   email: string;
 
   @ApiProperty({
-    description: "User password (minimum 8 characters)",
-    example: "SecurePassword123!",
+    description: 'User password (minimum 8 characters)',
+    example: 'SecurePassword123!',
     minLength: 8,
-    format: "password",
+    format: 'password',
   })
   @IsString()
   @MinLength(8)
   password: string;
 
   @ApiProperty({
-    description: "User full name",
-    example: "John Doe",
+    description: 'User full name',
+    example: 'John Doe',
     minLength: 1,
     maxLength: 255,
   })
@@ -3006,67 +2923,67 @@ export class CreateUserRequestDto {
   name: string;
 
   @ApiProperty({
-    description: "User role",
-    enum: ["user", "admin", "moderator"],
-    default: "user",
+    description: 'User role',
+    enum: ['user', 'admin', 'moderator'],
+    default: 'user',
     required: false,
   })
   @IsOptional()
-  @IsEnum(["user", "admin", "moderator"])
-  role?: string = "user";
+  @IsEnum(['user', 'admin', 'moderator'])
+  role?: string = 'user';
 }
 ```
 
 ```typescript
 // src/modules/user/interface/http/dtos/user-response.dto.ts
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UserResponseDto {
   @ApiProperty({
-    description: "User unique identifier",
-    example: "550e8400-e29b-41d4-a716-446655440000",
-    format: "uuid",
+    description: 'User unique identifier',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    format: 'uuid',
   })
   id: string;
 
   @ApiProperty({
-    description: "User email address",
-    example: "john.doe@example.com",
-    format: "email",
+    description: 'User email address',
+    example: 'john.doe@example.com',
+    format: 'email',
   })
   email: string;
 
   @ApiProperty({
-    description: "User full name",
-    example: "John Doe",
+    description: 'User full name',
+    example: 'John Doe',
   })
   name: string;
 
   @ApiProperty({
-    description: "User role",
-    enum: ["user", "admin", "moderator"],
-    example: "user",
+    description: 'User role',
+    enum: ['user', 'admin', 'moderator'],
+    example: 'user',
   })
   role: string;
 
   @ApiProperty({
-    description: "Authentication provider",
-    enum: ["local", "google"],
-    example: "local",
+    description: 'Authentication provider',
+    enum: ['local', 'google'],
+    example: 'local',
   })
   provider: string;
 
   @ApiProperty({
-    description: "Account creation timestamp",
-    example: "2024-11-11T10:30:00.000Z",
-    format: "date-time",
+    description: 'Account creation timestamp',
+    example: '2024-11-11T10:30:00.000Z',
+    format: 'date-time',
   })
   createdAt: Date;
 
   @ApiProperty({
-    description: "Last update timestamp",
-    example: "2024-11-11T15:45:00.000Z",
-    format: "date-time",
+    description: 'Last update timestamp',
+    example: '2024-11-11T15:45:00.000Z',
+    format: 'date-time',
   })
   updatedAt: Date;
 }
@@ -3074,41 +2991,41 @@ export class UserResponseDto {
 
 ```typescript
 // src/modules/user/interface/http/dtos/paginated-users-response.dto.ts
-import { ApiProperty } from "@nestjs/swagger";
-import { UserResponseDto } from "./user-response.dto";
+import { ApiProperty } from '@nestjs/swagger';
+import { UserResponseDto } from './user-response.dto';
 
 class PaginationMetaDto {
-  @ApiProperty({ example: 100, description: "Total number of items" })
+  @ApiProperty({ example: 100, description: 'Total number of items' })
   total: number;
 
-  @ApiProperty({ example: 1, description: "Current page number" })
+  @ApiProperty({ example: 1, description: 'Current page number' })
   page: number;
 
-  @ApiProperty({ example: 10, description: "Items per page" })
+  @ApiProperty({ example: 10, description: 'Items per page' })
   limit: number;
 
-  @ApiProperty({ example: 10, description: "Total number of pages" })
+  @ApiProperty({ example: 10, description: 'Total number of pages' })
   totalPages: number;
 
-  @ApiProperty({ example: true, description: "Whether there is a next page" })
+  @ApiProperty({ example: true, description: 'Whether there is a next page' })
   hasNextPage: boolean;
 
   @ApiProperty({
     example: false,
-    description: "Whether there is a previous page",
+    description: 'Whether there is a previous page',
   })
   hasPreviousPage: boolean;
 }
 
 export class PaginatedUsersResponseDto {
   @ApiProperty({
-    description: "Array of users",
+    description: 'Array of users',
     type: [UserResponseDto],
   })
   data: UserResponseDto[];
 
   @ApiProperty({
-    description: "Pagination metadata",
+    description: 'Pagination metadata',
     type: PaginationMetaDto,
   })
   meta: PaginationMetaDto;
