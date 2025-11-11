@@ -12,7 +12,7 @@ export class CreateSessionsTable1731320000000 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v7()',
+            default: 'uuidv7()',
           },
           {
             name: 'user_id',

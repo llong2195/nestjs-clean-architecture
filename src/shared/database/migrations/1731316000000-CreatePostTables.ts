@@ -14,7 +14,7 @@ export class CreatePostTables1731316000000 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v7()',
+            default: 'uuidv7()',
           },
           {
             name: 'author_id',
@@ -90,7 +90,7 @@ export class CreatePostTables1731316000000 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v7()',
+            default: 'uuidv7()',
           },
           {
             name: 'name',
@@ -127,7 +127,7 @@ export class CreatePostTables1731316000000 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v7()',
+            default: 'uuidv7()',
           },
           {
             name: 'post_id',
