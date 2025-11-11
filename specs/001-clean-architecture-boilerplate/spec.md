@@ -5,6 +5,37 @@
 **Status**: Ready for Planning  
 **Input**: User description: "Build a backend boilerplate project that follows Clean Architecture principles using NestJS, TypeORM, PostgreSQL, Redis, and WebSocket, Socket.IO, Kafka, message queues (MQ), Queue (BullMQ)"
 
+---
+
+## Table of Contents
+
+1. [User Scenarios & Testing](#user-scenarios--testing-mandatory)
+
+   - User Stories (P1, P2, P3)
+   - Edge Cases
+
+2. [Requirements](#requirements-mandatory)
+
+   - [Functional Requirements](#functional-requirements) (47 FRs organized by category)
+   - [Key Entities](#key-entities) (Database schema with snake_case, junction tables)
+   - [Assumptions](#assumptions) (Development guidelines and constraints)
+   - [Project Structure](#project-structure) (Clean Architecture 4-layer structure)
+   - [Git Commit Convention](#git-commit-convention) (Conventional Commits with commitlint)
+
+3. [Success Criteria](#success-criteria-mandatory)
+
+   - Measurable Outcomes (27 success criteria)
+   - Non-Functional Requirements
+   - Out of Scope
+   - Performance & Quality Standards
+
+4. [Technical Deep Dives](#technical-deep-dives)
+   - [Transaction Management & Domain Events](#transaction-management--domain-events-critical) (Transactional Outbox Pattern)
+   - [Authentication Without Passport](#authentication-without-passport-critical) (Pure NestJS JWT + Google OAuth)
+   - [Swagger/OpenAPI Documentation](#swaggeropenapi-documentation-mandatory) (@nestjs/swagger integration)
+
+---
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Project Foundation Setup (Priority: P1)
@@ -197,7 +228,11 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 
 - **FR-023**: System MUST enforce standardized API response format for all endpoints
 - **FR-024**: System MUST provide global exception handling with structured error codes
-- **FR-025**: System MUST generate OpenAPI/Swagger documentation automatically
+- **FR-025**: System MUST generate OpenAPI/Swagger documentation automatically using @nestjs/swagger
+- **FR-025.1**: All controllers MUST be decorated with @ApiTags for grouping endpoints
+- **FR-025.2**: All endpoints MUST have @ApiOperation with summary and description
+- **FR-025.3**: All request/response DTOs MUST use @ApiProperty decorators with examples
+- **FR-025.4**: Swagger UI MUST be accessible at /api/docs endpoint in development and staging environments
 - **FR-026**: System MUST validate all input data using class-validator decorators
 - **FR-027**: System MUST sanitize all output data to prevent sensitive information leaks
 
@@ -232,27 +267,122 @@ As a developer, I want pre-commit hooks, automated checks, and Docker configurat
 
 ### Key Entities
 
-**Note**: This is a boilerplate project focused on infrastructure and architecture patterns rather than specific business domain entities. The entities below represent example/sample entities to demonstrate the architecture:
+**Note**: This is a boilerplate project focused on infrastructure and architecture patterns rather than specific business domain entities. The entities below represent example/sample entities to demonstrate the architecture.
 
-- **User** (Sample Entity): Demonstrates authentication and authorization patterns; attributes include unique identifier, authentication credentials (hashed), profile information, role/permissions, OAuth provider linkage (local, google)
-- **Post** (Sample Aggregate): Demonstrates DDD aggregate pattern with Post as root managing Comments and Tags; attributes include title, content (value object), slug (value object), status, author reference, timestamps, file attachments
-- **Conversation** (Sample Aggregate): Demonstrates real-time chat aggregate pattern with Conversation as root managing Messages and Participants; attributes include conversation type (direct, group), participant list, last message reference, created timestamp
-- **Session** (Sample Entity): Demonstrates authentication session management; attributes include user reference, access token (hashed/encrypted), refresh token (hashed/encrypted), provider type, expiration timestamps. Tokens MUST NOT be stored in plaintext—follow secure token storage patterns (e.g., hashing or encryption) as per security best practices.
-- **Notification** (System Entity): Demonstrates notification system; attributes include recipient, channel (email/SMS/push), template, payload, delivery status
-- **FileMetadata** (System Entity): Demonstrates file storage; attributes include filename, storage path, mime type, size, uploader reference, storage provider
-- **DomainEventOutbox** (System Entity): Transactional outbox for domain events; attributes include aggregate type, aggregate ID, event type, event data (JSONB), occurred timestamp, published timestamp, retry count, error message
-- **Configuration** (System Entity): Represents environment-specific settings; attributes include environment name, feature flags, and non-sensitive configuration values.
-  > **Note:** Sensitive secrets such as API keys and credentials MUST NOT be stored as plain database attributes. Use environment variables or a secret management system (e.g., HashiCorp Vault, AWS Secrets Manager) for secret storage and retrieval.
+**Database Naming Convention**: All database table names and column names MUST use snake_case (e.g., `user_name`, `created_at`, `post_id`). TypeORM entity property names use camelCase in code but map to snake_case columns using `@Column({ name: 'column_name' })`:
+
+```typescript
+@Column({ name: 'user_name' })
+userName: string;
+```
+
+**Relationship Tables**: The project MUST NOT use TypeORM's @ManyToMany decorator. Instead, explicit junction/pivot tables MUST be created as separate entities to provide full control over relationships and additional metadata.
+
+#### Core Entities
+
+- **User** (Sample Entity): Demonstrates authentication and authorization patterns
+
+  - Table: `users`
+  - Columns: `id` (uuid), `email` (varchar, unique), `password` (varchar, hashed), `name` (varchar), `role` (varchar), `provider` (varchar: local|google), `created_at` (timestamp), `updated_at` (timestamp), `deleted_at` (timestamp, nullable)
+  - Indexes: `idx_users_email`, `idx_users_provider`
+
+- **Session** (Sample Entity): Demonstrates authentication session management
+
+  - Table: `sessions`
+  - Columns: `id` (uuid), `user_id` (uuid, FK), `access_token` (text, hashed), `refresh_token` (text, hashed), `provider_type` (varchar), `expires_at` (timestamp), `created_at` (timestamp)
+  - Indexes: `idx_sessions_user_id`, `idx_sessions_expires_at`
+  - Foreign Keys: `user_id` → `users.id`
+  - Note: Tokens MUST NOT be stored in plaintext
+
+- **Post** (Sample Aggregate Root): Demonstrates DDD aggregate pattern
+
+  - Table: `posts`
+  - Columns: `id` (uuid), `author_id` (uuid, FK), `title` (varchar), `content` (text), `slug` (varchar, unique), `status` (varchar: draft|published|archived), `published_at` (timestamp, nullable), `view_count` (integer), `created_at` (timestamp), `updated_at` (timestamp)
+  - Indexes: `idx_posts_author_id`, `idx_posts_slug`, `idx_posts_status_published_at`
+  - Foreign Keys: `author_id` → `users.id`
+
+- **Comment** (Child Entity of Post Aggregate): Blog post comments
+
+  - Table: `comments`
+  - Columns: `id` (uuid), `post_id` (uuid, FK), `author_id` (uuid, FK), `content` (text), `created_at` (timestamp)
+  - Indexes: `idx_comments_post_id`, `idx_comments_author_id`
+  - Foreign Keys: `post_id` → `posts.id`, `author_id` → `users.id`
+
+- **Tag** (Child Entity of Post Aggregate): Post tagging system
+
+  - Table: `tags`
+  - Columns: `id` (uuid), `name` (varchar, unique), `slug` (varchar, unique), `created_at` (timestamp)
+  - Indexes: `idx_tags_name`, `idx_tags_slug`
+
+- **PostTag** (Junction Table): EXPLICIT many-to-many relationship between Posts and Tags
+
+  - Table: `post_tags`
+  - Columns: `id` (uuid), `post_id` (uuid, FK), `tag_id` (uuid, FK), `created_at` (timestamp)
+  - Indexes: `idx_post_tags_post_id`, `idx_post_tags_tag_id`, `unique_post_tag` (composite unique on post_id, tag_id)
+  - Foreign Keys: `post_id` → `posts.id`, `tag_id` → `tags.id`
+  - Note: This replaces @ManyToMany decorator for better control
+
+- **Conversation** (Sample Aggregate Root): Real-time chat aggregate
+
+  - Table: `conversations`
+  - Columns: `id` (uuid), `type` (varchar: direct|group), `last_message_at` (timestamp), `created_at` (timestamp)
+  - Indexes: `idx_conversations_last_message_at`
+
+- **Message** (Child Entity of Conversation Aggregate): Chat messages
+
+  - Table: `messages`
+  - Columns: `id` (uuid), `conversation_id` (uuid, FK), `sender_id` (uuid, FK), `content` (text), `status` (varchar: sent|delivered|read), `sent_at` (timestamp)
+  - Indexes: `idx_messages_conversation_id_sent_at`, `idx_messages_sender_id`
+  - Foreign Keys: `conversation_id` → `conversations.id`, `sender_id` → `users.id`
+
+- **Participant** (Junction Table): EXPLICIT many-to-many between Users and Conversations
+  - Table: `conversation_participants`
+  - Columns: `id` (uuid), `conversation_id` (uuid, FK), `user_id` (uuid, FK), `role` (varchar: admin|member), `joined_at` (timestamp)
+  - Indexes: `idx_conv_participants_conv_id`, `idx_conv_participants_user_id`, `unique_conversation_user` (composite unique)
+  - Foreign Keys: `conversation_id` → `conversations.id`, `user_id` → `users.id`
+
+#### System Entities
+
+- **Notification** (System Entity): Notification system
+
+  - Table: `notifications`
+  - Columns: `id` (uuid), `recipient_id` (uuid, FK), `channel` (varchar: email|sms|push), `template` (varchar), `payload` (jsonb), `status` (varchar: pending|sent|failed), `sent_at` (timestamp, nullable), `created_at` (timestamp)
+  - Indexes: `idx_notifications_recipient_id`, `idx_notifications_status`
+  - Foreign Keys: `recipient_id` → `users.id`
+
+- **FileMetadata** (System Entity): File storage metadata
+
+  - Table: `file_metadata`
+  - Columns: `id` (uuid), `uploader_id` (uuid, FK), `filename` (varchar), `storage_path` (varchar), `mime_type` (varchar), `size` (bigint), `storage_provider` (varchar: local|s3), `created_at` (timestamp)
+  - Indexes: `idx_file_metadata_uploader_id`
+  - Foreign Keys: `uploader_id` → `users.id`
+
+- **DomainEventOutbox** (System Entity): Transactional outbox pattern
+
+  - Table: `domain_events_outbox`
+  - Columns: `id` (uuid), `aggregate_type` (varchar), `aggregate_id` (uuid), `event_type` (varchar), `event_data` (jsonb), `occurred_at` (timestamp), `published_at` (timestamp, nullable), `retry_count` (integer), `error_message` (text, nullable)
+  - Indexes: `idx_outbox_unpublished` (WHERE published_at IS NULL), `idx_outbox_aggregate`
+
+- **Configuration** (System Entity): Environment-specific settings
+  - Table: `configurations`
+  - Columns: `id` (uuid), `environment` (varchar), `key` (varchar), `value` (text), `created_at` (timestamp), `updated_at` (timestamp)
+  - Indexes: `unique_env_key` (composite unique on environment, key)
+  - Note: Sensitive secrets MUST NOT be stored here. Use environment variables or secret management systems.
 
 ### Assumptions
 
 - Development teams are familiar with TypeScript and JavaScript ES2020+ (including async/await, modules, destructuring)
 - Docker is available in development environments for running PostgreSQL, Redis, and Kafka
 - Node.js 22+ (LTS) is the target runtime environment
+- **Database Naming Convention**: All PostgreSQL table and column names use snake_case (e.g., `user_name`, `created_at`, `post_id`)
+- **TypeORM Mapping**: Entity properties in TypeScript use camelCase and map to snake_case columns via `@Column({ name: 'snake_case_name' })`
+- **No @ManyToMany**: Junction/pivot tables MUST be explicit entities (e.g., `PostTag`, `ConversationParticipant`) to provide full control and metadata
 - Teams follow **Conventional Commits** specification for semantic commit messages
 - Git workflow uses **rebase** strategy (no merge commits in feature branches)
 - **Husky** and **commitlint** are configured to enforce commit message format
 - **CHANGELOG.md** is auto-generated using standard-version or semantic-release
+- **Swagger Documentation**: @nestjs/swagger is configured and all endpoints documented with @ApiTags, @ApiOperation, @ApiProperty decorators
+- Swagger UI is available at `/api/docs` in development and staging environments (disabled in production for security)
 - Authentication mechanisms will be implemented as separate feature modules using this boilerplate
 - Default caching strategy uses TTL-based expiration with manual invalidation hooks
 - Database connection pooling is configured for production-grade concurrent connections
@@ -1269,9 +1399,15 @@ This boilerplate intentionally excludes the following to maintain focus on archi
 - **Security**: Input validation required; output sanitization via DTOs; no sensitive data exposure
 - **DDD Compliance**: Aggregates properly encapsulate invariants; domain events used for cross-aggregate communication; value objects are immutable
 
-## Transaction Management & Domain Events _(critical)_
+---
 
-### Problem Statement
+## Technical Deep Dives
+
+This section provides detailed implementation patterns for critical architectural decisions.
+
+### Transaction Management & Domain Events _(critical)_
+
+#### Problem Statement
 
 When aggregates emit domain events during operations, we face a critical challenge: **How to ensure transactional consistency between database changes and event publishing?**
 
@@ -1291,11 +1427,11 @@ async publishPost(postId: string) {
 }
 ```
 
-### Solution: Transactional Outbox Pattern
+#### Solution: Transactional Outbox Pattern
 
 The boilerplate implements the **Transactional Outbox Pattern** to guarantee atomic database writes and event publishing:
 
-#### 1. Architecture Overview
+**Pattern Overview:**
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -1802,9 +1938,11 @@ describe("PublishPostUseCase - Transaction Safety", () => {
 - **FR-006**: System MUST implement domain event dispatching for cross-aggregate communication ✅
 - **SC-016**: Domain events are dispatched and handled within the same transaction boundary ✅
 
-## Authentication Without Passport _(critical)_
+---
 
-### Problem Statement
+### Authentication Without Passport _(critical)_
+
+#### Problem Statement
 
 Most NestJS tutorials use Passport.js for authentication, but this adds unnecessary complexity and abstractions. This boilerplate implements **pure NestJS authentication** using native guards, decorators, and services.
 
@@ -1816,9 +1954,9 @@ Most NestJS tutorials use Passport.js for authentication, but this adds unnecess
 - ❌ Harder to integrate with Clean Architecture ports/adapters
 - ✅ **Our approach**: Direct control, cleaner code, better testability
 
-### Solution: Pure NestJS Authentication
+#### Solution: Pure NestJS Authentication
 
-#### 1. Architecture Overview
+**Architecture Overview:**
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -2513,3 +2651,551 @@ GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
 - **FR-031**: Auth guards MUST validate JWT tokens and extract user payload ✅
 - **FR-032**: System MUST support Google OAuth 2.0 without Passport strategies ✅
 - **SC-020**: OAuth login flow completes within 5 seconds ✅
+
+---
+
+### Swagger/OpenAPI Documentation _(mandatory)_
+
+#### Problem Statement
+
+API documentation is critical for developer experience but often becomes outdated when maintained separately from code. This boilerplate uses **@nestjs/swagger** to auto-generate OpenAPI 3.0 documentation directly from decorators.
+
+**Requirements**:
+
+- ✅ Auto-generated from TypeScript code decorators
+- ✅ Synchronized with actual implementation (single source of truth)
+- ✅ Interactive Swagger UI for testing endpoints
+- ✅ Type-safe request/response schemas
+- ✅ Examples for all DTOs
+
+#### Solution: @nestjs/swagger Integration
+
+##### 1. Setup Swagger in main.ts
+
+```typescript
+// src/main.ts
+import { NestFactory } from "@nestjs/core";
+import { ValidationPipe } from "@nestjs/common";
+import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import { AppModule } from "./app.module";
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  // Global validation pipe
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    })
+  );
+
+  // Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle("NestJS Clean Architecture API")
+    .setDescription(
+      "Production-ready boilerplate with Clean Architecture, PostgreSQL, Redis, WebSocket, Kafka"
+    )
+    .setVersion("1.0.0")
+    .addBearerAuth(
+      {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        name: "Authorization",
+        description: "Enter JWT access token",
+        in: "header",
+      },
+      "JWT-auth" // This name must match @ApiBearerAuth() in controllers
+    )
+    .addServer("http://localhost:3000", "Development")
+    .addServer("https://staging.example.com", "Staging")
+    .addServer("https://api.example.com", "Production")
+    .addTag(
+      "Authentication",
+      "User authentication endpoints (register, login, OAuth)"
+    )
+    .addTag("Users", "User management CRUD operations")
+    .addTag("Blog", "Blog posts, comments, and tags")
+    .addTag("Chat", "Real-time chat conversations and messages")
+    .addTag("Notifications", "User notifications (email, SMS, push)")
+    .addTag("Files", "File upload and download operations")
+    .addTag("Health", "Health check endpoints")
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  // Serve Swagger UI at /api/docs (development and staging only)
+  if (process.env.NODE_ENV !== "production") {
+    SwaggerModule.setup("api/docs", app, document, {
+      swaggerOptions: {
+        persistAuthorization: true, // Keep auth token after page refresh
+        tagsSorter: "alpha",
+        operationsSorter: "alpha",
+      },
+      customCssUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css",
+      customSiteTitle: "NestJS Clean Architecture API Docs",
+    });
+  }
+
+  await app.listen(3000);
+  console.log(`🚀 Application running on: http://localhost:3000`);
+  console.log(`📚 Swagger docs available at: http://localhost:3000/api/docs`);
+}
+
+bootstrap();
+```
+
+##### 2. Controller Example with Swagger Decorators
+
+```typescript
+// src/modules/user/interface/http/controllers/user.controller.ts
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from "@nestjs/common";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiExtraModels,
+  getSchemaPath,
+} from "@nestjs/swagger";
+import { CreateUserUseCase } from "../../../application/use-cases/create-user.use-case";
+import { GetUserUseCase } from "../../../application/use-cases/get-user.use-case";
+import { ListUsersUseCase } from "../../../application/use-cases/list-users.use-case";
+import { UpdateUserUseCase } from "../../../application/use-cases/update-user.use-case";
+import { DeleteUserUseCase } from "../../../application/use-cases/delete-user.use-case";
+import { CreateUserRequestDto } from "../dtos/create-user-request.dto";
+import { UpdateUserRequestDto } from "../dtos/update-user-request.dto";
+import { UserResponseDto } from "../dtos/user-response.dto";
+import { PaginatedUsersResponseDto } from "../dtos/paginated-users-response.dto";
+import { JwtAuthGuard } from "@/modules/auth/infrastructure/guards/jwt-auth.guard";
+import { RolesGuard } from "@/modules/auth/infrastructure/guards/roles.guard";
+import { Roles } from "@/common/decorators/roles.decorator";
+
+@ApiTags("Users")
+@Controller("users")
+@ApiExtraModels(UserResponseDto, PaginatedUsersResponseDto)
+export class UserController {
+  constructor(
+    private readonly createUserUseCase: CreateUserUseCase,
+    private readonly getUserUseCase: GetUserUseCase,
+    private readonly listUsersUseCase: ListUsersUseCase,
+    private readonly updateUserUseCase: UpdateUserUseCase,
+    private readonly deleteUserUseCase: DeleteUserUseCase
+  ) {}
+
+  @Post()
+  @ApiOperation({
+    summary: "Create new user",
+    description:
+      "Creates a new user account with email and password. Admin-only endpoint.",
+  })
+  @ApiResponse({
+    status: 201,
+    description: "User created successfully",
+    type: UserResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request body or validation error",
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ["email must be a valid email", "name should not be empty"],
+        error: "Bad Request",
+      },
+    },
+  })
+  @ApiResponse({
+    status: 409,
+    description: "Email already exists",
+    schema: {
+      example: {
+        statusCode: 409,
+        message: "Email already registered",
+        error: "Conflict",
+      },
+    },
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("admin")
+  @ApiBearerAuth("JWT-auth")
+  async createUser(
+    @Body() dto: CreateUserRequestDto
+  ): Promise<UserResponseDto> {
+    return this.createUserUseCase.execute(dto);
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: "List all users (paginated)",
+    description: "Retrieve paginated list of users with optional filters",
+  })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    type: Number,
+    example: 1,
+    description: "Page number",
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: Number,
+    example: 10,
+    description: "Items per page",
+  })
+  @ApiQuery({
+    name: "role",
+    required: false,
+    enum: ["user", "admin", "moderator"],
+    description: "Filter by role",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Users retrieved successfully",
+    type: PaginatedUsersResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth("JWT-auth")
+  async listUsers(
+    @Query("page") page: number = 1,
+    @Query("limit") limit: number = 10,
+    @Query("role") role?: string
+  ): Promise<PaginatedUsersResponseDto> {
+    return this.listUsersUseCase.execute({ page, limit, role });
+  }
+
+  @Get(":id")
+  @ApiOperation({
+    summary: "Get user by ID",
+    description: "Retrieve single user details by UUID",
+  })
+  @ApiParam({
+    name: "id",
+    type: "string",
+    format: "uuid",
+    description: "User UUID",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "User found",
+    type: UserResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User not found",
+    schema: {
+      example: {
+        statusCode: 404,
+        message: "User not found",
+        error: "Not Found",
+      },
+    },
+  })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth("JWT-auth")
+  async getUser(@Param("id") id: string): Promise<UserResponseDto> {
+    return this.getUserUseCase.execute(id);
+  }
+
+  @Patch(":id")
+  @ApiOperation({
+    summary: "Update user",
+    description:
+      "Update user profile information. Users can update their own profile; admins can update any user.",
+  })
+  @ApiParam({ name: "id", type: "string", format: "uuid" })
+  @ApiResponse({
+    status: 200,
+    description: "User updated successfully",
+    type: UserResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Cannot update other users",
+  })
+  @ApiResponse({ status: 404, description: "User not found" })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth("JWT-auth")
+  async updateUser(
+    @Param("id") id: string,
+    @Body() dto: UpdateUserRequestDto
+  ): Promise<UserResponseDto> {
+    return this.updateUserUseCase.execute(id, dto);
+  }
+
+  @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: "Delete user",
+    description: "Soft delete user account. Admin-only endpoint.",
+  })
+  @ApiParam({ name: "id", type: "string", format: "uuid" })
+  @ApiResponse({ status: 204, description: "User deleted successfully" })
+  @ApiResponse({ status: 403, description: "Forbidden - Admin only" })
+  @ApiResponse({ status: 404, description: "User not found" })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("admin")
+  @ApiBearerAuth("JWT-auth")
+  async deleteUser(@Param("id") id: string): Promise<void> {
+    return this.deleteUserUseCase.execute(id);
+  }
+}
+```
+
+##### 3. DTO Example with Swagger Decorators
+
+```typescript
+// src/modules/user/interface/http/dtos/create-user-request.dto.ts
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  MaxLength,
+  IsOptional,
+  IsEnum,
+} from "class-validator";
+
+export class CreateUserRequestDto {
+  @ApiProperty({
+    description: "User email address (must be unique)",
+    example: "john.doe@example.com",
+    format: "email",
+    uniqueItems: true,
+  })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({
+    description: "User password (minimum 8 characters)",
+    example: "SecurePassword123!",
+    minLength: 8,
+    format: "password",
+  })
+  @IsString()
+  @MinLength(8)
+  password: string;
+
+  @ApiProperty({
+    description: "User full name",
+    example: "John Doe",
+    minLength: 1,
+    maxLength: 255,
+  })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  name: string;
+
+  @ApiProperty({
+    description: "User role",
+    enum: ["user", "admin", "moderator"],
+    default: "user",
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(["user", "admin", "moderator"])
+  role?: string = "user";
+}
+```
+
+```typescript
+// src/modules/user/interface/http/dtos/user-response.dto.ts
+import { ApiProperty } from "@nestjs/swagger";
+
+export class UserResponseDto {
+  @ApiProperty({
+    description: "User unique identifier",
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    format: "uuid",
+  })
+  id: string;
+
+  @ApiProperty({
+    description: "User email address",
+    example: "john.doe@example.com",
+    format: "email",
+  })
+  email: string;
+
+  @ApiProperty({
+    description: "User full name",
+    example: "John Doe",
+  })
+  name: string;
+
+  @ApiProperty({
+    description: "User role",
+    enum: ["user", "admin", "moderator"],
+    example: "user",
+  })
+  role: string;
+
+  @ApiProperty({
+    description: "Authentication provider",
+    enum: ["local", "google"],
+    example: "local",
+  })
+  provider: string;
+
+  @ApiProperty({
+    description: "Account creation timestamp",
+    example: "2024-11-11T10:30:00.000Z",
+    format: "date-time",
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: "Last update timestamp",
+    example: "2024-11-11T15:45:00.000Z",
+    format: "date-time",
+  })
+  updatedAt: Date;
+}
+```
+
+```typescript
+// src/modules/user/interface/http/dtos/paginated-users-response.dto.ts
+import { ApiProperty } from "@nestjs/swagger";
+import { UserResponseDto } from "./user-response.dto";
+
+class PaginationMetaDto {
+  @ApiProperty({ example: 100, description: "Total number of items" })
+  total: number;
+
+  @ApiProperty({ example: 1, description: "Current page number" })
+  page: number;
+
+  @ApiProperty({ example: 10, description: "Items per page" })
+  limit: number;
+
+  @ApiProperty({ example: 10, description: "Total number of pages" })
+  totalPages: number;
+
+  @ApiProperty({ example: true, description: "Whether there is a next page" })
+  hasNextPage: boolean;
+
+  @ApiProperty({
+    example: false,
+    description: "Whether there is a previous page",
+  })
+  hasPreviousPage: boolean;
+}
+
+export class PaginatedUsersResponseDto {
+  @ApiProperty({
+    description: "Array of users",
+    type: [UserResponseDto],
+  })
+  data: UserResponseDto[];
+
+  @ApiProperty({
+    description: "Pagination metadata",
+    type: PaginationMetaDto,
+  })
+  meta: PaginationMetaDto;
+}
+```
+
+##### 4. Database Naming in Swagger Examples
+
+All database-related examples in Swagger MUST use **snake_case** for column names:
+
+```typescript
+// Example: Showing database schema in API documentation
+@ApiProperty({
+  description: 'Database column names use snake_case',
+  example: {
+    id: '550e8400-e29b-41d4-a716-446655440000',
+    user_name: 'john_doe',           // ✅ snake_case in DB
+    email_address: 'john@example.com', // ✅ snake_case in DB
+    created_at: '2024-11-11T10:30:00Z', // ✅ snake_case in DB
+    updated_at: '2024-11-11T15:45:00Z', // ✅ snake_case in DB
+  },
+})
+```
+
+**Note**: While database columns use snake_case, TypeScript DTOs use camelCase. TypeORM handles the mapping automatically.
+
+##### 5. Accessing Swagger UI
+
+**Development**:
+
+- URL: `http://localhost:3000/api/docs`
+- Interactive testing enabled
+- Authorization supported (click "Authorize" button, enter JWT token)
+
+**Staging**:
+
+- URL: `https://staging.example.com/api/docs`
+- Protected by basic auth (optional)
+
+**Production**:
+
+- Swagger UI DISABLED for security
+- OpenAPI JSON available at `/api/docs-json` for client SDK generation (protected by API key)
+
+##### 6. Best Practices
+
+1. **Always add @ApiTags** to controllers for grouping
+2. **Use @ApiOperation** with summary and description for every endpoint
+3. **Document all @ApiResponse** status codes (success + errors)
+4. **Add @ApiProperty** to ALL DTO properties with examples
+5. **Use @ApiBearerAuth** for protected endpoints
+6. **Include @ApiParam** for path parameters
+7. **Include @ApiQuery** for query parameters with examples
+8. **Use @ApiExtraModels** for complex nested schemas
+9. **Provide realistic examples** (not "string" or "test@test.com")
+10. **Keep descriptions concise** but informative
+
+##### 7. Generating Client SDKs
+
+```bash
+# Export OpenAPI JSON
+curl http://localhost:3000/api/docs-json > openapi.json
+
+# Generate TypeScript Axios client
+npx @openapitools/openapi-generator-cli generate \
+  -i openapi.json \
+  -g typescript-axios \
+  -o clients/typescript
+
+# Generate Python client
+npx @openapitools/openapi-generator-cli generate \
+  -i openapi.json \
+  -g python \
+  -o clients/python
+
+# Generate Java client
+npx @openapitools/openapi-generator-cli generate \
+  -i openapi.json \
+  -g java \
+  -o clients/java
+```
+
+### Related Requirements
+
+- **FR-025**: System MUST generate OpenAPI/Swagger documentation automatically ✅
+- **FR-025.1**: All controllers MUST be decorated with @ApiTags ✅
+- **FR-025.2**: All endpoints MUST have @ApiOperation ✅
+- **FR-025.3**: All DTOs MUST use @ApiProperty decorators ✅
+- **FR-025.4**: Swagger UI MUST be at /api/docs in dev/staging ✅
+- **SC-013**: 100% of API endpoints have OpenAPI documentation with examples ✅
