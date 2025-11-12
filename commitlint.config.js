@@ -20,5 +20,6 @@ module.exports = {
       ],
     ],
     'subject-case': [0], // Allow any case for subject
+    'header-max-length': [2, 'always', 200],
   },
 };
