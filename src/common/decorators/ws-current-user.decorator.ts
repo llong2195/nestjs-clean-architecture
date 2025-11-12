@@ -7,7 +7,7 @@ import { JwtPayload } from '../guards/ws-jwt-auth.guard';
  * Usage: @WsCurrentUser() user: JwtPayload
  */
 export const WsCurrentUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): JwtPayload => {
+  (_data: unknown, ctx: ExecutionContext): JwtPayload => {
     const client: Socket = ctx.switchToWs().getClient<Socket>();
     return client.data.user;
   },

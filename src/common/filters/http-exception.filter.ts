@@ -24,12 +24,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const responseObj = exceptionResponse as Record<string, unknown>;
         message = (responseObj.message as string) || exception.message;
         details = responseObj.errors || responseObj.details;
+        // Extract custom error code if provided
+        errorCode = (responseObj.errorCode as ErrorCode) || this.mapStatusToErrorCode(status);
       } else {
         message = exception.message;
+        errorCode = this.mapStatusToErrorCode(status);
       }
-
-      // Map HTTP status to error codes
-      errorCode = this.mapStatusToErrorCode(status);
     } else if (exception instanceof Error) {
       message = exception.message;
     }

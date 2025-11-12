@@ -21,15 +21,14 @@ export class LoggerService {
         const context = info.context as string | undefined;
         const requestId = info.requestId as string | undefined;
         const {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           timestamp: _,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
           level: __,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
           message: ___,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
           context: ____,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
           requestId: _____,
           ...meta
         } = info;

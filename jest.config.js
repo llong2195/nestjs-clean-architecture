@@ -1,9 +1,16 @@
+// @ts-ignore
 module.exports = {
+  preset: 'ts-jest',
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
   testRegex: '.*\\.spec\\.ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        tsconfig: 'tsconfig.json',
+      },
+    ],
   },
   collectCoverageFrom: ['src/**/*.(t|j)s'],
   coverageDirectory: './coverage',
@@ -12,21 +19,49 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  transformIgnorePatterns: ['node_modules/(?!((\\.pnpm/)?uuid))'],
   projects: [
     {
       displayName: 'unit',
+      preset: 'ts-jest',
       testMatch: ['<rootDir>/test/unit/**/*.spec.ts'],
       testEnvironment: 'node',
+      transform: {
+        '^.+\\.ts$': [
+          'ts-jest',
+          {
+            tsconfig: 'tsconfig.json',
+          },
+        ],
+      },
     },
     {
       displayName: 'integration',
+      preset: 'ts-jest',
       testMatch: ['<rootDir>/test/integration/**/*.spec.ts'],
       testEnvironment: 'node',
+      transform: {
+        '^.+\\.ts$': [
+          'ts-jest',
+          {
+            tsconfig: 'tsconfig.json',
+          },
+        ],
+      },
     },
     {
       displayName: 'e2e',
+      preset: 'ts-jest',
       testMatch: ['<rootDir>/test/e2e/**/*.e2e-spec.ts'],
       testEnvironment: 'node',
+      transform: {
+        '^.+\\.ts$': [
+          'ts-jest',
+          {
+            tsconfig: 'tsconfig.json',
+          },
+        ],
+      },
     },
   ],
 };

@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { APP_GUARD } from '@nestjs/core';
 import { AppConfigService } from '../../shared/config/config.service';
-import { AuthController } from './interface/http/auth.controller';
-import { LoginUseCase } from './application/use-cases/login.use-case';
-import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-case';
-import { LogoutUseCase } from './application/use-cases/logout.use-case';
-import { JwtAuthGuard } from './interface/guards/jwt-auth.guard';
-import { RolesGuard } from './interface/guards/roles.guard';
 import { UserModule } from '../user/user.module';
+import { LoginUseCase } from './application/use-cases/login.use-case';
+import { LogoutUseCase } from './application/use-cases/logout.use-case';
+import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-case';
+import { GoogleOAuthService } from './infrastructure/oauth/google-oauth.service';
+import { AuthController } from './interface/http/auth.controller';
 
 /**
  * Authentication Module
@@ -33,13 +31,12 @@ import { UserModule } from '../user/user.module';
     LoginUseCase,
     RefreshTokenUseCase,
     LogoutUseCase,
-    JwtAuthGuard,
-    RolesGuard,
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
+    GoogleOAuthService,
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: JwtAuthGuard,
+    // },
   ],
-  exports: [JwtAuthGuard, RolesGuard],
+  exports: [],
 })
 export class AuthModule {}

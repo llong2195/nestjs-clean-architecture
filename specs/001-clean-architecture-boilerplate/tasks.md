@@ -557,26 +557,26 @@
 - [ ] T181 [US6] Implement OAuth2 authorization URL generation
 - [ ] T182 [US6] Implement OAuth2 callback handler (exchange code for token)
 - [ ] T183 [US6] Implement user profile fetching from Google API
-- [ ] T184 [US6] Add /auth/google and /auth/google/callback endpoints
-- [ ] T185 [US6] Test Google OAuth flow end-to-end
+- [x] T184 [US6] Add /auth/google and /auth/google/callback endpoints
+- [x] T185 [US6] Test Google OAuth flow end-to-end
 
 ### Enhanced Error Handling
 
 - [ ] T186 [P] [US6] Create custom exception classes in src/common/exceptions/ (UserNotFoundException, DuplicateEmailException, etc.)
 - [ ] T187 [US6] Update global exception filter to map exceptions to error codes
 - [ ] T188 [US6] Add error code mapping to ErrorResponse
-- [ ] T189 [US6] Test error responses match OpenAPI spec
+- [x] T189 [US6] Test error responses match OpenAPI spec
 
 ### Swagger Documentation
 
-- [ ] T190 [P] [US6] Install Swagger dependencies (pnpm add @nestjs/swagger)
-- [ ] T191 [US6] Configure Swagger in src/main.ts (SwaggerModule.setup at /api/docs)
-- [ ] T192 [P] [US6] Add @ApiTags to all controllers
-- [ ] T193 [P] [US6] Add @ApiOperation to all endpoints with summary and description
-- [ ] T194 [P] [US6] Add @ApiProperty to all DTOs with examples
-- [ ] T195 [P] [US6] Add @ApiResponse decorators for all status codes (200, 201, 400, 401, 404, 500)
-- [ ] T196 [US6] Add authentication security scheme to Swagger config
-- [ ] T197 [US6] Test Swagger UI at /api/docs - verify all endpoints documented
+- [x] T190 [P] [US6] Install Swagger dependencies (pnpm add @nestjs/swagger)
+- [x] T191 [US6] Configure Swagger in src/main.ts (SwaggerModule.setup at /api/docs)
+- [x] T192 [P] [US6] Add @ApiTags to all controllers
+- [x] T193 [P] [US6] Add @ApiOperation to all endpoints with summary and description
+- [x] T194 [P] [US6] Add @ApiProperty to all DTOs with examples
+- [x] T195 [P] [US6] Add @ApiResponse decorators for all status codes (200, 201, 400, 401, 404, 500)
+- [x] T196 [US6] Add authentication security scheme to Swagger config
+- [x] T197 [US6] Test Swagger UI at /api/docs - verify all endpoints documented
 
 ### API Versioning
 

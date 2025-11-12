@@ -37,6 +37,9 @@ async function bootstrap() {
     .addTag('health', 'Health check endpoints')
     .addTag('auth', 'Authentication endpoints')
     .addTag('users', 'User management endpoints')
+    .addTag('posts', 'Post management endpoints')
+    .addTag('Tags', 'Tag management endpoints')
+    .addTag('Comments', 'Comment management endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
