@@ -111,6 +111,8 @@ API Documentation (Swagger): http://localhost:3000/api/docs
 
 ## Documentation
 
+- **[docs/testing.md](docs/testing.md)** - Complete testing guide (unit/integration/E2E)
+- **[docs/git-hooks.md](docs/git-hooks.md)** - Git hooks and commit conventions
 - **[LOCAL_SETUP.md](LOCAL_SETUP.md)** - Running with local PostgreSQL/Redis
 - **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - What's completed and next steps
 - **[QUICKSTART.md](QUICKSTART.md)** - Step-by-step checklist
@@ -164,18 +166,104 @@ pnpm lint:fix           # Auto-fix issues
 pnpm format             # Format with Prettier
 ```
 
-## Run Tests
+## Git Hooks
+
+The project uses automated Git hooks to enforce code quality and commit conventions. See **[docs/git-hooks.md](docs/git-hooks.md)** for complete guide.
+
+### Automatic Checks
+
+**Pre-commit hook** runs on every commit:
+
+- ✅ ESLint with auto-fix
+- ✅ Prettier formatting
+
+**Commit message hook** validates commit format:
 
 ```bash
-# unit tests
+# ✅ Valid commit messages (Conventional Commits)
+git commit -m "feat: add user authentication"
+git commit -m "fix: resolve null pointer in repository"
+git commit -m "docs: update README"
+
+# ❌ Invalid commit messages
+git commit -m "update code"           # Missing type
+git commit -m "Fix bug"               # Type must be lowercase
+```
+
+### Commit Types
+
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation
+- `test` - Tests
+- `refactor` - Code refactoring
+- `style` - Code formatting
+- `perf` - Performance
+- `chore` - Maintenance
+
+See **[docs/git-hooks.md](docs/git-hooks.md)** for troubleshooting and advanced usage.
+
+## Testing
+
+The project includes comprehensive unit, integration, and end-to-end tests. See **[docs/testing.md](docs/testing.md)** for complete testing guide.
+
+### Quick Test Commands
+
+```bash
+# Run all tests
 pnpm test
 
-# e2e tests
-$ pnpm run test:e2e
+# Run specific test suites
+pnpm test:unit          # Unit tests (fast, isolated)
+pnpm test:integration   # Integration tests (requires Docker)
+pnpm test:e2e           # End-to-end tests (requires running app)
 
-# test coverage
-$ pnpm run test:cov
+# Watch mode
+pnpm test:watch         # Auto-run tests on file changes
+
+# Coverage report
+pnpm test:cov           # Generate HTML coverage report
 ```
+
+### Test Structure
+
+```
+test/
+├── unit/                   # Domain & application logic tests (70%)
+│   ├── user/              # User entity and use case tests
+│   └── post/              # Post aggregate tests
+├── integration/            # Infrastructure tests (20%)
+│   ├── user/              # User repository integration tests
+│   └── post/              # Post repository integration tests
+└── e2e/                    # API flow tests (10%)
+    ├── auth.e2e-spec.ts   # Authentication flows
+    ├── user.e2e-spec.ts   # User CRUD operations
+    └── post.e2e-spec.ts   # Post lifecycle
+```
+
+### Coverage Requirements
+
+- **Global**: 80% (branches, functions, lines, statements)
+- **Domain Layer**: 90% (critical business logic)
+- **Application Layer**: 85% (use cases)
+
+### Example: Running Tests
+
+```bash
+# Run tests for a specific module
+pnpm test user
+
+# Run tests with specific name pattern
+pnpm test --testNamePattern="should create user"
+
+# Run tests with detailed output
+pnpm test --verbose
+
+# Debug tests
+pnpm test:debug
+```
+
+For complete testing documentation including best practices, troubleshooting, and examples, see **[docs/testing.md](docs/testing.md)**.
 
 ## Deployment
 

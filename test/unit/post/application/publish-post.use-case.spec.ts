@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { PublishPostUseCase } from '../../../../src/modules/post/application/use-cases/publish-post.use-case';
 import type { IPostRepository } from '../../../../src/modules/post/domain/repositories/post.repository.interface';
 import { Post } from '../../../../src/modules/post/domain/aggregates/post.aggregate';
@@ -42,10 +43,8 @@ describe('PublishPostUseCase', () => {
       expect(result).toBeDefined();
       expect(result.status).toBe(PostStatus.PUBLISHED);
       expect(result.publishedAt).toBeInstanceOf(Date);
-      expect(mockPostRepository.findById.bind(mockPostRepository)).toHaveBeenCalledWith(postId);
-      expect(mockPostRepository.saveWithTransaction.bind(mockPostRepository)).toHaveBeenCalledWith(
-        draftPost,
-      );
+      expect(mockPostRepository.findById).toHaveBeenCalledWith(postId);
+      expect(mockPostRepository.saveWithTransaction).toHaveBeenCalledWith(draftPost);
     });
 
     it('should generate domain events when publishing', async () => {
@@ -79,9 +78,7 @@ describe('PublishPostUseCase', () => {
       await expect(useCase.execute(postId)).rejects.toThrow(
         'Post with ID "non-existent-post" not found',
       );
-      expect(
-        mockPostRepository.saveWithTransaction.bind(mockPostRepository),
-      ).not.toHaveBeenCalled();
+      expect(mockPostRepository.saveWithTransaction).not.toHaveBeenCalled();
     });
 
     it('should throw error when trying to publish already published post', async () => {
@@ -102,9 +99,7 @@ describe('PublishPostUseCase', () => {
       mockPostRepository.findById.mockResolvedValue(publishedPost);
 
       await expect(useCase.execute(postId)).rejects.toThrow('Post is already published');
-      expect(
-        mockPostRepository.saveWithTransaction.bind(mockPostRepository),
-      ).not.toHaveBeenCalled();
+      expect(mockPostRepository.saveWithTransaction).not.toHaveBeenCalled();
     });
 
     it('should throw error when trying to publish archived post', async () => {
@@ -125,9 +120,7 @@ describe('PublishPostUseCase', () => {
       mockPostRepository.findById.mockResolvedValue(archivedPost);
 
       await expect(useCase.execute(postId)).rejects.toThrow('Cannot publish an archived post');
-      expect(
-        mockPostRepository.saveWithTransaction.bind(mockPostRepository),
-      ).not.toHaveBeenCalled();
+      expect(mockPostRepository.saveWithTransaction).not.toHaveBeenCalled();
     });
 
     it('should handle repository errors', async () => {
@@ -151,10 +144,8 @@ describe('PublishPostUseCase', () => {
 
       await useCase.execute(postId);
 
-      expect(mockPostRepository.saveWithTransaction.bind(mockPostRepository)).toHaveBeenCalledTimes(
-        1,
-      );
-      expect(mockPostRepository.save.bind(mockPostRepository)).not.toHaveBeenCalled();
+      expect(mockPostRepository.saveWithTransaction).toHaveBeenCalledTimes(1);
+      expect(mockPostRepository.save).not.toHaveBeenCalled();
     });
   });
 });

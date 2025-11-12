@@ -4,3 +4,6 @@ build/
 coverage/
 *.min.js
 *.bundle.js
+*.config.js
+.lintstagedrc.js
+commitlint.config.js

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { CreateUserUseCase } from '../../../../src/modules/user/application/use-cases/create-user.use-case';
 import type { IUserRepository } from '../../../../src/modules/user/domain/repositories/user.repository.interface';
 import { User } from '../../../../src/modules/user/domain/entities/user.entity';
@@ -44,10 +45,8 @@ describe('CreateUserUseCase', () => {
       expect(result.userName).toBe(dto.userName);
       expect(result.role).toBe(UserRole.USER);
       expect(result.provider).toBe('local');
-      expect(mockUserRepository.findByEmail.bind(mockUserRepository)).toHaveBeenCalledWith(
-        dto.email,
-      );
-      expect(mockUserRepository.save.bind(mockUserRepository)).toHaveBeenCalledTimes(1);
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(dto.email);
+      expect(mockUserRepository.save).toHaveBeenCalledTimes(1);
     });
 
     it('should create user with custom role', async () => {
@@ -82,10 +81,8 @@ describe('CreateUserUseCase', () => {
       mockUserRepository.findByEmail.mockResolvedValue(existingUser);
 
       await expect(useCase.execute(dto)).rejects.toThrow('User with this email already exists');
-      expect(mockUserRepository.findByEmail.bind(mockUserRepository)).toHaveBeenCalledWith(
-        dto.email,
-      );
-      expect(mockUserRepository.save.bind(mockUserRepository)).not.toHaveBeenCalled();
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(dto.email);
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
 
     it('should validate email format', async () => {
@@ -98,7 +95,7 @@ describe('CreateUserUseCase', () => {
       mockUserRepository.findByEmail.mockResolvedValue(null);
 
       await expect(useCase.execute(dto)).rejects.toThrow('Invalid email format');
-      expect(mockUserRepository.save.bind(mockUserRepository)).not.toHaveBeenCalled();
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
 
     it('should validate password strength', async () => {
@@ -113,7 +110,7 @@ describe('CreateUserUseCase', () => {
       await expect(useCase.execute(dto)).rejects.toThrow(
         'Password must be at least 8 characters long',
       );
-      expect(mockUserRepository.save.bind(mockUserRepository)).not.toHaveBeenCalled();
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
 
     it('should validate user name constraints', async () => {
@@ -128,7 +125,7 @@ describe('CreateUserUseCase', () => {
       await expect(useCase.execute(dto)).rejects.toThrow(
         'User name must be between 3 and 50 characters',
       );
-      expect(mockUserRepository.save.bind(mockUserRepository)).not.toHaveBeenCalled();
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
 
     it('should persist user with hashed password', async () => {

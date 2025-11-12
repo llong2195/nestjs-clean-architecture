@@ -21,5 +21,7 @@
     "noImplicitAny": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "include": ["src/**/*", "test/**/*", ".lintstagedrc.js", "commitlint.config.js"],
+  "exclude": ["node_modules"]
 }
