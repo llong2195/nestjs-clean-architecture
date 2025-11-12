@@ -6,7 +6,7 @@ services:
   # ================================
   postgres:
     image: postgres:18-alpine
-    container_name: nestjs-postgres
+    container_name: nestjs-postgres-dev
     restart: unless-stopped
     ports:
       - '5432:5432'
@@ -15,56 +15,56 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: nestjs_clean_architecture
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_dev:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - nestjs-network
+      - nestjs-network-dev
 
   # ================================
   # Redis Cache & Session Store
   # ================================
   redis:
     image: redis:7-alpine
-    container_name: nestjs-redis
+    container_name: nestjs-redis-dev
     restart: unless-stopped
     ports:
       - '6379:6379'
     volumes:
-      - redis_data:/data
+      - redis_data_dev:/data
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - nestjs-network
+      - nestjs-network-dev
 
   # ================================
   # Zookeeper (Kafka dependency)
   # ================================
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
-    container_name: nestjs-zookeeper
+    container_name: nestjs-zookeeper-dev
     restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     volumes:
-      - zookeeper_data:/var/lib/zookeeper/data
-      - zookeeper_logs:/var/lib/zookeeper/log
+      - zookeeper_data_dev:/var/lib/zookeeper/data
+      - zookeeper_logs_dev:/var/lib/zookeeper/log
     networks:
-      - nestjs-network
+      - nestjs-network-dev
 
   # ================================
   # Kafka Message Broker
   # ================================
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: nestjs-kafka
+    container_name: nestjs-kafka-dev
     restart: unless-stopped
     depends_on:
       - zookeeper
@@ -79,28 +79,29 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
     volumes:
-      - kafka_data:/var/lib/kafka/data
+      - kafka_data_dev:/var/lib/kafka/data
     healthcheck:
       test: ['CMD', 'kafka-broker-api-versions', '--bootstrap-server', 'localhost:9092']
       interval: 30s
       timeout: 10s
       retries: 5
     networks:
-      - nestjs-network
+      - nestjs-network-dev
 
   # ================================
-  # NestJS Application (Production)
+  # NestJS Application (Development)
   # ================================
-  app:
+  app-dev:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: nestjs-app
+      dockerfile: Dockerfile.dev
+    container_name: nestjs-app-dev
     restart: unless-stopped
     ports:
       - '3000:3000'
+      - '9229:9229' # Debug port
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       PORT: 3000
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
@@ -110,8 +111,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       KAFKA_BROKERS: kafka:29092
-      JWT_SECRET: change-me-in-production
-      JWT_REFRESH_SECRET: change-me-in-production-refresh
+      JWT_SECRET: dev-secret-key
+      JWT_REFRESH_SECRET: dev-refresh-secret-key
     depends_on:
       postgres:
         condition: service_healthy
@@ -119,39 +120,31 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-    healthcheck:
-      test:
-        [
-          'CMD',
-          'node',
-          '-e',
-          "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})",
-        ]
-      interval: 30s
-      timeout: 3s
-      start_period: 40s
-      retries: 3
+    volumes:
+      - ./src:/app/src:delegated
+      - ./test:/app/test:delegated
+      - /app/node_modules
     networks:
-      - nestjs-network
+      - nestjs-network-dev
 
 # ================================
 # Volumes
 # ================================
 volumes:
-  postgres_data:
+  postgres_data_dev:
     driver: local
-  redis_data:
+  redis_data_dev:
     driver: local
-  zookeeper_data:
+  zookeeper_data_dev:
     driver: local
-  zookeeper_logs:
+  zookeeper_logs_dev:
     driver: local
-  kafka_data:
+  kafka_data_dev:
     driver: local
 
 # ================================
 # Networks
 # ================================
 networks:
-  nestjs-network:
+  nestjs-network-dev:
     driver: bridge

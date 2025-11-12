@@ -14,6 +14,8 @@ import { UserModule } from './modules/user/user.module';
 import { PostModule } from './modules/post/post.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { ConversationModule } from './modules/conversation/conversation.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -24,6 +26,13 @@ import { ConversationModule } from './modules/conversation/conversation.module';
     BullMQModule,
     KafkaModule,
     DomainEventsModule,
+    // Rate limiting: 100 requests per 60 seconds per IP
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 seconds
+        limit: 100, // 100 requests
+      },
+    ]),
     AuthModule,
     UserModule,
     PostModule,
@@ -31,7 +40,14 @@ import { ConversationModule } from './modules/conversation/conversation.module';
     ConversationModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // Global rate limiting guard
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

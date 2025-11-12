@@ -57,7 +57,29 @@ If you have PostgreSQL and Redis installed locally, see **[LOCAL_SETUP.md](LOCAL
 3. Run migrations: `pnpm migration:run`
 4. Start server: `pnpm start:dev`
 
-### Option 2: Docker
+### Option 2: Docker (Recommended)
+
+See **[docs/docker.md](docs/docker.md)** for complete Docker deployment guide.
+
+**Quick start with Docker:**
+
+```bash
+# Development (with hot-reload)
+pnpm docker:dev
+
+# Production
+pnpm docker:prod
+
+# Clean up
+pnpm docker:clean
+```
+
+This starts:
+
+- PostgreSQL (port 5432)
+- Redis (port 6379)
+- Kafka (port 9092)
+- NestJS App (port 3000)
 
 ### 1. Install Dependencies
 
@@ -113,6 +135,8 @@ API Documentation (Swagger): http://localhost:3000/api/docs
 
 - **[docs/testing.md](docs/testing.md)** - Complete testing guide (unit/integration/E2E)
 - **[docs/git-hooks.md](docs/git-hooks.md)** - Git hooks and commit conventions
+- **[docs/docker.md](docs/docker.md)** - Docker deployment guide
+- **[docs/cicd.md](docs/cicd.md)** - CI/CD pipeline and GitHub Actions
 - **[LOCAL_SETUP.md](LOCAL_SETUP.md)** - Running with local PostgreSQL/Redis
 - **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - What's completed and next steps
 - **[QUICKSTART.md](QUICKSTART.md)** - Step-by-step checklist
@@ -154,6 +178,15 @@ pnpm start:prod         # Start production build
 pnpm migration:generate src/shared/database/migrations/MigrationName
 pnpm migration:run      # Run pending migrations
 pnpm migration:revert   # Rollback last migration
+
+# Docker
+pnpm docker:dev         # Start development stack
+pnpm docker:dev:build   # Rebuild and start dev stack
+pnpm docker:dev:down    # Stop dev stack
+pnpm docker:prod        # Start production stack
+pnpm docker:prod:build  # Rebuild and start prod stack
+pnpm docker:prod:down   # Stop prod stack
+pnpm docker:clean       # Remove all containers and volumes
 
 # Testing
 pnpm test               # Unit tests
@@ -264,6 +297,20 @@ pnpm test:debug
 ```
 
 For complete testing documentation including best practices, troubleshooting, and examples, see **[docs/testing.md](docs/testing.md)**.
+
+## Documentation
+
+### Available Documentation
+
+- **[Architecture Guide](docs/architecture.md)** - Clean Architecture and DDD patterns explained
+- **[API Development Guide](docs/api-development.md)** - Best practices for building APIs
+- **[Testing Guide](docs/testing.md)** - Comprehensive testing strategies and examples
+- **[Deployment Guide](docs/deployment.md)** - Deploy to AWS, GCP, Azure, Heroku, etc.
+- **[Development Tools Guide](docs/dev-tools.md)** - Circular dependency detection and automated versioning
+- **[Git Hooks Guide](docs/git-hooks.md)** - Pre-commit hooks and commit conventions
+- **[Docker Guide](docs/docker.md)** - Complete Docker deployment guide
+- **[CI/CD Guide](docs/cicd.md)** - GitHub Actions CI/CD pipeline documentation
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to this project
 
 ## Deployment
 
