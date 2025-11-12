@@ -1,5 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Test, TestingModule } from '@nestjs/testing';
 import { io, Socket } from 'socket.io-client';
 import { AppModule } from '../../src/app.module';
 import { RedisIoAdapter } from '../../src/shared/websocket/websocket.adapter';
@@ -36,7 +37,8 @@ describe('Multi-Instance WebSocket (e2e)', () => {
     }).compile();
 
     app1 = moduleFixture1.createNestApplication();
-    const redisAdapter1 = new RedisIoAdapter(app1);
+    const configService1 = app1.get(ConfigService);
+    const redisAdapter1 = new RedisIoAdapter(app1, configService1);
     await redisAdapter1.connectToRedis();
     app1.useWebSocketAdapter(redisAdapter1);
     await app1.listen(TEST_PORT_1);
@@ -47,7 +49,8 @@ describe('Multi-Instance WebSocket (e2e)', () => {
     }).compile();
 
     app2 = moduleFixture2.createNestApplication();
-    const redisAdapter2 = new RedisIoAdapter(app2);
+    const configService2 = app2.get(ConfigService);
+    const redisAdapter2 = new RedisIoAdapter(app2, configService2);
     await redisAdapter2.connectToRedis();
     app2.useWebSocketAdapter(redisAdapter2);
     await app2.listen(TEST_PORT_2);

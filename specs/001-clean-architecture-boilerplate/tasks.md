@@ -552,19 +552,19 @@
 
 ### Google OAuth
 
-- [ ] T179 [P] [US6] Install Google auth dependencies (pnpm add axios)
-- [ ] T180 [P] [US6] Create GoogleOAuthService in src/modules/auth/infrastructure/oauth/google-oauth.service.ts
-- [ ] T181 [US6] Implement OAuth2 authorization URL generation
-- [ ] T182 [US6] Implement OAuth2 callback handler (exchange code for token)
-- [ ] T183 [US6] Implement user profile fetching from Google API
+- [x] T179 [P] [US6] Install Google auth dependencies (pnpm add google-auth-library)
+- [x] T180 [P] [US6] Create GoogleOAuthService in src/modules/auth/infrastructure/oauth/google-oauth.service.ts
+- [x] T181 [US6] Implement OAuth2 authorization URL generation
+- [x] T182 [US6] Implement OAuth2 callback handler (exchange code for token)
+- [x] T183 [US6] Implement user profile fetching from Google API
 - [x] T184 [US6] Add /auth/google and /auth/google/callback endpoints
 - [x] T185 [US6] Test Google OAuth flow end-to-end
 
 ### Enhanced Error Handling
 
-- [ ] T186 [P] [US6] Create custom exception classes in src/common/exceptions/ (UserNotFoundException, DuplicateEmailException, etc.)
-- [ ] T187 [US6] Update global exception filter to map exceptions to error codes
-- [ ] T188 [US6] Add error code mapping to ErrorResponse
+- [x] T186 [P] [US6] Create custom exception classes in src/common/exceptions/ (UserNotFoundException, DuplicateEmailException, etc.)
+- [x] T187 [US6] Update global exception filter to map exceptions to error codes
+- [x] T188 [US6] Add error code mapping to ErrorResponse
 - [x] T189 [US6] Test error responses match OpenAPI spec
 
 ### Swagger Documentation
@@ -595,23 +595,23 @@
 
 ### Unit Tests (Domain & Application)
 
-- [ ] T200 [P] [US7] Create unit test for User entity in test/unit/user/domain/user.entity.spec.ts
-- [ ] T201 [P] [US7] Create unit test for Email value object in test/unit/user/domain/email.vo.spec.ts
-- [ ] T202 [P] [US7] Create unit test for Password value object in test/unit/user/domain/password.vo.spec.ts
-- [ ] T203 [P] [US7] Create unit test for CreateUserUseCase in test/unit/user/application/create-user.use-case.spec.ts
-- [ ] T204 [P] [US7] Create unit test for Post aggregate in test/unit/post/domain/post.aggregate.spec.ts
-- [ ] T205 [P] [US7] Create unit test for PublishPostUseCase in test/unit/post/application/publish-post.use-case.spec.ts
-- [ ] T206 [US7] Run unit tests (pnpm test) and verify >80% coverage for domain layer
+- [x] T200 [P] [US7] Create unit test for User entity in test/unit/user/domain/user.entity.spec.ts
+- [x] T201 [P] [US7] Create unit test for Email value object in test/unit/user/domain/email.vo.spec.ts
+- [x] T202 [P] [US7] Create unit test for Password value object in test/unit/user/domain/password.vo.spec.ts
+- [x] T203 [P] [US7] Create unit test for CreateUserUseCase in test/unit/user/application/create-user.use-case.spec.ts
+- [x] T204 [P] [US7] Create unit test for Post aggregate in test/unit/post/domain/post.aggregate.spec.ts
+- [x] T205 [P] [US7] Create unit test for PublishPostUseCase in test/unit/post/application/publish-post.use-case.spec.ts
+- [x] T206 [US7] Run unit tests (pnpm test) and verify >80% coverage for domain layer
 
 ### Integration Tests (Repositories & Infrastructure)
 
-- [ ] T207 [P] [US7] Install test containers (pnpm add -D testcontainers)
-- [ ] T208 [P] [US7] Create database test helper in test/helpers/database-test.helper.ts
-- [ ] T209 [P] [US7] Create Redis test helper in test/helpers/redis-test.helper.ts
-- [ ] T210 [P] [US7] Create integration test for UserRepository in test/integration/user/user.repository.integration.spec.ts
-- [ ] T211 [P] [US7] Create integration test for PostRepository in test/integration/post/post.repository.integration.spec.ts
-- [ ] T212 [P] [US7] Create integration test for OutboxProcessor in test/integration/outbox/outbox.processor.integration.spec.ts
-- [ ] T213 [US7] Run integration tests (pnpm test:integration)
+- [x] T207 [P] [US7] Install test containers (pnpm add -D testcontainers)
+- [x] T208 [P] [US7] Create database test helper in test/helpers/database-test.helper.ts
+- [x] T209 [P] [US7] Create Redis test helper in test/helpers/redis-test.helper.ts
+- [x] T210 [P] [US7] Create integration test for UserRepository in test/integration/user/user.repository.integration.spec.ts
+- [x] T211 [P] [US7] Create integration test for PostRepository in test/integration/post/post.repository.integration.spec.ts
+- [x] T212 [P] [US7] Create integration test for OutboxProcessor in test/integration/outbox/outbox.processor.integration.spec.ts
+- [ ] T213 [US7] Run integration tests (pnpm test:integration) - BLOCKED: ts-jest module resolution with nodenext
 
 ### E2E Tests (API & WebSocket)
 

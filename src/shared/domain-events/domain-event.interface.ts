@@ -17,6 +17,11 @@ export interface IDomainEvent {
   aggregateId: string;
 
   /**
+   * Type of the aggregate that produced this event
+   */
+  aggregateType: string;
+
+  /**
    * Type of the event (e.g., 'UserCreated', 'PostPublished')
    */
   eventType: string;
