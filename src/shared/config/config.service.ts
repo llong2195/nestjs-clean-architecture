@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
+import { StringValue } from 'ms';
 
 @Injectable()
 export class AppConfigService {
@@ -65,12 +66,12 @@ export class AppConfigService {
     return this.configService.get<string>('JWT_SECRET')!;
   }
 
-  get jwtExpiresIn(): string {
-    return this.configService.get<string>('JWT_EXPIRES_IN', '15m');
+  get jwtExpiresIn(): StringValue {
+    return this.configService.get<StringValue>('JWT_EXPIRES_IN', '15m');
   }
 
-  get refreshTokenExpiresIn(): string {
-    return this.configService.get<string>('REFRESH_TOKEN_EXPIRES_IN', '7d');
+  get refreshTokenExpiresIn(): StringValue {
+    return this.configService.get<StringValue>('REFRESH_TOKEN_EXPIRES_IN', '7d');
   }
 
   // Google OAuth

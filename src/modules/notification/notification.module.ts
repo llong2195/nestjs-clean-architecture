@@ -25,7 +25,7 @@ import { AppConfigService } from '../../shared/config/config.service';
       useFactory: (configService: AppConfigService): JwtModuleOptions => ({
         secret: configService.jwtSecret,
         signOptions: {
-          expiresIn: configService.jwtExpiresIn as `${number}${'ms' | 's' | 'm' | 'h' | 'd'}`,
+          expiresIn: configService.jwtExpiresIn,
         },
       }),
       inject: [AppConfigService],

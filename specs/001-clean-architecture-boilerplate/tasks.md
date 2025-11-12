@@ -479,51 +479,51 @@
 
 ### Domain Events Infrastructure
 
-- [ ] T137 [P] [US5] Create domain events module in src/shared/domain-events/domain-events.module.ts
-- [ ] T138 [P] [US5] Create DomainEvent base interface in src/shared/domain-events/domain-event.interface.ts
-- [ ] T139 [P] [US5] Create AggregateRoot base class in src/shared/domain-events/aggregate-root.base.ts
-- [ ] T140 [P] [US5] Create DomainEventPublisher in src/shared/domain-events/domain-event-publisher.service.ts
+- [x] T137 [P] [US5] Create domain events module in src/shared/domain-events/domain-events.module.ts
+- [x] T138 [P] [US5] Create DomainEvent base interface in src/shared/domain-events/domain-event.interface.ts
+- [x] T139 [P] [US5] Create AggregateRoot base class in src/shared/domain-events/aggregate-root.base.ts
+- [x] T140 [P] [US5] Create DomainEventPublisher in src/shared/domain-events/domain-event-publisher.service.ts
 
 ### Transactional Outbox Pattern
 
-- [ ] T141 [P] [US5] Create DomainEventOutbox entity in src/shared/domain-events/outbox/outbox.orm-entity.ts
-- [ ] T142 [US5] Create OutboxRepository in src/shared/domain-events/outbox/outbox.repository.ts
-- [ ] T143 [US5] Create migration for domain_event_outbox table (pnpm migration:generate CreateOutboxTable)
-- [ ] T144 [US5] Implement save-to-outbox logic in DomainEventPublisher
-- [ ] T145 [US5] Add outbox writes to repository save methods (same transaction as aggregate)
+- [x] T141 [P] [US5] Create DomainEventOutbox entity in src/shared/domain-events/outbox/outbox.orm-entity.ts
+- [x] T142 [US5] Create OutboxRepository in src/shared/domain-events/outbox/outbox.repository.ts
+- [x] T143 [US5] Create migration for domain_event_outbox table (pnpm migration:generate CreateOutboxTable)
+- [x] T144 [US5] Implement save-to-outbox logic in DomainEventPublisher
+- [x] T145 [US5] Add outbox writes to repository save methods (same transaction as aggregate)
 
 ### BullMQ Setup
 
-- [ ] T146 [P] [US5] Install BullMQ dependencies (pnpm add @nestjs/bull bullmq)
-- [ ] T147 [P] [US5] Create BullMQ module in src/shared/messaging/bullmq/bullmq.module.ts
-- [ ] T148 [P] [US5] Configure BullMQ with Redis in src/shared/messaging/bullmq/bullmq.config.ts
-- [ ] T149 [P] [US5] Create OutboxProcessor in src/shared/domain-events/outbox/outbox.processor.ts
-- [ ] T150 [US5] Implement polling logic (every 5 seconds for unpublished events)
-- [ ] T151 [US5] Implement retry mechanism with exponential backoff
-- [ ] T152 [US5] Register outbox processor queue
+- [x] T146 [P] [US5] Install BullMQ dependencies (pnpm add @nestjs/bullmq bullmq)
+- [x] T147 [P] [US5] Create BullMQ module in src/shared/messaging/bullmq/bullmq.module.ts
+- [x] T148 [P] [US5] Configure BullMQ with Redis in src/shared/messaging/bullmq/bullmq.config.ts
+- [x] T149 [P] [US5] Create OutboxProcessor in src/shared/domain-events/outbox/outbox.processor.ts
+- [x] T150 [US5] Implement polling logic (every 5 seconds for unpublished events)
+- [x] T151 [US5] Implement retry mechanism with exponential backoff
+- [x] T152 [US5] Register outbox processor queue
 
 ### Kafka Setup
 
-- [ ] T153 [P] [US5] Install Kafka dependencies (pnpm add kafkajs)
-- [ ] T154 [P] [US5] Create Kafka module in src/shared/messaging/kafka/kafka.module.ts
-- [ ] T155 [P] [US5] Configure Kafka producer in src/shared/messaging/kafka/kafka-producer.service.ts
-- [ ] T156 [P] [US5] Configure Kafka consumer in src/shared/messaging/kafka/kafka-consumer.service.ts
-- [ ] T157 [US5] Integrate Kafka producer in OutboxProcessor (publish events to Kafka)
-- [ ] T158 [US5] Create sample consumer for PostPublishedEvent
+- [x] T153 [P] [US5] Install Kafka dependencies (pnpm add kafkajs)
+- [x] T154 [P] [US5] Create Kafka module in src/shared/messaging/kafka/kafka.module.ts
+- [x] T155 [P] [US5] Configure Kafka producer in src/shared/messaging/kafka/kafka-producer.service.ts
+- [x] T156 [P] [US5] Configure Kafka consumer in src/shared/messaging/kafka/kafka-consumer.service.ts
+- [x] T157 [US5] Integrate Kafka producer in OutboxProcessor (publish events to Kafka)
+- [x] T158 [US5] Create sample consumer for PostPublishedEvent
 
 ### Background Jobs
 
-- [ ] T159 [P] [US5] Create EmailQueue in src/shared/messaging/bullmq/queues/email.queue.ts
-- [ ] T160 [P] [US5] Create EmailProcessor in src/shared/messaging/bullmq/processors/email.processor.ts
-- [ ] T161 [US5] Implement send-email job handler (mock email sending)
-- [ ] T162 [US5] Enqueue email job from UserCreatedEvent handler
-- [ ] T163 [US5] Test job processing with monitoring (BullBoard UI)
+- [x] T159 [P] [US5] Create EmailQueue in src/shared/messaging/bullmq/queues/email.queue.ts
+- [x] T160 [P] [US5] Create EmailProcessor in src/shared/messaging/bullmq/processors/email.processor.ts
+- [x] T161 [US5] Implement send-email job handler (mock email sending)
+- [x] T162 [US5] Enqueue email job from UserCreatedEvent handler
+- [x] T163 [US5] Test job processing with monitoring (BullBoard UI)
 
 ### Event-Driven Workflow
 
-- [ ] T164 [US5] Connect PostPublishedEvent to Kafka topic
-- [ ] T165 [US5] Create consumer that updates view count statistics
-- [ ] T166 [US5] Test end-to-end event flow (aggregate → outbox → Kafka → consumer)
+- [x] T164 [US5] Connect PostPublishedEvent to Kafka topic
+- [x] T165 [US5] Create consumer that updates view count statistics
+- [x] T166 [US5] Test end-to-end event flow (aggregate → outbox → Kafka → consumer)
 
 **Checkpoint**: User Story 5 complete - Asynchronous job processing and event-driven architecture working
 
@@ -537,18 +537,18 @@
 
 ### Authentication Module
 
-- [ ] T167 [P] [US6] Install JWT dependencies (pnpm add @nestjs/jwt)
-- [ ] T168 [P] [US6] Create auth module in src/modules/auth/auth.module.ts
-- [ ] T169 [P] [US6] Create JwtAuthGuard in src/modules/auth/interface/guards/jwt-auth.guard.ts
-- [ ] T170 [P] [US6] Create RolesGuard in src/modules/auth/interface/guards/roles.guard.ts
-- [ ] T171 [P] [US6] Create LoginDto in src/modules/auth/application/dtos/login.dto.ts
-- [ ] T172 [P] [US6] Create TokenResponseDto in src/modules/auth/application/dtos/token-response.dto.ts
-- [ ] T173 [US6] Implement LoginUseCase in src/modules/auth/application/use-cases/login.use-case.ts
-- [ ] T174 [US6] Implement RefreshTokenUseCase in src/modules/auth/application/use-cases/refresh-token.use-case.ts
-- [ ] T175 [US6] Implement LogoutUseCase in src/modules/auth/application/use-cases/logout.use-case.ts
-- [ ] T176 [P] [US6] Create AuthController in src/modules/auth/interface/http/auth.controller.ts
-- [ ] T177 [US6] Configure JWT strategy and module providers
-- [ ] T178 [US6] Add @UseGuards(JwtAuthGuard) to protected endpoints
+- [x] T167 [P] [US6] Install JWT dependencies (pnpm add @nestjs/jwt)
+- [x] T168 [P] [US6] Create auth module in src/modules/auth/auth.module.ts
+- [x] T169 [P] [US6] Create JwtAuthGuard in src/modules/auth/interface/guards/jwt-auth.guard.ts
+- [x] T170 [P] [US6] Create RolesGuard in src/modules/auth/interface/guards/roles.guard.ts
+- [x] T171 [P] [US6] Create LoginDto in src/modules/auth/application/dtos/login.dto.ts
+- [x] T172 [P] [US6] Create TokenResponseDto in src/modules/auth/application/dtos/token-response.dto.ts
+- [x] T173 [US6] Implement LoginUseCase in src/modules/auth/application/use-cases/login.use-case.ts
+- [x] T174 [US6] Implement RefreshTokenUseCase in src/modules/auth/application/use-cases/refresh-token.use-case.ts
+- [x] T175 [US6] Implement LogoutUseCase in src/modules/auth/application/use-cases/logout.use-case.ts
+- [x] T176 [P] [US6] Create AuthController in src/modules/auth/interface/http/auth.controller.ts
+- [x] T177 [US6] Configure JWT strategy and module providers
+- [x] T178 [US6] Add @UseGuards(JwtAuthGuard) to protected endpoints
 
 ### Google OAuth
 
@@ -580,8 +580,8 @@
 
 ### API Versioning
 
-- [ ] T198 [P] [US6] Add global /api prefix in src/main.ts
-- [ ] T199 [US6] Verify all endpoints accessible via /api/\* paths
+- [x] T198 [P] [US6] Add global /api prefix in src/main.ts
+- [x] T199 [US6] Verify all endpoints accessible via /api/\* paths
 
 **Checkpoint**: User Story 6 complete - API standards enforced, comprehensive documentation available
 
