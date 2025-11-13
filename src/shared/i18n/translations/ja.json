@@ -1,0 +1,52 @@
+{
+  "common": {
+    "welcome": "Clean Architecture APIへようこそ",
+    "success": "成功",
+    "error": "エラー",
+    "notFound": "見つかりません",
+    "unauthorized": "未認証",
+    "forbidden": "禁止",
+    "badRequest": "不正なリクエスト",
+    "internalError": "内部サーバーエラー"
+  },
+  "auth": {
+    "loginSuccess": "ログイン成功",
+    "logoutSuccess": "ログアウト成功",
+    "invalidCredentials": "メールアドレスまたはパスワードが無効です",
+    "emailAlreadyExists": "メールアドレスは既に存在します",
+    "userNotFound": "ユーザーが見つかりません",
+    "tokenExpired": "トークンの有効期限が切れています",
+    "tokenInvalid": "トークンが無効です",
+    "refreshTokenSuccess": "トークンの更新に成功しました"
+  },
+  "user": {
+    "created": "ユーザーの作成に成功しました",
+    "updated": "ユーザーの更新に成功しました",
+    "deleted": "ユーザーの削除に成功しました",
+    "notFound": "ユーザーが見つかりません",
+    "emailRequired": "メールアドレスは必須です",
+    "passwordRequired": "パスワードは必須です",
+    "passwordTooShort": "パスワードは8文字以上である必要があります",
+    "invalidEmail": "無効なメールアドレス形式です"
+  },
+  "post": {
+    "created": "投稿の作成に成功しました",
+    "updated": "投稿の更新に成功しました",
+    "deleted": "投稿の削除に成功しました",
+    "published": "投稿の公開に成功しました",
+    "archived": "投稿のアーカイブに成功しました",
+    "notFound": "投稿が見つかりません",
+    "titleRequired": "タイトルは必須です",
+    "contentRequired": "内容は必須です",
+    "invalidStatus": "無効な投稿ステータスです"
+  },
+  "validation": {
+    "isString": "{{field}}は文字列である必要があります",
+    "isNumber": "{{field}}は数値である必要があります",
+    "isEmail": "{{field}}は有効なメールアドレスである必要があります",
+    "minLength": "{{field}}は{{min}}文字以上である必要があります",
+    "maxLength": "{{field}}は{{max}}文字以下である必要があります",
+    "isNotEmpty": "{{field}}は空であってはいけません",
+    "isEnum": "{{field}}は次のいずれかである必要があります: {{values}}"
+  }
+}

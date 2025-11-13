@@ -1,0 +1,52 @@
+{
+  "common": {
+    "welcome": "Chào mừng đến với Clean Architecture API",
+    "success": "Thành công",
+    "error": "Lỗi",
+    "notFound": "Không tìm thấy",
+    "unauthorized": "Chưa xác thực",
+    "forbidden": "Bị cấm",
+    "badRequest": "Yêu cầu không hợp lệ",
+    "internalError": "Lỗi máy chủ nội bộ"
+  },
+  "auth": {
+    "loginSuccess": "Đăng nhập thành công",
+    "logoutSuccess": "Đăng xuất thành công",
+    "invalidCredentials": "Email hoặc mật khẩu không hợp lệ",
+    "emailAlreadyExists": "Email đã tồn tại",
+    "userNotFound": "Không tìm thấy người dùng",
+    "tokenExpired": "Token đã hết hạn",
+    "tokenInvalid": "Token không hợp lệ",
+    "refreshTokenSuccess": "Làm mới token thành công"
+  },
+  "user": {
+    "created": "Tạo người dùng thành công",
+    "updated": "Cập nhật người dùng thành công",
+    "deleted": "Xóa người dùng thành công",
+    "notFound": "Không tìm thấy người dùng",
+    "emailRequired": "Email là bắt buộc",
+    "passwordRequired": "Mật khẩu là bắt buộc",
+    "passwordTooShort": "Mật khẩu phải có ít nhất 8 ký tự",
+    "invalidEmail": "Định dạng email không hợp lệ"
+  },
+  "post": {
+    "created": "Tạo bài viết thành công",
+    "updated": "Cập nhật bài viết thành công",
+    "deleted": "Xóa bài viết thành công",
+    "published": "Xuất bản bài viết thành công",
+    "archived": "Lưu trữ bài viết thành công",
+    "notFound": "Không tìm thấy bài viết",
+    "titleRequired": "Tiêu đề là bắt buộc",
+    "contentRequired": "Nội dung là bắt buộc",
+    "invalidStatus": "Trạng thái bài viết không hợp lệ"
+  },
+  "validation": {
+    "isString": "{{field}} phải là chuỗi ký tự",
+    "isNumber": "{{field}} phải là số",
+    "isEmail": "{{field}} phải là email hợp lệ",
+    "minLength": "{{field}} phải có ít nhất {{min}} ký tự",
+    "maxLength": "{{field}} phải có tối đa {{max}} ký tự",
+    "isNotEmpty": "{{field}} không được để trống",
+    "isEnum": "{{field}} phải là một trong: {{values}}"
+  }
+}
