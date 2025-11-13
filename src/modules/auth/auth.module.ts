@@ -18,6 +18,7 @@ import { AuthController } from './interface/http/auth.controller';
     UserModule,
     JwtModule.registerAsync({
       inject: [AppConfigService],
+      global: true,
       useFactory: (configService: AppConfigService) => ({
         secret: configService.jwtSecret,
         signOptions: {

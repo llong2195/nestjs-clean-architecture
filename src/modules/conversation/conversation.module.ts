@@ -1,12 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule } from '@nestjs/jwt';
+import { ConversationParticipantOrmEntity } from './infrastructure/persistence/conversation-participant.orm-entity';
 import { ConversationOrmEntity } from './infrastructure/persistence/conversation.orm-entity';
 import { MessageOrmEntity } from './infrastructure/persistence/message.orm-entity';
-import { ConversationParticipantOrmEntity } from './infrastructure/persistence/conversation-participant.orm-entity';
 import { ConversationGateway } from './interface/websocket/conversation.gateway';
-import { ConfigModule } from '../../shared/config/config.module';
-import { AppConfigService } from '../../shared/config/config.service';
 
 /**
  * Conversation Module
@@ -25,17 +22,6 @@ import { AppConfigService } from '../../shared/config/config.service';
       MessageOrmEntity,
       ConversationParticipantOrmEntity,
     ]),
-    ConfigModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: AppConfigService) => ({
-        secret: configService.jwtSecret,
-        signOptions: {
-          expiresIn: configService.jwtExpiresIn as `${number}${'ms' | 's' | 'm' | 'h' | 'd'}`,
-        },
-      }),
-      inject: [AppConfigService],
-    }),
   ],
   providers: [
     // WebSocket gateway

@@ -24,8 +24,8 @@ export interface JwtPayload {
 @Injectable()
 export class JwtAuthGuard {
   constructor(
-    private jwtService: JwtService,
     private reflector: Reflector,
+    private jwtService: JwtService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

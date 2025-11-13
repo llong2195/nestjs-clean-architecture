@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import compression from 'compression';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -42,6 +43,9 @@ async function bootstrap() {
     exposedHeaders: ['X-Total-Count', 'X-Request-ID'],
     maxAge: 86400, // 24 hours
   });
+
+  // Performance: Enable compression for responses
+  app.use(compression());
 
   // Global prefix for all routes
   app.setGlobalPrefix('api');

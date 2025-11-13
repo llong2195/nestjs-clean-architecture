@@ -1,12 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule, type JwtModuleOptions } from '@nestjs/jwt';
+import { SendNotificationUseCase } from './application/use-cases/send-notification.use-case';
 import { NotificationOrmEntity } from './infrastructure/persistence/notification.orm-entity';
 import { NotificationRepository } from './infrastructure/persistence/notification.repository';
-import { SendNotificationUseCase } from './application/use-cases/send-notification.use-case';
 import { NotificationGateway } from './interface/websocket/notification.gateway';
-import { ConfigModule } from '../../shared/config/config.module';
-import { AppConfigService } from '../../shared/config/config.service';
 
 /**
  * Notification Module
@@ -17,20 +14,7 @@ import { AppConfigService } from '../../shared/config/config.service';
  * - Background processing for email/push notifications
  */
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([NotificationOrmEntity]),
-    ConfigModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: AppConfigService): JwtModuleOptions => ({
-        secret: configService.jwtSecret,
-        signOptions: {
-          expiresIn: configService.jwtExpiresIn,
-        },
-      }),
-      inject: [AppConfigService],
-    }),
-  ],
+  imports: [TypeOrmModule.forFeature([NotificationOrmEntity])],
   providers: [
     // Repository
     {
