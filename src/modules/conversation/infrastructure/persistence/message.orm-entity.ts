@@ -30,6 +30,9 @@ export class MessageOrmEntity {
   @Column({ name: 'content', type: 'text' })
   content!: string;
 
+  @Column({ name: 'is_delivered', type: 'boolean', default: false })
+  isDelivered!: boolean;
+
   @Column({ name: 'is_read', type: 'boolean', default: false })
   isRead!: boolean;
 

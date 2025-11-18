@@ -41,14 +41,14 @@ This task list implements real-time messaging with WebSocket (Socket.IO), extend
 
 **Note**: Existing conversation module structure already exists. This phase adds missing infrastructure.
 
-- [ ] T001 Generate TypeORM migration for conversation indexes in src/shared/database/migrations/
-- [ ] T002 [P] Create application/use-cases/ directory in src/modules/conversation/
-- [ ] T003 [P] Create application/dtos/ directory in src/modules/conversation/
-- [ ] T004 [P] Create infrastructure/cache/ directory in src/modules/conversation/
-- [ ] T005 [P] Create interface/http/controllers/ directory in src/modules/conversation/
-- [ ] T006 [P] Create interface/http/dtos/ directory in src/modules/conversation/
-- [ ] T007 Run migration to add indexes: idx_messages_search_vector (GIN), idx_messages_conversation_created, idx_conversation_participants_user_active
-- [ ] T008 Update conversation.module.ts to import WebSocketModule, CacheModule, LoggerModule
+- [x] T001 Generate TypeORM migration for conversation indexes in src/shared/database/migrations/
+- [x] T002 [P] Create application/use-cases/ directory in src/modules/conversation/
+- [x] T003 [P] Create application/dtos/ directory in src/modules/conversation/
+- [x] T004 [P] Create infrastructure/cache/ directory in src/modules/conversation/
+- [x] T005 [P] Create interface/http/controllers/ directory in src/modules/conversation/
+- [x] T006 [P] Create interface/http/dtos/ directory in src/modules/conversation/
+- [x] T007 Run migration to add indexes: idx_messages_search_vector (GIN), idx_messages_conversation_created, idx_conversation_participants_user_active
+- [x] T008 Update conversation.module.ts to import WebSocketModule, CacheModule, LoggerModule
 
 **Validation**:
 
@@ -67,15 +67,15 @@ This task list implements real-time messaging with WebSocket (Socket.IO), extend
 
 **Estimated Duration**: 6-8 hours
 
-- [ ] T009 [P] Create domain/events/message-sent.event.ts in src/modules/conversation/
-- [ ] T010 [P] Create domain/events/typing-started.event.ts in src/modules/conversation/
-- [ ] T011 [P] Create infrastructure/mappers/conversation.mapper.ts with toDomain() and toOrm() methods
-- [ ] T012 [P] Create infrastructure/mappers/message.mapper.ts with toDomain() and toOrm() methods
-- [ ] T013 Implement ConversationRepository from interface in src/modules/conversation/infrastructure/persistence/conversation.repository.ts
-- [ ] T014 Add methods to ConversationRepository: save, findById, findByParticipants, findByUser, getUnreadCount
-- [ ] T015 Add methods to ConversationRepository: searchMessages (using PostgreSQL tsvector)
-- [ ] T016 [P] Create infrastructure/cache/typing-indicator.cache.ts with Redis SETEX (3-second TTL)
-- [ ] T017 Register all repository providers and mappers in conversation.module.ts
+- [x] T009 [P] Create domain/events/message-sent.event.ts in src/modules/conversation/
+- [x] T010 [P] Create domain/events/typing-started.event.ts in src/modules/conversation/
+- [x] T011 [P] Create infrastructure/mappers/conversation.mapper.ts with toDomain() and toOrm() methods
+- [x] T012 [P] Create infrastructure/mappers/message.mapper.ts with toDomain() and toOrm() methods
+- [x] T013 Implement ConversationRepository from interface in src/modules/conversation/infrastructure/persistence/conversation.repository.ts
+- [x] T014 Add methods to ConversationRepository: save, findById, findByParticipants, findByUser, getUnreadCount
+- [x] T015 Add methods to ConversationRepository: searchMessages (using PostgreSQL tsvector)
+- [x] T016 [P] Create infrastructure/cache/typing-indicator.cache.ts with Redis SETEX (3-second TTL)
+- [x] T017 Register all repository providers and mappers in conversation.module.ts
 
 **Validation**:
 
@@ -109,44 +109,44 @@ This task list implements real-time messaging with WebSocket (Socket.IO), extend
 
 ### Application Layer - DTOs
 
-- [ ] T018 [P] [US1] Create SendMessageDto with validation (@IsUUID conversationId, @IsString content, @MinLength(1), @MaxLength(5000)) in src/modules/conversation/application/dtos/send-message.dto.ts
-- [ ] T019 [P] [US1] Create CreateConversationDto with validation (@IsEnum type, @IsArray participantIds, @IsOptional name) in src/modules/conversation/application/dtos/create-conversation.dto.ts
-- [ ] T020 [P] [US1] Create MessageResponseDto with @Expose decorators in src/modules/conversation/application/dtos/message-response.dto.ts
-- [ ] T021 [P] [US1] Create ConversationResponseDto with lastMessage, unreadCount fields in src/modules/conversation/application/dtos/conversation-response.dto.ts
+- [x] T018 [P] [US1] Create SendMessageDto with validation (@IsUUID conversationId, @IsString content, @MinLength(1), @MaxLength(5000)) in src/modules/conversation/application/dtos/send-message.dto.ts
+- [x] T019 [P] [US1] Create CreateConversationDto with validation (@IsEnum type, @IsArray participantIds, @IsOptional name) in src/modules/conversation/application/dtos/create-conversation.dto.ts
+- [x] T020 [P] [US1] Create MessageResponseDto with @Expose decorators in src/modules/conversation/application/dtos/message-response.dto.ts
+- [x] T021 [P] [US1] Create ConversationResponseDto with lastMessage, unreadCount fields in src/modules/conversation/application/dtos/conversation-response.dto.ts
 
 ### Application Layer - Use Cases
 
-- [ ] T022 [US1] Implement SendMessageUseCase with conversation participant check, rate limiting (10 msgs/min) in src/modules/conversation/application/use-cases/send-message.use-case.ts
-- [ ] T023 [US1] Implement CreateConversationUseCase with type validation (DIRECT=2 participants, GROUP=3+) in src/modules/conversation/application/use-cases/create-conversation.use-case.ts
-- [ ] T024 [US1] Add DIRECT uniqueness check to CreateConversationUseCase (query before creation, return existing if found)
-- [ ] T025 [US1] Implement GetMessageHistoryUseCase with pagination (before/limit params, 50 msgs default) in src/modules/conversation/application/use-cases/get-message-history.use-case.ts
-- [ ] T026 [US1] Implement AddParticipantUseCase with GROUP-only validation in src/modules/conversation/application/use-cases/add-participant.use-case.ts
+- [x] T022 [US1] Implement SendMessageUseCase with conversation participant check, rate limiting (10 msgs/min) in src/modules/conversation/application/use-cases/send-message.use-case.ts
+- [x] T023 [US1] Implement CreateConversationUseCase with type validation (DIRECT=2 participants, GROUP=3+) in src/modules/conversation/application/use-cases/create-conversation.use-case.ts
+- [x] T024 [US1] Add DIRECT uniqueness check to CreateConversationUseCase (query before creation, return existing if found)
+- [x] T025 [US1] Implement GetMessageHistoryUseCase with pagination (before/limit params, 50 msgs default) in src/modules/conversation/application/use-cases/get-message-history.use-case.ts
+- [x] T026 [US1] Implement AddParticipantUseCase with GROUP-only validation in src/modules/conversation/application/use-cases/add-participant.use-case.ts
 
 ### Infrastructure Layer - Offline Delivery
 
-- [ ] T027 [P] [US1] Create BullMQ queue configuration for offline-delivery in src/modules/conversation/infrastructure/queues/offline-delivery.queue.ts
-- [ ] T028 [P] [US1] Create OfflineDeliveryWorker with exponential backoff (2s, 4s, 8s) in src/modules/conversation/infrastructure/workers/offline-delivery.worker.ts
+- [x] T027 [P] [US1] Create BullMQ queue configuration for offline-delivery in src/modules/conversation/infrastructure/queues/offline-delivery.queue.ts
+- [x] T028 [P] [US1] Create OfflineDeliveryWorker with exponential backoff (2s, 4s, 8s) in src/modules/conversation/infrastructure/workers/offline-delivery.worker.ts
 
 ### Interface Layer - WebSocket (Gateway Enhancement)
 
-- [ ] T029 [P] [US1] Create WsJwtAuthGuard extending WsCurrentUserDecorator in src/modules/conversation/interface/websocket/ws-jwt-auth.guard.ts
-- [ ] T030 [US1] Enhance ConversationGateway with connection authentication (JWT from auth parameter)
-- [ ] T031 [US1] Add automatic room joining on connection: user:{userId}, conversation:{conversationId} for all user's conversations
-- [ ] T032 [US1] Add @SubscribeMessage('message:send') handler in ConversationGateway with rate limiting (@UseGuards(ThrottlerGuard))
-- [ ] T033 [US1] Implement message:send handler to call SendMessageUseCase and emit to conversation room
-- [ ] T034 [US1] Add 'message:received' emission to conversation:{conversationId} room (broadcasts to all participants)
-- [ ] T035 [US1] Add WebSocket error handling with structured error codes (CHAT_UNAUTHORIZED, CHAT_FORBIDDEN, CHAT_RATE_LIMIT_EXCEEDED)
-- [ ] T036 [US1] Add disconnect handler to clean up user rooms and typing indicators
+- [x] T029 [P] [US1] Create WsJwtAuthGuard extending WsCurrentUserDecorator in src/modules/conversation/interface/websocket/ws-jwt-auth.guard.ts
+- [x] T030 [US1] Enhance ConversationGateway with connection authentication (JWT from auth parameter)
+- [x] T031 [US1] Add automatic room joining on connection: user:{userId}, conversation:{conversationId} for all user's conversations
+- [x] T032 [US1] Add @SubscribeMessage('message:send') handler in ConversationGateway with rate limiting (@UseGuards(ThrottlerGuard))
+- [x] T033 [US1] Implement message:send handler to call SendMessageUseCase and emit to conversation room
+- [x] T034 [US1] Add 'message:received' emission to conversation:{conversationId} room (broadcasts to all participants)
+- [x] T035 [US1] Add WebSocket error handling with structured error codes (CHAT_UNAUTHORIZED, CHAT_FORBIDDEN, CHAT_RATE_LIMIT_EXCEEDED)
+- [x] T036 [US1] Add disconnect handler to clean up user rooms and typing indicators
 
 ### Interface Layer - REST (New Controller)
 
-- [ ] T037 [P] [US1] Create ConversationController with @Controller('conversations') in src/modules/conversation/interface/http/controllers/conversation.controller.ts
-- [ ] T038 [P] [US1] Create HTTP DTOs in src/modules/conversation/interface/http/dtos/: CreateConversationRequestDto, GetMessagesQueryDto, SendMessageRequestDto
-- [ ] T039 [US1] Add POST /conversations endpoint with @ApiTags, @ApiOperation, @ApiResponse decorators in ConversationController
-- [ ] T040 [US1] Add GET /conversations endpoint with pagination (limit/offset params) in ConversationController
-- [ ] T041 [US1] Add GET /conversations/:id/messages endpoint with pagination (before/limit params) in ConversationController
-- [ ] T042 [US1] Add POST /conversations/:id/participants endpoint (GROUP only) in ConversationController
-- [ ] T043 [US1] Add authentication guards (@UseGuards(JwtAuthGuard)) to all ConversationController endpoints
+- [x] T037 [P] [US1] Create ConversationController with @Controller('conversations') in src/modules/conversation/interface/http/controllers/conversation.controller.ts
+- [x] T038 [P] [US1] Create HTTP DTOs in src/modules/conversation/interface/http/dtos/: CreateConversationRequestDto, GetMessagesQueryDto, SendMessageRequestDto
+- [x] T039 [US1] Add POST /conversations endpoint with @ApiTags, @ApiOperation, @ApiResponse decorators in ConversationController
+- [x] T040 [US1] Add GET /conversations endpoint with pagination (limit/offset params) in ConversationController
+- [x] T041 [US1] Add GET /conversations/:id/messages endpoint with pagination (before/limit params) in ConversationController
+- [x] T042 [US1] Add POST /conversations/:id/participants endpoint (GROUP only) in ConversationController
+- [x] T043 [US1] Add authentication guards (@UseGuards(JwtAuthGuard)) to all ConversationController endpoints
 
 **Validation** (MVP Acceptance):
 
@@ -183,25 +183,25 @@ This task list implements real-time messaging with WebSocket (Socket.IO), extend
 
 ### Domain Events
 
-- [ ] T044 [P] [US2] Create MessageDeliveredEvent domain event in src/modules/conversation/domain/events/message-delivered.event.ts
-- [ ] T045 [P] [US2] Create MessageReadEvent domain event in src/modules/conversation/domain/events/message-read.event.ts
+- [x] T044 [P] [US2] Create MessageDeliveredEvent domain event in src/modules/conversation/domain/events/message-delivered.event.ts
+- [x] T045 [P] [US2] Create MessageReadEvent domain event in src/modules/conversation/domain/events/message-read.event.ts
 
 ### Application Layer
 
-- [ ] T046 [P] [US2] Create MarkMessagesReadDto with validation (@IsUUID conversationId, @IsOptional @IsDate lastReadAt) in src/modules/conversation/application/dtos/mark-messages-read.dto.ts
-- [ ] T047 [US2] Implement MarkMessagesAsReadUseCase with participant authorization check in src/modules/conversation/application/use-cases/mark-messages-as-read.use-case.ts
-- [ ] T048 [US2] Add markAsDelivered() and markAsRead() business logic to Message entity if not already present
+- [x] T046 [P] [US2] Create MarkMessagesReadDto with validation (@IsUUID conversationId, @IsOptional @IsDate lastReadAt) in src/modules/conversation/application/dtos/mark-messages-read.dto.ts
+- [x] T047 [US2] Implement MarkMessagesAsReadUseCase with participant authorization check in src/modules/conversation/application/use-cases/mark-messages-as-read.use-case.ts
+- [x] T048 [US2] Add markAsDelivered() and markAsRead() business logic to Message entity if not already present
 
 ### Interface Layer - WebSocket
 
-- [ ] T049 [US2] Add @SubscribeMessage('messages:delivered') handler in ConversationGateway calling Message.markAsDelivered()
-- [ ] T050 [US2] Add @SubscribeMessage('messages:read') handler in ConversationGateway calling MarkMessagesAsReadUseCase
-- [ ] T051 [US2] Add 'message:status_changed' emission to sender when status updates (delivered or read)
-- [ ] T052 [US2] Update 'message:received' handler to auto-mark message as delivered (isDelivered=true) when emitted
+- [x] T049 [US2] Add @SubscribeMessage('messages:delivered') handler in ConversationGateway calling Message.markAsDelivered()
+- [x] T050 [US2] Add @SubscribeMessage('messages:read') handler in ConversationGateway calling MarkMessagesAsReadUseCase
+- [x] T051 [US2] Add 'message:status_changed' emission to sender when status updates (delivered or read)
+- [x] T052 [US2] Update 'message:received' handler to auto-mark message as delivered (isDelivered=true) when emitted
 
 ### Interface Layer - REST
 
-- [ ] T053 [US2] Add PATCH /conversations/:id/messages/read endpoint in ConversationController with Swagger decorators
+- [x] T053 [US2] Add PATCH /conversations/:id/messages/read endpoint in ConversationController with Swagger decorators
 
 **Validation**:
 
@@ -235,25 +235,25 @@ This task list implements real-time messaging with WebSocket (Socket.IO), extend
 
 ### Infrastructure Layer - Caching
 
-- [ ] T054 [P] [US4] Implement ConversationCacheService with Redis for caching conversation list in src/modules/conversation/infrastructure/cache/conversation-cache.service.ts
-- [ ] T055 [P] [US4] Add cache invalidation on new message, mark-as-read in ConversationCacheService with 60-second TTL
+- [x] T054 [P] [US4] Implement ConversationCacheService with Redis for caching conversation list in src/modules/conversation/infrastructure/cache/conversation-cache.service.ts
+- [x] T055 [P] [US4] Add cache invalidation on new message, mark-as-read in ConversationCacheService with 60-second TTL
 
 ### Application Layer
 
-- [ ] T056 [P] [US4] Create GetConversationListDto with pagination params (@IsOptional @IsInt limit, @IsOptional @IsInt offset, @IsOptional @IsEnum type) in src/modules/conversation/application/dtos/get-conversation-list.dto.ts
-- [ ] T057 [US4] Implement GetConversationListUseCase with Redis caching, sorting by updatedAt DESC in src/modules/conversation/application/use-cases/get-conversation-list.use-case.ts
-- [ ] T058 [US4] Add unread count calculation in GetConversationListUseCase using ConversationRepository.getUnreadCount()
-- [ ] T059 [US4] Add last message loading with truncation to 50 chars in GetConversationListUseCase
+- [x] T056 [P] [US4] Create GetConversationListDto with pagination params (@IsOptional @IsInt limit, @IsOptional @IsInt offset, @IsOptional @IsEnum type) in src/modules/conversation/application/dtos/get-conversation-list.dto.ts
+- [x] T057 [US4] Implement GetConversationListUseCase with Redis caching, sorting by updatedAt DESC in src/modules/conversation/application/use-cases/get-conversation-list.use-case.ts
+- [x] T058 [US4] Add unread count calculation in GetConversationListUseCase using ConversationRepository.getUnreadCount()
+- [x] T059 [US4] Add last message loading with truncation to 50 chars in GetConversationListUseCase
 
 ### Interface Layer - REST
 
-- [ ] T060 [P] [US4] Update GET /conversations endpoint implementation with pagination, type filtering, caching in ConversationController
-- [ ] T061 [US4] Add GET /conversations/:id endpoint for single conversation details in ConversationController
+- [x] T060 [P] [US4] Update GET /conversations endpoint implementation with pagination, type filtering, caching in ConversationController
+- [x] T061 [US4] Add GET /conversations/:id endpoint for single conversation details in ConversationController
 
 ### Interface Layer - WebSocket
 
-- [ ] T062 [US4] Add 'conversation:updated' event emission on new message in ConversationGateway
-- [ ] T063 [US4] Add automatic cache invalidation trigger on message send/read in ConversationGateway
+- [x] T062 [US4] Add 'conversation:updated' event emission on new message in ConversationGateway
+- [x] T063 [US4] Add automatic cache invalidation trigger on message send/read in ConversationGateway
 
 **Validation**:
 
@@ -288,22 +288,22 @@ This task list implements real-time messaging with WebSocket (Socket.IO), extend
 
 ### Application Layer
 
-- [ ] T064 [P] [US3] Create StartTypingDto with validation (@IsUUID conversationId) in src/modules/conversation/application/dtos/start-typing.dto.ts
-- [ ] T065 [US3] Implement StartTypingUseCase with participant authorization check in src/modules/conversation/application/use-cases/start-typing.use-case.ts
+- [x] T064 [P] [US3] Create StartTypingDto with validation (@IsUUID conversationId) in src/modules/conversation/application/dtos/start-typing.dto.ts
+- [x] T065 [US3] Implement StartTypingUseCase with participant authorization check in src/modules/conversation/application/use-cases/start-typing.use-case.ts
 
 ### Infrastructure Layer
 
-- [ ] T066 [P] [US3] Add startTyping(conversationId, userId) method to TypingIndicatorCache with Redis key pattern typing:{conversationId}:{userId}
-- [ ] T067 [P] [US3] Add stopTyping(conversationId, userId) method to TypingIndicatorCache with Redis DEL
-- [ ] T068 [P] [US3] Add getTypingUsers(conversationId) method to TypingIndicatorCache to retrieve active typers
+- [x] T066 [P] [US3] Add startTyping(conversationId, userId) method to TypingIndicatorCache with Redis key pattern typing:{conversationId}:{userId}
+- [x] T067 [P] [US3] Add stopTyping(conversationId, userId) method to TypingIndicatorCache with Redis DEL
+- [x] T068 [P] [US3] Add getTypingUsers(conversationId) method to TypingIndicatorCache to retrieve active typers
 
 ### Interface Layer - WebSocket
 
-- [ ] T069 [US3] Add @SubscribeMessage('typing:start') handler in ConversationGateway calling StartTypingUseCase
-- [ ] T070 [US3] Add @SubscribeMessage('typing:stop') handler in ConversationGateway calling TypingIndicatorCache.stopTyping()
-- [ ] T071 [US3] Add 'typing:indicator' event broadcast to conversation room (excludes sender)
-- [ ] T072 [US3] Add automatic typing:stop trigger when message is sent (in message:send handler)
-- [ ] T073 [US3] Add rate limiting to typing:start (max 1 event/second per user) using @UseGuards(ThrottlerGuard)
+- [x] T069 [US3] Add @SubscribeMessage('typing:start') handler in ConversationGateway calling StartTypingUseCase
+- [x] T070 [US3] Add @SubscribeMessage('typing:stop') handler in ConversationGateway calling TypingIndicatorCache.stopTyping()
+- [x] T071 [US3] Add 'typing:indicator' event broadcast to conversation room (excludes sender)
+- [x] T072 [US3] Add automatic typing:stop trigger when message is sent (in message:send handler)
+- [x] T073 [US3] Add rate limiting to typing:start (max 1 event/second per user) using @UseGuards(ThrottlerGuard)
 
 **Validation**:
 
@@ -339,22 +339,22 @@ This task list implements real-time messaging with WebSocket (Socket.IO), extend
 
 ### Application Layer
 
-- [ ] T074 [P] [US5] Create SearchMessagesDto with query validation (@IsString @MinLength(1) @MaxLength(100) query) in src/modules/conversation/application/dtos/search-messages.dto.ts
-- [ ] T075 [P] [US5] Create MessageSearchResultDto extending MessageResponseDto with rank field in src/modules/conversation/application/dtos/message-search-result.dto.ts
-- [ ] T076 [US5] Implement SearchMessagesUseCase with authorization, pagination (limit 50) in src/modules/conversation/application/use-cases/search-messages.use-case.ts
+- [x] T074 [P] [US5] Create SearchMessagesDto with query validation (@IsString @MinLength(1) @MaxLength(100) query) in src/modules/conversation/application/dtos/search-messages.dto.ts
+- [x] T075 [P] [US5] Create MessageSearchResultDto extending MessageResponseDto with rank field in src/modules/conversation/application/dtos/message-search-result.dto.ts
+- [x] T076 [US5] Implement SearchMessagesUseCase with authorization, pagination (limit 50) in src/modules/conversation/application/use-cases/search-messages.use-case.ts
 
 ### Infrastructure Layer
 
-- [ ] T077 [US5] Implement full-text search in ConversationRepository.searchMessages() using PostgreSQL plainto_tsquery and ts_rank
-- [ ] T078 [US5] Add user authorization filter to search query (only search conversations user participates in)
-- [ ] T079 [US5] Add result limiting (max 50 results) and relevance sorting (ORDER BY ts_rank DESC) in search query
+- [x] T077 [US5] Implement full-text search in ConversationRepository.searchMessages() using PostgreSQL plainto_tsquery and ts_rank
+- [x] T078 [US5] Add user authorization filter to search query (only search conversations user participates in)
+- [x] T079 [US5] Add result limiting (max 50 results) and relevance sorting (ORDER BY ts_rank DESC) in search query
 
 ### Interface Layer - REST
 
-- [ ] T080 [P] [US5] Create SearchMessagesRequestDto for HTTP request in src/modules/conversation/interface/http/dtos/search-messages-request.dto.ts
-- [ ] T081 [US5] Add POST /messages/search endpoint in ConversationController with Swagger decorators
-- [ ] T082 [US5] Add pagination metadata (total, hasMore) to search response in ConversationController
-- [ ] T083 [US5] Add error handling for empty search query and no results in ConversationController
+- [x] T080 [P] [US5] Create SearchMessagesRequestDto for HTTP request in src/modules/conversation/interface/http/dtos/search-messages-request.dto.ts
+- [x] T081 [US5] Add POST /messages/search endpoint in ConversationController with Swagger decorators
+- [x] T082 [US5] Add pagination metadata (total, hasMore) to search response in ConversationController
+- [x] T083 [US5] Add error handling for empty search query and no results in ConversationController
 
 **Validation**:
 

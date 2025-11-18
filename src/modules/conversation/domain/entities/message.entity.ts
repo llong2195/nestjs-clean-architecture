@@ -12,6 +12,7 @@ export class Message {
     public readonly conversationId: string,
     public readonly senderId: string,
     private _content: string,
+    private _isDelivered: boolean,
     private _isRead: boolean,
     private _isEdited: boolean,
     public readonly createdAt: Date,
@@ -23,7 +24,7 @@ export class Message {
    */
   static create(conversationId: string, senderId: string, content: string): Message {
     const now = new Date();
-    return new Message(uuid(), conversationId, senderId, content, false, false, now, now);
+    return new Message(uuid(), conversationId, senderId, content, false, false, false, now, now);
   }
 
   /**
@@ -34,6 +35,7 @@ export class Message {
     conversationId: string,
     senderId: string,
     content: string,
+    isDelivered: boolean,
     isRead: boolean,
     isEdited: boolean,
     createdAt: Date,
@@ -44,6 +46,7 @@ export class Message {
       conversationId,
       senderId,
       content,
+      isDelivered,
       isRead,
       isEdited,
       createdAt,
@@ -56,6 +59,10 @@ export class Message {
     return this._content;
   }
 
+  get isDelivered(): boolean {
+    return this._isDelivered;
+  }
+
   get isRead(): boolean {
     return this._isRead;
   }
@@ -66,6 +73,14 @@ export class Message {
 
   get updatedAt(): Date {
     return this._updatedAt;
+  }
+
+  /**
+   * Mark message as delivered
+   */
+  markAsDelivered(): void {
+    this._isDelivered = true;
+    this._updatedAt = new Date();
   }
 
   /**
