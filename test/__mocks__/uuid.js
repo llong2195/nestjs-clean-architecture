@@ -1,15 +1,15 @@
-const crypto = require('crypto');
+import { randomBytes } from 'crypto';
 
 function v4() {
   return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
-    (c ^ (crypto.randomBytes(1)[0] & (15 >> (c / 4)))).toString(16),
+    (c ^ (randomBytes(1)[0] & (15 >> (c / 4)))).toString(16),
   );
 }
 
 function v7() {
   const now = Date.now();
   const timeHex = now.toString(16).padStart(12, '0');
-  const randomHex = crypto.randomBytes(10).toString('hex').slice(0, 20);
+  const randomHex = randomBytes(10).toString('hex').slice(0, 20);
   return `${timeHex.slice(0, 8)}-${timeHex.slice(8, 12)}-7${randomHex.slice(0, 3)}-${randomHex.slice(3, 7)}-${randomHex.slice(7, 19)}`;
 }
 
@@ -48,7 +48,7 @@ function version(uuid) {
   return parseInt(uuid[14]);
 }
 
-module.exports = {
+export default {
   v1,
   v3,
   v4,
