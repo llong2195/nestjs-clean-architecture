@@ -1,0 +1,759 @@
+openapi: 3.0.3
+info:
+  title: Real-time Chat Module - REST API
+  description: |
+    REST API for conversation management, message history retrieval, and search.
+    WebSocket events (Socket.IO) are used for real-time messaging (see websocket-events.yaml).
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.example.com/v1
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Conversations
+    description: Conversation management endpoints
+  - name: Messages
+    description: Message history and search endpoints
+
+paths:
+  /conversations:
+    get:
+      tags:
+        - Conversations
+      summary: List user's conversations
+      description: |
+        Retrieves all conversations where the authenticated user is a participant.
+        Returns conversations ordered by last activity (most recent first).
+        Includes unread message count and last message preview.
+      operationId: listConversations
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of conversations to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          description: Number of conversations to skip (for pagination)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: type
+          in: query
+          description: Filter by conversation type
+          required: false
+          schema:
+            type: string
+            enum: [DIRECT, GROUP]
+      responses:
+        '200':
+          description: Successfully retrieved conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      conversations:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ConversationListItem'
+                      total:
+                        type: integer
+                        description: Total number of conversations
+                        example: 25
+                      hasMore:
+                        type: boolean
+                        description: True if more conversations exist beyond this page
+                        example: true
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Conversations
+      summary: Create new conversation
+      description: |
+        Creates a new conversation (DIRECT or GROUP).
+        For DIRECT conversations, if a conversation already exists between the two participants, returns the existing conversation.
+      operationId: createConversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConversationRequest'
+      responses:
+        '201':
+          description: Conversation created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/ConversationDetail'
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+        '200':
+          description: Existing DIRECT conversation returned (uniqueness constraint)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/ConversationDetail'
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /conversations/{conversationId}:
+    get:
+      tags:
+        - Conversations
+      summary: Get conversation details
+      description: Retrieves detailed information about a specific conversation
+      operationId: getConversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: UUID of the conversation
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successfully retrieved conversation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/ConversationDetail'
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /conversations/{conversationId}/messages:
+    get:
+      tags:
+        - Messages
+      summary: Get message history
+      description: |
+        Retrieves paginated message history for a conversation.
+        Messages ordered by creation time (newest first).
+      operationId: getMessageHistory
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: UUID of the conversation
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          description: Maximum number of messages to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: before
+          in: query
+          description: Return messages created before this timestamp (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: '2025-11-18T10:30:00Z'
+      responses:
+        '200':
+          description: Successfully retrieved messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      messages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Message'
+                      hasMore:
+                        type: boolean
+                        description: True if more messages exist beyond this page
+                        example: true
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /conversations/{conversationId}/participants:
+    post:
+      tags:
+        - Conversations
+      summary: Add participant to GROUP conversation
+      description: |
+        Adds a new participant to a GROUP conversation.
+        Only works for GROUP conversations (DIRECT conversations have fixed 2 participants).
+      operationId: addParticipant
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: UUID of the conversation
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  description: UUID of user to add as participant
+                  example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+      responses:
+        '201':
+          description: Participant added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      conversationId:
+                        type: string
+                        format: uuid
+                      userId:
+                        type: string
+                        format: uuid
+                      joinedAt:
+                        type: string
+                        format: date-time
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+        '400':
+          description: Bad request (e.g., trying to add to DIRECT conversation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error:
+                  code: VALIDATION_FAILED
+                  message: Cannot add participants to DIRECT conversations
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: User already a participant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error:
+                  code: CONFLICT
+                  message: User is already a participant of this conversation
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /conversations/{conversationId}/participants/{userId}:
+    delete:
+      tags:
+        - Conversations
+      summary: Remove participant from GROUP conversation
+      description: |
+        Removes a participant from a GROUP conversation (soft delete).
+        Only works for GROUP conversations.
+        Conversation must have at least 2 remaining participants.
+      operationId: removeParticipant
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: UUID of the conversation
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          description: UUID of participant to remove
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Participant removed successfully (no content)
+        '400':
+          description: Bad request (e.g., trying to remove from DIRECT conversation or leaving <2 participants)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /messages/search:
+    get:
+      tags:
+        - Messages
+      summary: Search messages
+      description: |
+        Full-text search across all messages in conversations where the user is a participant.
+        Uses PostgreSQL tsvector for relevance ranking.
+      operationId: searchMessages
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query string
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+            example: 'meeting tomorrow'
+        - name: conversationId
+          in: query
+          required: false
+          description: Filter results to specific conversation
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of results
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SearchResult'
+                      total:
+                        type: integer
+                        description: Total matching results
+                        example: 42
+                      query:
+                        type: string
+                        description: Normalized search query
+                        example: 'meeting tomorrow'
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+        '400':
+          description: Invalid search query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login endpoint
+
+  schemas:
+    ConversationListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 'c7e4b5a0-1234-5678-9abc-def012345678'
+        name:
+          type: string
+          nullable: true
+          description: Conversation name (null for DIRECT)
+          example: 'Project Team Chat'
+        type:
+          type: string
+          enum: [DIRECT, GROUP]
+          example: GROUP
+        isActive:
+          type: boolean
+          example: true
+        unreadCount:
+          type: integer
+          description: Number of unread messages for current user
+          example: 5
+        lastMessage:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            content:
+              type: string
+              example: 'See you tomorrow!'
+            senderId:
+              type: string
+              format: uuid
+            createdAt:
+              type: string
+              format: date-time
+              example: '2025-11-18T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-11-18T10:30:00Z'
+
+    ConversationDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 'c7e4b5a0-1234-5678-9abc-def012345678'
+        name:
+          type: string
+          nullable: true
+          example: 'Project Team Chat'
+        type:
+          type: string
+          enum: [DIRECT, GROUP]
+          example: GROUP
+        createdBy:
+          type: string
+          format: uuid
+          example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-11-17T09:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-11-18T10:30:00Z'
+        isActive:
+          type: boolean
+          example: true
+        participants:
+          type: array
+          items:
+            type: object
+            properties:
+              userId:
+                type: string
+                format: uuid
+              name:
+                type: string
+                example: 'John Doe'
+              email:
+                type: string
+                format: email
+                example: 'john.doe@example.com'
+              joinedAt:
+                type: string
+                format: date-time
+              isOnline:
+                type: boolean
+                description: WebSocket connection status
+
+    CreateConversationRequest:
+      type: object
+      required:
+        - type
+        - participantIds
+      properties:
+        type:
+          type: string
+          enum: [DIRECT, GROUP]
+          example: DIRECT
+        name:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 255
+          description: Required for GROUP, must be null for DIRECT
+          example: 'Project Team Chat'
+        participantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 100
+          description: For DIRECT, must contain exactly 1 other user (creator is automatically added). For GROUP, minimum 2 users.
+          example: ['a1b2c3d4-e5f6-7890-abcd-ef1234567890']
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 'msg-uuid-1234'
+        conversationId:
+          type: string
+          format: uuid
+          example: 'c7e4b5a0-1234-5678-9abc-def012345678'
+        senderId:
+          type: string
+          format: uuid
+          example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+          example: 'Hello, how are you?'
+        isDelivered:
+          type: boolean
+          example: true
+        isRead:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-11-18T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-11-18T10:30:05Z'
+
+    SearchResult:
+      type: object
+      properties:
+        message:
+          $ref: '#/components/schemas/Message'
+        conversationId:
+          type: string
+          format: uuid
+        conversationName:
+          type: string
+          nullable: true
+          example: 'Project Team Chat'
+        relevanceScore:
+          type: number
+          format: float
+          description: Search relevance score (higher = better match)
+          example: 0.85
+
+    ResponseMeta:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: '2025-11-18T10:30:00Z'
+        requestId:
+          type: string
+          format: uuid
+          description: Unique request ID for tracing
+          example: 'req-uuid-5678'
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_FAILED
+            message:
+              type: string
+              example: Validation failed
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            error:
+              code: VALIDATION_FAILED
+              message: Validation failed
+              details:
+                - field: content
+                  message: Message content must be 1-5000 characters
+            meta:
+              timestamp: '2025-11-18T10:30:00Z'
+              requestId: 'req-uuid-5678'
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            error:
+              code: UNAUTHORIZED
+              message: Invalid or expired token
+            meta:
+              timestamp: '2025-11-18T10:30:00Z'
+              requestId: 'req-uuid-5678'
+
+    Forbidden:
+      description: Forbidden - user not participant of conversation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            error:
+              code: FORBIDDEN
+              message: You are not a participant of this conversation
+            meta:
+              timestamp: '2025-11-18T10:30:00Z'
+              requestId: 'req-uuid-5678'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            error:
+              code: NOT_FOUND
+              message: Conversation not found
+            meta:
+              timestamp: '2025-11-18T10:30:00Z'
+              requestId: 'req-uuid-5678'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            error:
+              code: INTERNAL_SERVER_ERROR
+              message: An unexpected error occurred
+            meta:
+              timestamp: '2025-11-18T10:30:00Z'
+              requestId: 'req-uuid-5678'

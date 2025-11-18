@@ -5,23 +5,34 @@
 **Status**: Draft  
 **Input**: User description: "implement chat module realworld"
 
+## Clarifications
+
+### Session 2025-11-18
+
+- Q: Module consolidation strategy - duplicate conversation module exists → A: Use existing `conversation` module structure (src/modules/conversation) instead of creating new chat module, avoid duplication
+- Q: Database migration strategy for duplicate schemas → A: Delete chat migration, keep existing conversation tables (conversations, messages, conversation_participants)
+- Q: Group chat support scope - spec says out-of-scope but Conversation aggregate supports GROUP type → A: Support both DIRECT and GROUP in MVP (expand scope)
+- Q: Message status tracking implementation - separate MessageStatus entity vs existing boolean fields → A: Use existing Message entity boolean fields (isDelivered, isRead) - simpler approach
+- Q: Conversation uniqueness constraint for group chats → A: Only DIRECT conversations enforce uniqueness (same 2 users = 1 conversation), GROUP allows multiple conversations with same participants
+
 ## User Scenarios & Testing _(mandatory)_
 
-### User Story 1 - Direct Messaging Between Users (Priority: P1)
+### User Story 1 - Direct Messaging and Group Conversations (Priority: P1)
 
-Users can send and receive real-time text messages to other users through private one-on-one conversations. Messages are delivered instantly when both users are online, and stored for offline delivery when the recipient is unavailable.
+Users can send and receive real-time text messages in both one-on-one conversations and group conversations with multiple participants. Messages are delivered instantly when recipients are online, and stored for offline delivery when recipients are unavailable.
 
-**Why this priority**: Core functionality that delivers immediate value. Without direct messaging, there is no chat module. This represents the MVP that can be independently deployed and tested.
+**Why this priority**: Core functionality that delivers immediate value. Without messaging, there is no chat module. This represents the MVP that can be independently deployed and tested. Supports both ConversationType.DIRECT (2 participants) and ConversationType.GROUP (3+ participants).
 
-**Independent Test**: Can be fully tested by having two users exchange messages in a private conversation and delivers immediate communication value without any other features.
+**Independent Test**: Can be fully tested by having users exchange messages in both private conversations and group conversations, delivering immediate communication value without any other features.
 
 **Acceptance Scenarios**:
 
 1. **Given** User A and User B are both online, **When** User A sends a message to User B, **Then** User B receives the message instantly (within 1 second)
-2. **Given** User A wants to contact User B, **When** User A initiates a new conversation, **Then** a private chat room is created between the two users
-3. **Given** User B is offline, **When** User A sends a message, **Then** the message is stored and delivered when User B comes online
-4. **Given** User A is viewing a conversation, **When** User B sends a message, **Then** User A sees the message appear in real-time without refreshing
-5. **Given** a conversation exists, **When** either user views it, **Then** they see the complete message history in chronological order
+2. **Given** User A wants to contact User B, **When** User A initiates a new conversation, **Then** a private chat room is created between the two users (ConversationType.DIRECT)
+3. **Given** User A wants to create a group, **When** User A creates a conversation with Users B and C, **Then** a group conversation is created with all three participants (ConversationType.GROUP)
+4. **Given** User B is offline, **When** User A sends a message, **Then** the message is stored and delivered when User B comes online
+5. **Given** User A is viewing a conversation, **When** User B sends a message, **Then** User A sees the message appear in real-time without refreshing
+6. **Given** a conversation exists, **When** either user views it, **Then** they see the complete message history in chronological order
 
 ---
 
@@ -109,7 +120,9 @@ Users can search through their message history to find specific conversations or
 - **FR-001**: System MUST allow authenticated users to send text messages to other authenticated users
 - **FR-002**: System MUST deliver messages in real-time when recipient is online (WebSocket connection active)
 - **FR-003**: System MUST store messages persistently for offline delivery
-- **FR-004**: System MUST create private one-on-one conversation rooms between two users
+- **FR-004**: System MUST support both DIRECT conversations (exactly 2 participants) and GROUP conversations (3+ participants)
+- **FR-025**: System MUST enforce uniqueness constraint for DIRECT conversations (prevent duplicate conversations between same 2 users)
+- **FR-026**: System MUST allow multiple GROUP conversations with the same participant set (no uniqueness constraint for GROUP type)
 - **FR-005**: System MUST prevent users from accessing conversations they are not participants in
 - **FR-006**: System MUST display message history in chronological order (oldest to newest)
 - **FR-007**: System MUST track message status: sent, delivered, and read
@@ -133,11 +146,11 @@ Users can search through their message history to find specific conversations or
 
 ### Key Entities
 
-- **Message**: Represents a single text message in a conversation. Contains message content (text), sender reference, timestamp (UTC), status (sent/delivered/read), and conversation reference. Messages are immutable once created.
+- **Message**: Represents a single text message in a conversation. Contains message content (text), sender reference, timestamp (UTC), delivery status (isDelivered boolean), read status (isRead boolean), and conversation reference. Messages are immutable once created. For group conversations, status indicates if delivered/read by all participants.
 
-- **Conversation**: Represents a private chat room between two users. Contains participant references (exactly 2 users), creation timestamp, and last activity timestamp. Enforces uniqueness constraint to prevent duplicate conversations between same users.
+- **Conversation**: Represents a chat room between users. Contains type (DIRECT or GROUP), participant references (2 for DIRECT, 3+ for GROUP), optional name (required for GROUP), creation timestamp, and last activity timestamp. For DIRECT conversations, enforces uniqueness constraint to prevent duplicates between same two users.
 
-- **MessageStatus**: Tracks delivery and read status for each message-recipient pair. Contains message reference, recipient reference, delivery timestamp, and read timestamp. Updated in real-time as message state changes.
+- **ConversationParticipant**: Junction entity linking users to conversations. Contains conversation reference, user reference, join timestamp, and last read timestamp for tracking unread messages per participant.
 
 - **TypingIndicator**: Ephemeral state (not persisted) indicating when a user is typing. Contains user reference, conversation reference, and timestamp. Automatically expires after 3 seconds of inactivity.
 
@@ -189,7 +202,7 @@ Users can search through their message history to find specific conversations or
 - User entity already exists in the system with unique identifiers
 - WebSocket infrastructure (Socket.IO with Redis adapter) is already configured
 - Message content is plain text only (no rich text, images, or file attachments in MVP)
-- One-on-one conversations only (no group chat in MVP)
+- Both one-on-one (DIRECT) and group (GROUP) conversations supported in MVP
 - Messages are immutable (no editing or deletion) for simplicity and audit trail
 - English language support only for MVP (i18n can be added later)
 - Standard web/mobile app latency expectations apply (not optimized for satellite/slow connections)
@@ -208,7 +221,6 @@ Users can search through their message history to find specific conversations or
 
 ### Out of Scope (for MVP)
 
-- Group chat conversations (3+ participants)
 - Message editing or deletion
 - Rich text formatting, emoji reactions
 - File/image attachments

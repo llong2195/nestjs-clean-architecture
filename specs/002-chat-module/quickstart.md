@@ -1,402 +1,335 @@
 # Quickstart Guide: Real-time Chat Module
 
-**Feature**: Real-time Chat Module  
-**Branch**: 002-chat-module  
-**Prerequisites**: Node.js 22+, pnpm 10+, Docker, PostgreSQL, Redis
-
----
-
-## Overview
-
-This guide walks you through setting up and testing the real-time chat module locally. By the end, you'll be able to send messages between users via both REST API and WebSocket.
-
-**What you'll build**:
-
-- ✅ One-on-one real-time messaging
-- ✅ Message status tracking (sent/delivered/read)
-- ✅ Typing indicators
-- ✅ Conversation history and search
-- ✅ Multi-instance WebSocket support via Redis
-
----
+**Feature**: Real-time messaging with WebSocket (Socket.IO) and REST API
+**Last Updated**: 2025-11-18
 
 ## Prerequisites
 
-### 1. Install Dependencies
+### Required Software
+
+- **Node.js**: 22+ (LTS)
+- **pnpm**: 10.x+ (REQUIRED - do not use npm or yarn)
+- **PostgreSQL**: 18+
+- **Redis**: 7.x
+- **Docker** (optional): For running PostgreSQL and Redis via docker-compose
+
+### Verify Installation
 
 ```bash
-# Ensure you have required versions
-node --version  # Should be 22.x or higher
-pnpm --version  # Should be 10.x or higher
-docker --version
+node --version    # Should be v22.x.x
+pnpm --version    # Should be 10.x.x
+psql --version    # Should be 18.x
+redis-cli --version # Should be 7.x
+```
 
-# Install project dependencies
+---
+
+## Setup
+
+### 1. Clone and Install Dependencies
+
+```bash
+# Clone repository (if not already done)
+cd c:/Users/llong/Desktop/clean-architecture
+
+# Install dependencies with pnpm (REQUIRED)
 pnpm install
 ```
 
-### 2. Start Infrastructure
+### 2. Start Infrastructure (Docker)
+
+**Option A: Using Docker Compose (Recommended)**
 
 ```bash
-# Start PostgreSQL and Redis via Docker Compose
-docker-compose up -d postgres redis
+# Start PostgreSQL, Redis, and Kafka containers
+docker-compose up -d
 
 # Verify services are running
 docker-compose ps
-
-# Expected output:
-# NAME                   STATUS              PORTS
-# postgres               Up 2 minutes        5432->5432
-# redis                  Up 2 minutes        6379->6379
 ```
 
-### 3. Configure Environment
+**Option B: Manual Setup**
+
+Start PostgreSQL:
 
 ```bash
-# Copy example environment file
-cp .env.example .env
+# Windows (using pg_ctl)
+pg_ctl -D "C:\Program Files\PostgreSQL\18\data" start
 
-# Update the following variables in .env:
+# macOS/Linux
+sudo systemctl start postgresql
 ```
 
-```env
+Start Redis:
+
+```bash
+# Windows (Redis for Windows)
+redis-server
+
+# macOS/Linux
+sudo systemctl start redis
+```
+
+### 3. Configure Environment Variables
+
+Create `.env` file in project root (if not exists):
+
+```bash
 # Database
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
-DATABASE_USERNAME=postgres
+DATABASE_NAME=clean_architecture_db
+DATABASE_USER=postgres
 DATABASE_PASSWORD=postgres
-DATABASE_NAME=clean_architecture_dev
 
 # Redis
+REDIS_URL=redis://localhost:6379
 REDIS_HOST=localhost
 REDIS_PORT=6379
 
-# JWT (use existing values from auth module)
-JWT_SECRET=your-secret-key-here
-JWT_EXPIRATION=3600
+# JWT Authentication
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_EXPIRES_IN=7d
+
+# WebSocket
+WEBSOCKET_PORT=3000
+WEBSOCKET_CORS_ORIGIN=http://localhost:3001
 
 # Application
 NODE_ENV=development
 PORT=3000
+LOG_LEVEL=debug
 ```
 
----
-
-## Database Setup
-
-### 1. Run Migrations
+### 4. Run Database Migrations
 
 ```bash
-# Run all migrations (including chat tables)
+# Run all pending migrations (creates conversations, messages, conversation_participants tables)
 pnpm migration:run
 
-# Verify chat tables were created
-pnpm typeorm query "SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename LIKE '%conversation%' OR tablename LIKE '%message%'"
-
-# Expected output:
-# conversations
-# messages
+# Verify tables created
+psql -U postgres -d clean_architecture_db -c "\dt"
+# Should show: conversations, messages, conversation_participants, users, etc.
 ```
 
-### 2. Seed Test Users (Optional)
+### 5. Start Development Server
 
 ```bash
-# Create two test users for chatting
-pnpm seed:users
-
-# This creates:
-# - User A: alice@example.com / password123
-# - User B: bob@example.com / password123
-```
-
----
-
-## Running the Application
-
-### 1. Start Development Server
-
-```bash
-# Start NestJS application with hot-reload
+# Start NestJS server with hot-reload
 pnpm start:dev
 
-# Wait for server to start
-# Expected output:
-# [Nest] LOG [NestApplication] Nest application successfully started
-# [Nest] LOG [Main] 🚀 Application is running on: http://localhost:3000
-# [Nest] LOG [Main] 📚 API Documentation: http://localhost:3000/api/docs
+# Server should start on http://localhost:3000
+# WebSocket gateway on http://localhost:3000/conversations
 ```
 
-### 2. Verify Health
+**Expected Output:**
 
-```bash
-# Check application health
-curl http://localhost:3000/health
-
-# Expected response:
-# {
-#   "status": "ok",
-#   "info": {
-#     "database": { "status": "up" },
-#     "redis": { "status": "up" }
-#   }
-# }
+```
+[Nest] 12345  - 11/18/2025, 10:30:00 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 12345  - 11/18/2025, 10:30:01 AM     LOG [InstanceLoader] AppModule dependencies initialized +25ms
+[Nest] 12345  - 11/18/2025, 10:30:01 AM     LOG [InstanceLoader] ConversationModule dependencies initialized +5ms
+[Nest] 12345  - 11/18/2025, 10:30:01 AM     LOG [RoutesResolver] ConversationController {/api/v1/conversations}: +10ms
+[Nest] 12345  - 11/18/2025, 10:30:01 AM     LOG [WebSocketsController] ConversationGateway subscribed to port: 3000
+[Nest] 12345  - 11/18/2025, 10:30:01 AM     LOG [NestApplication] Nest application successfully started +5ms
 ```
 
 ---
 
-## Testing the API
+## Testing the Chat Module
 
-### 1. Authenticate Users
+### REST API (HTTP)
+
+**1. Create a User (Authentication)**
 
 ```bash
-# Login as Alice
-curl -X POST http://localhost:3000/auth/login \
+# Register user
+curl -X POST http://localhost:3000/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "alice@example.com",
-    "password": "password123"
+    "email": "user1@example.com",
+    "password": "SecurePass123!",
+    "name": "User One"
   }'
 
-# Save Alice's token from response:
-export ALICE_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-
-# Login as Bob
-curl -X POST http://localhost:3000/auth/login \
+# Login to get JWT token
+curl -X POST http://localhost:3000/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "bob@example.com",
-    "password": "password123"
+    "email": "user1@example.com",
+    "password": "SecurePass123!"
   }'
 
-# Save Bob's token:
-export BOB_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+# Response:
+{
+  "status": "success",
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": { "id": "user-uuid-1", "email": "user1@example.com", "name": "User One" }
+  }
+}
 ```
 
-### 2. Create Conversation
+**2. Create a Conversation**
 
 ```bash
-# Alice initiates conversation with Bob
-# First, get Bob's user ID
-curl http://localhost:3000/users \
-  -H "Authorization: Bearer $ALICE_TOKEN" \
-  | jq '.data.users[] | select(.email=="bob@example.com") | .id'
-
-# Save Bob's ID
-export BOB_ID="123e4567-e89b-12d3-a456-426614174000"
-
-# Create or get conversation
-curl -X POST http://localhost:3000/conversations/with/$BOB_ID \
-  -H "Authorization: Bearer $ALICE_TOKEN" \
-  | jq '.'
-
-# Expected response:
-# {
-#   "status": "success",
-#   "data": {
-#     "id": "123e4567-e89b-12d3-a456-426614174001",
-#     "participants": [
-#       { "id": "...", "username": "alice", "avatarUrl": null },
-#       { "id": "...", "username": "bob", "avatarUrl": null }
-#     ],
-#     "unreadCount": 0,
-#     "createdAt": "2025-11-13T10:30:00Z",
-#     "updatedAt": "2025-11-13T10:30:00Z"
-#   }
-# }
-
-# Save conversation ID
-export CONVERSATION_ID="123e4567-e89b-12d3-a456-426614174001"
-```
-
-### 3. Test WebSocket Messaging
-
-**Option A: Using Socket.IO Client (Node.js)**
-
-```javascript
-// test-chat.js
-const io = require('socket.io-client');
-
-// Connect Alice
-const aliceSocket = io('http://localhost:3000', {
-  auth: { token: process.env.ALICE_TOKEN },
-});
-
-// Connect Bob
-const bobSocket = io('http://localhost:3000', {
-  auth: { token: process.env.BOB_TOKEN },
-});
-
-aliceSocket.on('connect', () => {
-  console.log('Alice connected');
-
-  // Alice sends message
-  aliceSocket.emit(
-    'message:send',
-    {
-      conversationId: process.env.CONVERSATION_ID,
-      content: 'Hello Bob!',
-    },
-    (response) => {
-      console.log('Alice sent:', response.data);
-    },
-  );
-});
-
-bobSocket.on('connect', () => {
-  console.log('Bob connected');
-});
-
-bobSocket.on('message:received', (message) => {
-  console.log('Bob received:', message);
-
-  // Bob marks as read
-  bobSocket.emit('messages:mark_read', {
-    conversationId: message.conversationId,
-  });
-});
-
-aliceSocket.on('messages:read', (data) => {
-  console.log('Alice notified messages read:', data);
-});
-
-// Run: node test-chat.js
-```
-
-**Option B: Using Postman or Browser DevTools**
-
-1. Open Postman → New WebSocket Request
-2. URL: `ws://localhost:3000`
-3. Add auth header: `{ "auth": { "token": "YOUR_TOKEN" } }`
-4. Send message:
-   ```json
-   {
-     "event": "message:send",
-     "data": {
-       "conversationId": "YOUR_CONVERSATION_ID",
-       "content": "Hello from Postman!"
-     }
-   }
-   ```
-
-### 4. Test REST Endpoints
-
-```bash
-# Get conversation list
-curl http://localhost:3000/conversations \
-  -H "Authorization: Bearer $ALICE_TOKEN" \
-  | jq '.data.conversations'
-
-# Get conversation history (50 messages)
-curl http://localhost:3000/conversations/$CONVERSATION_ID/messages \
-  -H "Authorization: Bearer $ALICE_TOKEN" \
-  | jq '.data.messages'
-
-# Mark messages as read
-curl -X PATCH http://localhost:3000/messages/mark-read \
-  -H "Authorization: Bearer $ALICE_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"conversationId\": \"$CONVERSATION_ID\"
-  }" \
-  | jq '.data'
-
-# Search messages
-curl -X POST http://localhost:3000/messages/search \
-  -H "Authorization: Bearer $ALICE_TOKEN" \
+# Create DIRECT conversation (1-on-1 chat)
+curl -X POST http://localhost:3000/api/v1/conversations \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "hello",
-    "limit": 50
-  }' \
-  | jq '.data.results'
+    "type": "DIRECT",
+    "participantIds": ["user-uuid-2"]
+  }'
+
+# Create GROUP conversation
+curl -X POST http://localhost:3000/api/v1/conversations \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "GROUP",
+    "name": "Project Team Chat",
+    "participantIds": ["user-uuid-2", "user-uuid-3"]
+  }'
+```
+
+**3. List Conversations**
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/conversations?limit=50&offset=0" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+**4. Get Message History**
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/conversations/CONVERSATION_UUID/messages?limit=50" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+**5. Search Messages**
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/messages/search?q=meeting&limit=20" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ---
 
-## Testing Typing Indicators
+### WebSocket (Real-time Messaging)
+
+**Using Browser Console:**
 
 ```javascript
-// typing-test.js
-const io = require('socket.io-client');
-
-const aliceSocket = io('http://localhost:3000', {
-  auth: { token: process.env.ALICE_TOKEN },
+// 1. Establish WebSocket connection
+const socket = io('http://localhost:3000/conversations', {
+  auth: { token: 'YOUR_JWT_TOKEN' }, // Replace with actual JWT
+  transports: ['websocket'],
 });
 
-const bobSocket = io('http://localhost:3000', {
-  auth: { token: process.env.BOB_TOKEN },
+// 2. Listen for connection events
+socket.on('connect', () => {
+  console.log('Connected:', socket.id);
 });
 
-aliceSocket.on('connect', () => {
-  console.log('Alice connected');
+socket.on('connect_error', (error) => {
+  console.error('Connection error:', error.message);
+});
 
-  // Alice starts typing
-  aliceSocket.emit('typing:start', {
+// 3. Join a conversation room
+socket.emit('conversation:join', {
+  conversationId: 'CONVERSATION_UUID',
+});
+
+socket.on('conversation:joined', (data) => {
+  console.log('Joined conversation:', data);
+});
+
+// 4. Send a message
+socket.emit('message:send', {
+  conversationId: 'CONVERSATION_UUID',
+  content: 'Hello, how are you?',
+});
+
+// 5. Listen for incoming messages
+socket.on('message:received', (data) => {
+  console.log('New message:', data);
+
+  // Acknowledge delivery
+  socket.emit('message:delivered', { messageId: data.id });
+});
+
+// 6. Listen for typing indicators
+socket.on('typing:indicator', (data) => {
+  console.log(`User ${data.userId} is ${data.isTyping ? 'typing' : 'stopped typing'}`);
+});
+
+// 7. Send typing indicator
+socket.emit('typing:start', { conversationId: 'CONVERSATION_UUID' });
+
+// Stop typing after 3 seconds
+setTimeout(() => {
+  socket.emit('typing:stop', { conversationId: 'CONVERSATION_UUID' });
+}, 3000);
+
+// 8. Mark messages as read
+socket.emit('message:read', {
+  conversationId: 'CONVERSATION_UUID',
+  messageIds: ['msg-uuid-1', 'msg-uuid-2'],
+});
+
+socket.on('message:status:read', (data) => {
+  console.log('Messages marked as read:', data);
+});
+```
+
+**Using Node.js Client:**
+
+```bash
+# Install Socket.IO client
+pnpm add socket.io-client
+
+# Create test-client.js
+```
+
+```javascript
+// test-client.js
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:3000/conversations', {
+  auth: { token: process.env.JWT_TOKEN },
+  transports: ['websocket'],
+});
+
+socket.on('connect', () => {
+  console.log('✅ Connected to WebSocket');
+
+  // Join conversation
+  socket.emit('conversation:join', {
     conversationId: process.env.CONVERSATION_ID,
   });
 
+  // Send message
   setTimeout(() => {
-    // Alice stops typing after 2 seconds
-    aliceSocket.emit('typing:stop', {
+    socket.emit('message:send', {
       conversationId: process.env.CONVERSATION_ID,
+      content: 'Test message from Node.js client',
     });
-  }, 2000);
+  }, 1000);
 });
 
-bobSocket.on('connect', () => {
-  console.log('Bob connected');
+socket.on('message:received', (data) => {
+  console.log('📩 New message:', data.content);
 });
 
-bobSocket.on('typing:user_started', (data) => {
-  console.log(`${data.username} is typing...`);
+socket.on('error', (error) => {
+  console.error('❌ Error:', error);
 });
-
-bobSocket.on('typing:user_stopped', (data) => {
-  console.log('Typing indicator stopped');
-});
-
-// Run: node typing-test.js
 ```
 
----
-
-## Testing Multi-Instance Scaling
-
-### 1. Start Multiple Instances
+Run:
 
 ```bash
-# Terminal 1: Start instance on port 3000
-PORT=3000 pnpm start:dev
-
-# Terminal 2: Start instance on port 3001
-PORT=3001 pnpm start:dev
-```
-
-### 2. Connect Clients to Different Instances
-
-```javascript
-// multi-instance-test.js
-const io = require('socket.io-client');
-
-// Alice connects to instance 1
-const aliceSocket = io('http://localhost:3000', {
-  auth: { token: process.env.ALICE_TOKEN },
-});
-
-// Bob connects to instance 2
-const bobSocket = io('http://localhost:3001', {
-  auth: { token: process.env.BOB_TOKEN },
-});
-
-// Alice sends message from instance 1
-aliceSocket.emit('message:send', {
-  conversationId: process.env.CONVERSATION_ID,
-  content: 'Cross-instance message!',
-});
-
-// Bob should receive on instance 2 (via Redis pub/sub)
-bobSocket.on('message:received', (message) => {
-  console.log('Bob received cross-instance:', message);
-});
+JWT_TOKEN=your-jwt-token CONVERSATION_ID=conversation-uuid node test-client.js
 ```
 
 ---
@@ -406,231 +339,362 @@ bobSocket.on('message:received', (message) => {
 ### Unit Tests
 
 ```bash
-# Run domain and application layer tests
-pnpm test src/modules/chat
+# Run all unit tests
+pnpm test
 
-# Expected output:
-# PASS  src/modules/chat/domain/entities/message.entity.spec.ts
-# PASS  src/modules/chat/domain/entities/conversation.entity.spec.ts
-# PASS  src/modules/chat/application/use-cases/send-message.use-case.spec.ts
+# Run tests with coverage
+pnpm test:cov
+
+# Run tests in watch mode (for development)
+pnpm test:watch
+
+# Test specific module
+pnpm test -- conversation
+```
+
+**Expected Output:**
+
+```
+PASS  test/unit/conversation/conversation.aggregate.spec.ts
+  Conversation Aggregate
+    ✓ should create DIRECT conversation with exactly 2 participants (15ms)
+    ✓ should create GROUP conversation with 3+ participants (10ms)
+    ✓ should throw error when DIRECT has != 2 participants (5ms)
+    ✓ should add message to active conversation (8ms)
+    ✓ should throw error when adding message to archived conversation (6ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Coverage:    85.7% Statements 120/140 | 83.3% Branches 25/30 | 90% Functions 18/20
 ```
 
 ### Integration Tests
 
 ```bash
-# Run repository tests (requires PostgreSQL test database)
-pnpm test:integration src/modules/chat
+# Run integration tests (requires PostgreSQL and Redis running)
+pnpm test:integration
 
-# Expected output:
-# PASS  test/integration/chat/message.repository.spec.ts
-# PASS  test/integration/chat/conversation.repository.spec.ts
+# Test specific integration
+pnpm test:integration -- conversation.repository
 ```
 
 ### E2E Tests
 
 ```bash
-# Run full end-to-end tests (requires all services)
-pnpm test:e2e test/e2e/chat.e2e-spec.ts
+# Run end-to-end tests
+pnpm test:e2e
 
-# Expected output:
-# PASS  test/e2e/chat.e2e-spec.ts
-#   Chat Module (E2E)
-#     ✓ should send and receive message via WebSocket (1234ms)
-#     ✓ should mark messages as read (567ms)
-#     ✓ should show typing indicators (890ms)
+# Test WebSocket multi-instance
+pnpm test:e2e -- multi-instance-websocket
 ```
 
 ---
 
-## Accessing API Documentation
+## Development Workflow
 
-### Swagger UI
+### File Structure
 
-Open browser: http://localhost:3000/api/docs
+```
+src/modules/conversation/
+├── domain/                          # Pure business logic (NO NestJS decorators)
+│   ├── aggregates/
+│   │   └── conversation.aggregate.ts
+│   ├── entities/
+│   │   └── message.entity.ts
+│   ├── value-objects/
+│   │   └── conversation-type.vo.ts
+│   └── repositories/
+│       └── conversation.repository.interface.ts
+│
+├── application/                     # Use cases (orchestration)
+│   ├── use-cases/
+│   │   ├── send-message.use-case.ts
+│   │   ├── create-conversation.use-case.ts
+│   │   └── get-message-history.use-case.ts
+│   └── dtos/
+│       ├── send-message.dto.ts
+│       └── conversation-response.dto.ts
+│
+├── infrastructure/                  # Framework implementations
+│   ├── persistence/
+│   │   ├── conversation.orm-entity.ts
+│   │   ├── message.orm-entity.ts
+│   │   └── conversation.repository.ts
+│   ├── cache/
+│   │   └── typing-indicator.cache.ts
+│   └── mappers/
+│       └── conversation.mapper.ts
+│
+├── interface/                       # Entry points
+│   ├── http/
+│   │   └── conversation.controller.ts
+│   └── websocket/
+│       └── conversation.gateway.ts
+│
+└── conversation.module.ts
+```
 
-**Features**:
+### Creating a New Use Case
 
-- Interactive API explorer
-- Request/response schemas
-- Try out REST endpoints
-- Authentication via "Authorize" button
+**Example: Create a "Send Message" Use Case**
 
-**Usage**:
+1. **Define DTO** (`application/dtos/send-message.dto.ts`):
 
-1. Click "Authorize" button
-2. Enter Bearer token: `Bearer YOUR_JWT_TOKEN`
-3. Select `/conversations` endpoint
-4. Click "Try it out"
-5. Execute request
+```typescript
+import { IsUUID, IsString, Length } from 'class-validator';
+
+export class SendMessageDto {
+  @IsUUID()
+  conversationId!: string;
+
+  @IsString()
+  @Length(1, 5000)
+  content!: string;
+}
+```
+
+2. **Create Use Case** (`application/use-cases/send-message.use-case.ts`):
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { IConversationRepository } from '../../domain/repositories/conversation.repository.interface';
+import { SendMessageDto } from '../dtos/send-message.dto';
+
+@Injectable()
+export class SendMessageUseCase {
+  constructor(private readonly conversationRepo: IConversationRepository) {}
+
+  async execute(userId: string, dto: SendMessageDto): Promise<MessageResponseDto> {
+    // 1. Load conversation aggregate
+    const conversation = await this.conversationRepo.findById(dto.conversationId);
+
+    // 2. Validate user is participant
+    if (!conversation.isParticipant(userId)) {
+      throw new ForbiddenException('User not a participant');
+    }
+
+    // 3. Add message (domain logic)
+    const message = conversation.addMessage(userId, dto.content);
+
+    // 4. Persist
+    await this.conversationRepo.save(conversation);
+
+    // 5. Return DTO
+    return MessageResponseDto.fromDomain(message);
+  }
+}
+```
+
+3. **Wire in Module** (`conversation.module.ts`):
+
+```typescript
+@Module({
+  providers: [
+    SendMessageUseCase,
+    // ... other providers
+  ],
+  exports: [SendMessageUseCase],
+})
+export class ConversationModule {}
+```
+
+4. **Call from Controller/Gateway**:
+
+```typescript
+@SubscribeMessage('message:send')
+async handleSendMessage(
+  @ConnectedSocket() client: Socket,
+  @MessageBody() dto: SendMessageDto,
+) {
+  const userId = client.data.user.id;
+  const message = await this.sendMessageUseCase.execute(userId, dto);
+
+  // Broadcast to conversation room
+  this.server.to(`conversation:${dto.conversationId}`).emit('message:received', message);
+}
+```
 
 ---
 
-## Monitoring and Debugging
+## Common Issues & Solutions
 
-### View Logs
+### Issue: Database connection failed
 
-```bash
-# Application logs (structured JSON)
-tail -f logs/application.log | jq '.'
+**Error**: `error: database "clean_architecture_db" does not exist`
 
-# WebSocket connection logs
-grep "WebSocket" logs/application.log | jq '.'
-
-# Message delivery logs
-grep "message:send\|message:received" logs/application.log | jq '.'
-```
-
-### Redis Monitoring
+**Solution**:
 
 ```bash
-# Connect to Redis CLI
-docker exec -it redis redis-cli
+# Create database manually
+psql -U postgres -c "CREATE DATABASE clean_architecture_db;"
 
-# Monitor real-time commands
-MONITOR
-
-# Check typing indicators
-KEYS typing:*
-
-# Check Socket.IO adapter keys
-KEYS socket.io*
+# Run migrations
+pnpm migration:run
 ```
 
-### Database Queries
+---
+
+### Issue: Redis connection refused
+
+**Error**: `Error: connect ECONNREFUSED 127.0.0.1:6379`
+
+**Solution**:
+
+```bash
+# Check if Redis is running
+docker-compose ps redis
+
+# If not, start it
+docker-compose up -d redis
+
+# Verify connection
+redis-cli ping  # Should return "PONG"
+```
+
+---
+
+### Issue: WebSocket connection fails with CORS error
+
+**Error**: `Cross-Origin Request Blocked: The Same Origin Policy disallows...`
+
+**Solution**:
+Update `.env`:
+
+```bash
+WEBSOCKET_CORS_ORIGIN=http://localhost:3001  # Update to your frontend URL
+```
+
+Or update `conversation.gateway.ts`:
+
+```typescript
+@WebSocketGateway({
+  namespace: 'conversations',
+  cors: {
+    origin: process.env.WEBSOCKET_CORS_ORIGIN || '*',
+    credentials: true,
+  },
+})
+```
+
+---
+
+### Issue: JWT authentication fails
+
+**Error**: `Unauthorized: Invalid or expired token`
+
+**Solution**:
+
+1. Verify JWT_SECRET in `.env` matches server configuration
+2. Check token expiration with [jwt.io](https://jwt.io)
+3. Ensure `Authorization: Bearer TOKEN` header format is correct
+4. For WebSocket, check `auth.token` in connection options
+
+---
+
+### Issue: Migration errors
+
+**Error**: `Table "conversations" already exists`
+
+**Solution**:
+
+```bash
+# Revert last migration
+pnpm migration:revert
+
+# Check migration status
+pnpm typeorm migration:show
+
+# Re-run migrations
+pnpm migration:run
+```
+
+---
+
+## Performance Monitoring
+
+### Check WebSocket Connections
+
+```bash
+# Connect to Redis
+redis-cli
+
+# Count active Socket.IO rooms
+KEYS *conversations*  # Shows all conversation rooms
+KEYS user:*           # Shows all user rooms
+```
+
+### Database Query Performance
 
 ```bash
 # Connect to PostgreSQL
-docker exec -it postgres psql -U postgres -d clean_architecture_dev
+psql -U postgres -d clean_architecture_db
 
-# View recent messages
-SELECT id, sender_id, content, status, created_at
-FROM messages
-ORDER BY created_at DESC
-LIMIT 10;
+# Check query execution time
+\timing
 
-# View conversation participants
-SELECT c.id, c.participant1_id, c.participant2_id, c.updated_at
-FROM conversations c
-ORDER BY c.updated_at DESC;
+# Analyze slow queries
+EXPLAIN ANALYZE SELECT * FROM messages WHERE conversation_id = 'uuid' ORDER BY created_at DESC LIMIT 50;
 
-# Check unread message count
-SELECT conversation_id, COUNT(*) as unread_count
-FROM messages
-WHERE status != 'read'
-GROUP BY conversation_id;
+# Verify indexes
+\di  # List all indexes
 ```
 
----
-
-## Performance Testing
-
-### Load Test with Artillery
+### Monitor Redis Memory
 
 ```bash
-# Install Artillery
-pnpm add -g artillery
-
-# Run WebSocket load test
-artillery run specs/002-chat-module/tests/load-test.yml
-
-# Expected results:
-# Summary:
-#   scenarios launched: 1000
-#   scenarios completed: 1000
-#   messages sent: 10000
-#   p95 latency: 950ms
-#   errors: 0
+redis-cli INFO memory
+# Look for: used_memory_human, maxmemory_policy
 ```
-
-**load-test.yml**:
-
-```yaml
-config:
-  target: 'http://localhost:3000'
-  phases:
-    - duration: 60
-      arrivalRate: 10
-  processor: './load-test-functions.js'
-
-scenarios:
-  - name: 'Send messages'
-    engine: 'socketio'
-    flow:
-      - function: 'authenticate'
-      - emit:
-          channel: 'message:send'
-          data:
-            conversationId: '{{ conversationId }}'
-            content: 'Load test message {{ $randomString() }}'
-      - think: 5
-```
-
----
-
-## Troubleshooting
-
-### Issue: WebSocket connection fails
-
-**Symptoms**: `connect_error` event fired
-
-**Solutions**:
-
-1. Check JWT token is valid: `jwt.io` → paste token
-2. Verify Redis is running: `docker-compose ps redis`
-3. Check server logs: `grep "WebSocket" logs/application.log`
-4. Test authentication: `curl http://localhost:3000/auth/profile -H "Authorization: Bearer $TOKEN"`
-
-### Issue: Messages not delivered across instances
-
-**Symptoms**: Message sent but not received
-
-**Solutions**:
-
-1. Verify Redis adapter configured: Check `src/shared/websocket/websocket.module.ts`
-2. Check Redis pub/sub: `redis-cli MONITOR` should show publish/subscribe
-3. Verify both instances connect to same Redis: Check `REDIS_HOST` in `.env`
-4. Test Redis connectivity: `redis-cli PING` should return `PONG`
-
-### Issue: Message search returns no results
-
-**Symptoms**: Search endpoint returns empty array
-
-**Solutions**:
-
-1. Check `search_vector` populated: `SELECT search_vector FROM messages LIMIT 1;`
-2. Verify trigger is active: `SELECT * FROM pg_trigger WHERE tgname = 'messages_search_vector_update';`
-3. Rebuild search vectors: `UPDATE messages SET content = content;`
-4. Test search manually: `SELECT * FROM messages WHERE search_vector @@ plainto_tsquery('hello');`
-
-### Issue: Rate limit exceeded
-
-**Symptoms**: `CHAT_RATE_LIMIT_EXCEEDED` error
-
-**Solutions**:
-
-1. Wait 60 seconds for rate limit to reset
-2. Check ThrottlerGuard config: `src/modules/chat/chat.module.ts`
-3. Adjust limits for testing: Increase `limit` in ThrottlerModule config
-4. Verify Redis stores rate limit counters: `redis-cli KEYS throttler:*`
 
 ---
 
 ## Next Steps
 
-- ✅ Chat module is running locally
-- ⏭️ Implement frontend client (React/Vue/Angular)
-- ⏭️ Add push notifications for offline users
-- ⏭️ Implement message encryption (E2E)
-- ⏭️ Add file/image attachments
-- ⏭️ Implement group chat support
+1. **Implement Use Cases**: Create missing use cases (create conversation, mark as read, search messages)
+2. **Add Tests**: Achieve >80% test coverage for critical modules
+3. **Add REST Controller**: Create ConversationController with Swagger docs
+4. **Performance Tuning**: Add database indexes, optimize queries
+5. **Deploy**: Configure production environment variables, set up CI/CD
+
+---
+
+## Useful Commands Reference
+
+```bash
+# Development
+pnpm start:dev              # Start with hot-reload
+pnpm build                  # Build for production
+pnpm start:prod             # Start production server
+
+# Testing
+pnpm test                   # Run unit tests
+pnpm test:cov               # Run with coverage
+pnpm test:e2e               # Run E2E tests
+
+# Database
+pnpm migration:generate src/shared/database/migrations/MigrationName
+pnpm migration:run          # Run pending migrations
+pnpm migration:revert       # Revert last migration
+
+# Code Quality
+pnpm lint                   # Run ESLint
+pnpm lint:fix               # Auto-fix linting errors
+pnpm format                 # Format with Prettier
+
+# Docker
+docker-compose up -d        # Start all services
+docker-compose down         # Stop all services
+docker-compose logs -f      # View logs
+```
 
 ---
 
 ## Additional Resources
 
-- **API Documentation**: http://localhost:3000/api/docs
-- **WebSocket Events**: See `contracts/websocket-events.md`
-- **Data Model**: See `data-model.md`
-- **Architecture Guide**: See `../../docs/architecture.md`
-- **Socket.IO Docs**: https://socket.io/docs/v4/
-- **TypeORM Docs**: https://typeorm.io/
+- **NestJS Documentation**: https://docs.nestjs.com
+- **Socket.IO Documentation**: https://socket.io/docs/v4
+- **TypeORM Documentation**: https://typeorm.io
+- **Clean Architecture**: https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- **Project README**: See `README.md` in project root
+
+**Questions?** Open an issue in the GitHub repository or contact the development team.
