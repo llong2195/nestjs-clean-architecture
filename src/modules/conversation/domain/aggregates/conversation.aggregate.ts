@@ -12,6 +12,14 @@ import {
   MinimumParticipantsRequiredException,
   CannotUpdateDirectConversationNameException,
 } from '../exceptions/conversation.exceptions';
+import { AggregateRoot } from '../../../../shared/domain-events/aggregate-root.base';
+import {
+  ConversationCreatedEvent,
+  MessageAddedEvent,
+  ParticipantAddedEvent,
+  ParticipantRemovedEvent,
+  ConversationArchivedEvent,
+} from '../events/conversation.events';
 
 /**
  * Conversation Aggregate Root
@@ -19,7 +27,7 @@ import {
  * Manages conversation lifecycle and ensures business rules.
  * Controls messages within the conversation boundary.
  */
-export class Conversation {
+export class Conversation extends AggregateRoot {
   private _messages: Message[] = [];
   private _participantIds: Set<string>;
 
@@ -33,6 +41,7 @@ export class Conversation {
     private _isActive: boolean,
     participantIds: string[],
   ) {
+    super();
     this._participantIds = new Set(participantIds);
   }
 
@@ -67,7 +76,22 @@ export class Conversation {
     }
 
     const now = new Date();
-    return new Conversation(uuid(), name, type, createdBy, now, now, true, participantIds);
+    const conversation = new Conversation(
+      uuid(),
+      name,
+      type,
+      createdBy,
+      now,
+      now,
+      true,
+      participantIds,
+    );
+
+    conversation.addDomainEvent(
+      new ConversationCreatedEvent(conversation.id, type, createdBy, participantIds),
+    );
+
+    return conversation;
   }
 
   /**
@@ -140,6 +164,8 @@ export class Conversation {
     this._messages.push(message);
     this._updatedAt = new Date();
 
+    this.addDomainEvent(new MessageAddedEvent(this.id, message.id, senderId, content));
+
     return message;
   }
 
@@ -161,6 +187,8 @@ export class Conversation {
 
     this._participantIds.add(userId);
     this._updatedAt = new Date();
+
+    this.addDomainEvent(new ParticipantAddedEvent(this.id, userId, addedBy));
   }
 
   /**
@@ -185,6 +213,8 @@ export class Conversation {
 
     this._participantIds.delete(userId);
     this._updatedAt = new Date();
+
+    this.addDomainEvent(new ParticipantRemovedEvent(this.id, userId, removedBy));
   }
 
   /**
@@ -213,6 +243,8 @@ export class Conversation {
 
     this._isActive = false;
     this._updatedAt = new Date();
+
+    this.addDomainEvent(new ConversationArchivedEvent(this.id, archivedBy));
   }
 
   /**

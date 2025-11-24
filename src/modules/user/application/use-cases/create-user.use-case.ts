@@ -3,6 +3,7 @@ import type { IUserRepository } from '../../domain/repositories/user.repository.
 import { User } from '../../domain/entities/user.entity';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UserRole } from '../../domain/value-objects/user-role.vo';
+import { DuplicateEmailException } from '../../../../common/exceptions/custom-exceptions';
 
 @Injectable()
 export class CreateUserUseCase {
@@ -15,7 +16,7 @@ export class CreateUserUseCase {
     // Check if user with email already exists
     const existingUser = await this.userRepository.findByEmail(dto.email);
     if (existingUser) {
-      throw new Error('User with this email already exists');
+      throw new DuplicateEmailException(dto.email);
     }
 
     // Create domain entity

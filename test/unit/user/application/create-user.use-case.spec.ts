@@ -80,7 +80,7 @@ describe('CreateUserUseCase', () => {
 
       mockUserRepository.findByEmail.mockResolvedValue(existingUser);
 
-      await expect(useCase.execute(dto)).rejects.toThrow('User with this email already exists');
+      await expect(useCase.execute(dto)).rejects.toThrow('Email already exists');
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(dto.email);
       expect(mockUserRepository.save).not.toHaveBeenCalled();
     });

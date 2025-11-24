@@ -1,7 +1,11 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import type { IUserRepository } from '../../domain/repositories/user.repository.interface';
 import { User } from '../../domain/entities/user.entity';
 import { UpdateUserDto } from '../dtos/update-user.dto';
+import {
+  UserNotFoundException,
+  DuplicateEmailException,
+} from '../../../../common/exceptions/custom-exceptions';
 
 @Injectable()
 export class UpdateUserUseCase {
@@ -14,14 +18,14 @@ export class UpdateUserUseCase {
     // Find user
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
+      throw new UserNotFoundException(userId);
     }
 
     // Check email uniqueness if email is being updated
     if (dto.email && dto.email !== user.email) {
       const existingUser = await this.userRepository.findByEmail(dto.email);
       if (existingUser) {
-        throw new Error('User with this email already exists');
+        throw new DuplicateEmailException(dto.email);
       }
     }
 

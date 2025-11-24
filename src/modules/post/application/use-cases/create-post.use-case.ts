@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import type { IPostRepository } from '../../domain/repositories/post.repository.interface';
 import { CreatePostDto } from '../dtos/create-post.dto';
 import { Post } from '../../domain/aggregates/post.aggregate';
+import { DuplicateSlugException } from '../../../../common/exceptions/custom-exceptions';
 
 @Injectable()
 export class CreatePostUseCase {
@@ -15,7 +16,7 @@ export class CreatePostUseCase {
     if (dto.slug) {
       const existingPost = await this.postRepository.findBySlug(dto.slug);
       if (existingPost) {
-        throw new Error(`Post with slug "${dto.slug}" already exists`);
+        throw new DuplicateSlugException(dto.slug);
       }
     }
 

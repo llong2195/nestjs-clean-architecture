@@ -66,6 +66,22 @@ export class PostNotFoundException extends HttpException {
 }
 
 /**
+ * Duplicate Slug Exception
+ */
+export class DuplicateSlugException extends HttpException {
+  constructor(slug: string) {
+    super(
+      {
+        statusCode: HttpStatus.CONFLICT,
+        message: `Post with slug "${slug}" already exists`,
+        errorCode: ErrorCode.DUPLICATE_EMAIL, // Reuse similar error code
+      },
+      HttpStatus.CONFLICT,
+    );
+  }
+}
+
+/**
  * Invalid Post Status Exception
  */
 export class InvalidPostStatusException extends HttpException {
