@@ -122,9 +122,7 @@ describe('CreateUserUseCase', () => {
 
       mockUserRepository.findByEmail.mockResolvedValue(null);
 
-      await expect(useCase.execute(dto)).rejects.toThrow(
-        'User name must be between 3 and 50 characters',
-      );
+      await expect(useCase.execute(dto)).rejects.toThrow(/User name must be at least 3 characters/);
       expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
 

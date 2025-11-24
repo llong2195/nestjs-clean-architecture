@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserOrmEntity } from './infrastructure/persistence/user.orm-entity';
 import { UserRepository } from './infrastructure/persistence/user.repository';
+import { UserOrmMapper } from './infrastructure/mappers/user-orm.mapper';
 import { CreateUserUseCase } from './application/use-cases/create-user.use-case';
 import { GetUserUseCase } from './application/use-cases/get-user.use-case';
 import { UpdateUserUseCase } from './application/use-cases/update-user.use-case';
@@ -15,6 +16,7 @@ import { UserCacheService } from './infrastructure/cache/user-cache.service';
   controllers: [UserController],
   providers: [
     UserCacheService,
+    UserOrmMapper,
     // Repository implementation
     {
       provide: 'IUserRepository',

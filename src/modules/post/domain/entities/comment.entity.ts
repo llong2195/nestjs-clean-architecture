@@ -1,4 +1,10 @@
 import { v7 as uuid } from 'uuid';
+import {
+  EmptyCommentContentException,
+  CommentContentTooLongException,
+  PostIdRequiredException,
+  AuthorIdRequiredException,
+} from '../exceptions/post.exceptions';
 
 export class Comment {
   private constructor(
@@ -11,19 +17,19 @@ export class Comment {
 
   static create(postId: string, authorId: string, content: string): Comment {
     if (!content || content.trim().length === 0) {
-      throw new Error('Comment content cannot be empty');
+      throw new EmptyCommentContentException();
     }
 
     if (content.length > 1000) {
-      throw new Error('Comment content cannot exceed 1000 characters');
+      throw new CommentContentTooLongException(content.length, 1000);
     }
 
     if (!postId || postId.trim().length === 0) {
-      throw new Error('Post ID is required');
+      throw new PostIdRequiredException();
     }
 
     if (!authorId || authorId.trim().length === 0) {
-      throw new Error('Author ID is required');
+      throw new AuthorIdRequiredException();
     }
 
     return new Comment(uuid(), postId, authorId, content.trim(), new Date());
@@ -41,11 +47,11 @@ export class Comment {
 
   updateContent(content: string): void {
     if (!content || content.trim().length === 0) {
-      throw new Error('Comment content cannot be empty');
+      throw new EmptyCommentContentException();
     }
 
     if (content.length > 1000) {
-      throw new Error('Comment content cannot exceed 1000 characters');
+      throw new CommentContentTooLongException(content.length, 1000);
     }
 
     this._content = content.trim();

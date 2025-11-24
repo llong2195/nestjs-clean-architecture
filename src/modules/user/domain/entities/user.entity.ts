@@ -2,10 +2,23 @@ import { v7 as uuid } from 'uuid';
 import { Email } from '../value-objects/email.vo';
 import { Password } from '../value-objects/password.vo';
 import { UserRole } from '../value-objects/user-role.vo';
+import {
+  PasswordRequiredForLocalAuthException,
+  EmptyUserNameException,
+  UserNameTooShortException,
+  UserNameTooLongException,
+  CannotChangePasswordForOAuthException,
+} from '../exceptions/user.exceptions';
+import { AggregateRoot } from '../../../../shared/domain-events/aggregate-root.base';
+import {
+  UserCreatedEvent,
+  UserProfileUpdatedEvent,
+  UserDeactivatedEvent,
+} from '../events/user.events';
 
 export type AuthProvider = 'local' | 'google' | 'github';
 
-export class User {
+export class User extends AggregateRoot {
   private constructor(
     public readonly id: string,
     private _email: Email,
@@ -16,7 +29,9 @@ export class User {
     private _isActive: boolean,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
-  ) {}
+  ) {
+    super();
+  }
 
   static create(
     email: string,
@@ -41,18 +56,22 @@ export class User {
     if (password) {
       passwordVo = await Password.create(password);
     } else if (provider === 'local') {
-      throw new Error('Password is required for local authentication');
+      throw new PasswordRequiredForLocalAuthException();
     }
 
     if (!userName || userName.trim().length === 0) {
-      throw new Error('User name cannot be empty');
+      throw new EmptyUserNameException();
     }
 
-    if (userName.length < 3 || userName.length > 50) {
-      throw new Error('User name must be between 3 and 50 characters');
+    if (userName.length < 3) {
+      throw new UserNameTooShortException(userName.length, 3);
     }
 
-    return new User(
+    if (userName.length > 50) {
+      throw new UserNameTooLongException(userName.length, 50);
+    }
+
+    const user = new User(
       uuid(),
       emailVo,
       passwordVo,
@@ -63,6 +82,12 @@ export class User {
       new Date(),
       new Date(),
     );
+
+    user.addDomainEvent(
+      new UserCreatedEvent(user.id, user.email, user.userName, user.role, user.provider),
+    );
+
+    return user;
   }
 
   static reconstitute(
@@ -93,24 +118,35 @@ export class User {
   }
 
   updateProfile(userName?: string, email?: string): void {
+    const updatedFields: { email?: string; userName?: string } = {};
+
     if (userName !== undefined) {
       if (!userName || userName.trim().length === 0) {
-        throw new Error('User name cannot be empty');
+        throw new EmptyUserNameException();
       }
-      if (userName.length < 3 || userName.length > 50) {
-        throw new Error('User name must be between 3 and 50 characters');
+      if (userName.length < 3) {
+        throw new UserNameTooShortException(userName.length, 3);
+      }
+      if (userName.length > 50) {
+        throw new UserNameTooLongException(userName.length, 50);
       }
       this._userName = userName.trim();
+      updatedFields.userName = this._userName;
     }
 
     if (email !== undefined) {
       this._email = Email.create(email);
+      updatedFields.email = this._email.value;
+    }
+
+    if (Object.keys(updatedFields).length > 0) {
+      this.addDomainEvent(new UserProfileUpdatedEvent(this.id, updatedFields));
     }
   }
 
   async changePassword(newPassword: string): Promise<void> {
     if (this._provider !== 'local') {
-      throw new Error('Cannot change password for OAuth users');
+      throw new CannotChangePasswordForOAuthException(this._provider);
     }
     this._password = await Password.create(newPassword);
   }
@@ -124,6 +160,7 @@ export class User {
 
   deactivate(): void {
     this._isActive = false;
+    this.addDomainEvent(new UserDeactivatedEvent(this.id));
   }
 
   activate(): void {

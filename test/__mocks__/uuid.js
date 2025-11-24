@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+const { randomBytes } = require('crypto');
 
 function v4() {
   return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
@@ -48,7 +48,8 @@ function version(uuid) {
   return parseInt(uuid[14]);
 }
 
-export default {
+// Export both named exports and default export for compatibility
+module.exports = {
   v1,
   v3,
   v4,
@@ -62,3 +63,17 @@ export default {
   validate,
   version,
 };
+
+// Also support named exports
+module.exports.v1 = v1;
+module.exports.v3 = v3;
+module.exports.v4 = v4;
+module.exports.v5 = v5;
+module.exports.v6 = v6;
+module.exports.v7 = v7;
+module.exports.v8 = v8;
+module.exports.NIL = NIL;
+module.exports.parse = parse;
+module.exports.stringify = stringify;
+module.exports.validate = validate;
+module.exports.version = version;

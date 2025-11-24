@@ -30,11 +30,11 @@ describe('Email Value Object', () => {
     });
 
     it('should throw error for empty email', () => {
-      expect(() => Email.create('')).toThrow('Email cannot be empty');
+      expect(() => Email.create('')).toThrow('Invalid email format');
     });
 
     it('should throw error for whitespace-only email', () => {
-      expect(() => Email.create('   ')).toThrow('Email cannot be empty');
+      expect(() => Email.create('   ')).toThrow('Invalid email format');
     });
 
     it('should throw error for invalid email format - missing @', () => {

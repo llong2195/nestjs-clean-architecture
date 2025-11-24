@@ -1,4 +1,5 @@
 import { v7 as uuid } from 'uuid';
+import { EmptyMessageException } from '../exceptions/conversation.exceptions';
 
 /**
  * Message Domain Entity
@@ -96,7 +97,7 @@ export class Message {
    */
   edit(newContent: string): void {
     if (newContent.trim().length === 0) {
-      throw new Error('Message content cannot be empty');
+      throw new EmptyMessageException();
     }
     this._content = newContent;
     this._isEdited = true;

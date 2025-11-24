@@ -1,6 +1,17 @@
 import { v7 as uuid } from 'uuid';
 import { ConversationType } from '../value-objects/conversation-type.vo';
 import { Message } from '../entities/message.entity';
+import {
+  InvalidParticipantCountException,
+  NotParticipantException,
+  ConversationInactiveException,
+  EmptyMessageException,
+  AlreadyParticipantException,
+  CannotAddToDirectConversationException,
+  CannotRemoveFromDirectConversationException,
+  MinimumParticipantsRequiredException,
+  CannotUpdateDirectConversationNameException,
+} from '../exceptions/conversation.exceptions';
 
 /**
  * Conversation Aggregate Root
@@ -36,11 +47,19 @@ export class Conversation {
   ): Conversation {
     // Validation
     if (type === ConversationType.DIRECT && participantIds.length !== 2) {
-      throw new Error('Direct conversations must have exactly 2 participants');
+      throw new InvalidParticipantCountException(
+        'Direct',
+        'must have exactly 2 participants',
+        participantIds.length,
+      );
     }
 
     if (type === ConversationType.GROUP && participantIds.length < 2) {
-      throw new Error('Group conversations must have at least 2 participants');
+      throw new InvalidParticipantCountException(
+        'Group',
+        'must have at least 2 participants',
+        participantIds.length,
+      );
     }
 
     if (!participantIds.includes(createdBy)) {
@@ -106,15 +125,15 @@ export class Conversation {
    */
   addMessage(senderId: string, content: string): Message {
     if (!this.isActive) {
-      throw new Error('Cannot add message to inactive conversation');
+      throw new ConversationInactiveException('add message');
     }
 
     if (!this.isParticipant(senderId)) {
-      throw new Error('Only participants can send messages');
+      throw new NotParticipantException(senderId, this.id);
     }
 
     if (content.trim().length === 0) {
-      throw new Error('Message content cannot be empty');
+      throw new EmptyMessageException();
     }
 
     const message = Message.create(this.id, senderId, content);
@@ -129,15 +148,15 @@ export class Conversation {
    */
   addParticipant(userId: string, addedBy: string): void {
     if (!this.isParticipant(addedBy)) {
-      throw new Error('Only participants can add new members');
+      throw new NotParticipantException(addedBy, this.id);
     }
 
     if (this._type === ConversationType.DIRECT) {
-      throw new Error('Cannot add participants to direct conversations');
+      throw new CannotAddToDirectConversationException();
     }
 
     if (this._participantIds.has(userId)) {
-      throw new Error('User is already a participant');
+      throw new AlreadyParticipantException(userId);
     }
 
     this._participantIds.add(userId);
@@ -149,19 +168,19 @@ export class Conversation {
    */
   removeParticipant(userId: string, removedBy: string): void {
     if (!this.isParticipant(removedBy)) {
-      throw new Error('Only participants can remove members');
+      throw new NotParticipantException(removedBy, this.id);
     }
 
     if (this._type === ConversationType.DIRECT) {
-      throw new Error('Cannot remove participants from direct conversations');
+      throw new CannotRemoveFromDirectConversationException();
     }
 
     if (!this._participantIds.has(userId)) {
-      throw new Error('User is not a participant');
+      throw new NotParticipantException(userId, this.id);
     }
 
     if (this._participantIds.size <= 2) {
-      throw new Error('Cannot remove participant: conversation must have at least 2 members');
+      throw new MinimumParticipantsRequiredException(2);
     }
 
     this._participantIds.delete(userId);
@@ -173,11 +192,11 @@ export class Conversation {
    */
   updateName(newName: string, updatedBy: string): void {
     if (!this.isParticipant(updatedBy)) {
-      throw new Error('Only participants can update conversation name');
+      throw new NotParticipantException(updatedBy, this.id);
     }
 
     if (this._type === ConversationType.DIRECT) {
-      throw new Error('Cannot update name of direct conversations');
+      throw new CannotUpdateDirectConversationNameException();
     }
 
     this._name = newName;
@@ -189,7 +208,7 @@ export class Conversation {
    */
   archive(archivedBy: string): void {
     if (!this.isParticipant(archivedBy)) {
-      throw new Error('Only participants can archive conversation');
+      throw new NotParticipantException(archivedBy, this.id);
     }
 
     this._isActive = false;
@@ -201,7 +220,7 @@ export class Conversation {
    */
   reactivate(reactivatedBy: string): void {
     if (!this.isParticipant(reactivatedBy)) {
-      throw new Error('Only participants can reactivate conversation');
+      throw new NotParticipantException(reactivatedBy, this.id);
     }
 
     this._isActive = true;

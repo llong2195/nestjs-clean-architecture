@@ -61,10 +61,11 @@ describe('PublishPostUseCase', () => {
       const events = draftPost.getDomainEvents();
       expect(events).toHaveLength(1);
       expect(events[0]).toMatchObject({
-        postId: draftPost.id,
+        aggregateId: draftPost.id,
         authorId: 'author-123',
         title: 'Test Post',
         slug: 'test-post',
+        eventType: 'PostPublished',
       });
       expect(events[0].publishedAt).toBeInstanceOf(Date);
     });
@@ -98,7 +99,7 @@ describe('PublishPostUseCase', () => {
 
       mockPostRepository.findById.mockResolvedValue(publishedPost);
 
-      await expect(useCase.execute(postId)).rejects.toThrow('Post is already published');
+      await expect(useCase.execute(postId)).rejects.toThrow(/Cannot publish post/);
       expect(mockPostRepository.saveWithTransaction).not.toHaveBeenCalled();
     });
 
@@ -119,7 +120,7 @@ describe('PublishPostUseCase', () => {
 
       mockPostRepository.findById.mockResolvedValue(archivedPost);
 
-      await expect(useCase.execute(postId)).rejects.toThrow('Cannot publish an archived post');
+      await expect(useCase.execute(postId)).rejects.toThrow(/Cannot publish post/);
       expect(mockPostRepository.saveWithTransaction).not.toHaveBeenCalled();
     });
 

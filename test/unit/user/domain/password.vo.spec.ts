@@ -36,25 +36,25 @@ describe('Password Value Object', () => {
 
     it('should throw error for password shorter than 8 characters', async () => {
       await expect(Password.create('Short1')).rejects.toThrow(
-        'Password must be at least 8 characters long',
+        'Password must be at least 8 characters',
       );
     });
 
     it('should throw error for password without uppercase letter', async () => {
       await expect(Password.create('weakpass123')).rejects.toThrow(
-        'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+        'Password does not meet security requirements',
       );
     });
 
     it('should throw error for password without lowercase letter', async () => {
       await expect(Password.create('WEAKPASS123')).rejects.toThrow(
-        'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+        'Password does not meet security requirements',
       );
     });
 
     it('should throw error for password without number', async () => {
       await expect(Password.create('WeakPassword')).rejects.toThrow(
-        'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+        'Password does not meet security requirements',
       );
     });
 
@@ -76,7 +76,7 @@ describe('Password Value Object', () => {
     });
 
     it('should throw error for empty hash', () => {
-      expect(() => Password.fromHash('')).toThrow('Hashed password cannot be empty');
+      expect(() => Password.fromHash('')).toThrow('Password does not meet security requirements');
     });
   });
 

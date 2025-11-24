@@ -1,3 +1,5 @@
+import { InvalidEmailException } from '../exceptions/user.exceptions';
+
 export class Email {
   private readonly _value: string;
 
@@ -7,13 +9,13 @@ export class Email {
 
   static create(email: string): Email {
     if (!email || email.trim().length === 0) {
-      throw new Error('Email cannot be empty');
+      throw new InvalidEmailException('(empty)');
     }
 
     // RFC 5322 simplified email validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
-      throw new Error('Invalid email format');
+      throw new InvalidEmailException(email);
     }
 
     return new Email(email.toLowerCase().trim());

@@ -1,10 +1,16 @@
 import { v7 as uuid } from 'uuid';
+import { AggregateRoot } from '../../../../shared/domain-events/aggregate-root.base';
 import { PostStatus } from '../value-objects/post-status.vo';
 import { PostPublishedEvent, PostArchivedEvent } from '../events/post.events';
+import {
+  EmptyPostTitleException,
+  PostTitleTooLongException,
+  EmptyPostContentException,
+  AuthorIdRequiredException,
+  InvalidPostStateException,
+} from '../exceptions/post.exceptions';
 
-export class Post {
-  private domainEvents: any[] = [];
-
+export class Post extends AggregateRoot {
   private constructor(
     public readonly id: string,
     private _authorId: string,
@@ -16,23 +22,25 @@ export class Post {
     private _viewCount: number,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
-  ) {}
+  ) {
+    super();
+  }
 
   static create(authorId: string, title: string, content: string, slug?: string): Post {
     if (!title || title.trim().length === 0) {
-      throw new Error('Post title cannot be empty');
+      throw new EmptyPostTitleException();
     }
 
     if (title.length > 200) {
-      throw new Error('Post title cannot exceed 200 characters');
+      throw new PostTitleTooLongException(title.length, 200);
     }
 
     if (!content || content.trim().length === 0) {
-      throw new Error('Post content cannot be empty');
+      throw new EmptyPostContentException();
     }
 
     if (!authorId || authorId.trim().length === 0) {
-      throw new Error('Author ID is required');
+      throw new AuthorIdRequiredException();
     }
 
     const generatedSlug = slug || Post.generateSlug(title);
@@ -88,11 +96,11 @@ export class Post {
 
   publish(): void {
     if (this._status === PostStatus.PUBLISHED) {
-      throw new Error('Post is already published');
+      throw new InvalidPostStateException('publish', this._status);
     }
 
     if (this._status === PostStatus.ARCHIVED) {
-      throw new Error('Cannot publish an archived post');
+      throw new InvalidPostStateException('publish', this._status);
     }
 
     this._status = PostStatus.PUBLISHED;
@@ -105,7 +113,7 @@ export class Post {
 
   archive(): void {
     if (this._status === PostStatus.ARCHIVED) {
-      throw new Error('Post is already archived');
+      throw new InvalidPostStateException('archive', this._status);
     }
 
     this._status = PostStatus.ARCHIVED;
@@ -119,7 +127,7 @@ export class Post {
   updateContent(title: string, content: string, slug?: string): void {
     if (title && title.trim().length > 0) {
       if (title.length > 200) {
-        throw new Error('Post title cannot exceed 200 characters');
+        throw new PostTitleTooLongException(title.length, 200);
       }
       this._title = title.trim();
       this._slug = slug || Post.generateSlug(title);
@@ -130,16 +138,12 @@ export class Post {
     }
   }
 
-  private addDomainEvent(event: any): void {
-    this.domainEvents.push(event);
-  }
-
+  /**
+   * Compatibility method for existing code that uses getDomainEvents()
+   * @deprecated Use domainEvents property instead
+   */
   getDomainEvents(): any[] {
-    return [...this.domainEvents];
-  }
-
-  clearDomainEvents(): void {
-    this.domainEvents = [];
+    return Array.from(this.domainEvents);
   }
 
   // Getters

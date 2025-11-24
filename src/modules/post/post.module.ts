@@ -7,6 +7,9 @@ import { PostTagOrmEntity } from './infrastructure/persistence/post-tag.orm-enti
 import { PostRepository } from './infrastructure/persistence/post.repository';
 import { CommentRepository } from './infrastructure/persistence/comment.repository';
 import { TagRepository } from './infrastructure/persistence/tag.repository';
+import { PostOrmMapper } from './infrastructure/mappers/post-orm.mapper';
+import { CommentOrmMapper } from './infrastructure/mappers/comment-orm.mapper';
+import { TagOrmMapper } from './infrastructure/mappers/tag-orm.mapper';
 import { CreatePostUseCase } from './application/use-cases/create-post.use-case';
 import { GetPostUseCase } from './application/use-cases/get-post.use-case';
 import { UpdatePostUseCase } from './application/use-cases/update-post.use-case';
@@ -30,6 +33,10 @@ import { PostCacheService } from './infrastructure/cache/post-cache.service';
   controllers: [PostController, CommentController, TagController],
   providers: [
     PostCacheService,
+    // ORM Mappers
+    PostOrmMapper,
+    CommentOrmMapper,
+    TagOrmMapper,
     // Repository implementations
     {
       provide: 'IPostRepository',

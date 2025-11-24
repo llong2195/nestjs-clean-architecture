@@ -1,0 +1,14 @@
+
+> clean-architecture@0.0.1 circular C:\Users\llong\Desktop\clean-architecture
+> madge --circular --extensions ts src/
+
+- Finding files
+Processed 195 files (4.2s) 
+
+✖ Found 3 circular dependencies!
+
+1) modules/conversation/infrastructure/persistence/conversation.orm-entity.ts > modules/conversation/infrastructure/persistence/conversation-participant.orm-entity.ts
+2) modules/conversation/infrastructure/persistence/conversation.orm-entity.ts > modules/conversation/infrastructure/persistence/message.orm-entity.ts
+3) modules/post/infrastructure/persistence/comment.orm-entity.ts > modules/post/infrastructure/persistence/post.orm-entity.ts
+
+ ELIFECYCLE  Command failed with exit code 1.

@@ -42,12 +42,12 @@ describe('Post Aggregate', () => {
     });
 
     it('should throw error for empty title', () => {
-      expect(() => Post.create('author-id', '', 'Content')).toThrow('Post title cannot be empty');
+      expect(() => Post.create('author-id', '', 'Content')).toThrow(/Post title cannot be empty/);
     });
 
     it('should throw error for whitespace-only title', () => {
       expect(() => Post.create('author-id', '   ', 'Content')).toThrow(
-        'Post title cannot be empty',
+        /Post title cannot be empty/,
       );
     });
 
@@ -55,16 +55,16 @@ describe('Post Aggregate', () => {
       const longTitle = 'a'.repeat(201);
 
       expect(() => Post.create('author-id', longTitle, 'Content')).toThrow(
-        'Post title cannot exceed 200 characters',
+        /Post title cannot exceed/,
       );
     });
 
     it('should throw error for empty content', () => {
-      expect(() => Post.create('author-id', 'Title', '')).toThrow('Post content cannot be empty');
+      expect(() => Post.create('author-id', 'Title', '')).toThrow(/Post content cannot be empty/);
     });
 
     it('should throw error for empty author ID', () => {
-      expect(() => Post.create('', 'Title', 'Content')).toThrow('Author ID is required');
+      expect(() => Post.create('', 'Title', 'Content')).toThrow(/Author ID is required/);
     });
 
     it('should trim whitespace from title and content', () => {
@@ -87,20 +87,21 @@ describe('Post Aggregate', () => {
       const events = post.getDomainEvents();
       expect(events).toHaveLength(1);
       expect(events[0]).toMatchObject({
-        postId: post.id,
+        aggregateId: post.id,
         authorId: 'author-id',
         title: 'Title',
         slug: 'title',
+        eventType: 'PostPublished',
       });
       expect(events[0].publishedAt).toBeInstanceOf(Date);
-      expect(events[0].occurredAt).toBeInstanceOf(Date);
+      expect(events[0].occurredOn).toBeInstanceOf(Date);
     });
 
     it('should throw error when publishing already published post', () => {
       const post = Post.create('author-id', 'Title', 'Content');
       post.publish();
 
-      expect(() => post.publish()).toThrow('Post is already published');
+      expect(() => post.publish()).toThrow(/Cannot publish post in/);
     });
 
     it('should throw error when publishing archived post', () => {
@@ -117,7 +118,7 @@ describe('Post Aggregate', () => {
         new Date(),
       );
 
-      expect(() => post.publish()).toThrow('Cannot publish an archived post');
+      expect(() => post.publish()).toThrow(/Cannot publish post in/);
     });
 
     it('should set publishedAt timestamp', () => {
@@ -142,9 +143,10 @@ describe('Post Aggregate', () => {
       const events = post.getDomainEvents();
       expect(events).toHaveLength(1);
       expect(events[0]).toMatchObject({
-        postId: post.id,
+        aggregateId: post.id,
+        eventType: 'PostArchived',
       });
-      expect(events[0].occurredAt).toBeInstanceOf(Date);
+      expect(events[0].occurredOn).toBeInstanceOf(Date);
     });
 
     it('should archive a published post', () => {
@@ -161,7 +163,7 @@ describe('Post Aggregate', () => {
       const post = Post.create('author-id', 'Title', 'Content');
       post.archive();
 
-      expect(() => post.archive()).toThrow('Post is already archived');
+      expect(() => post.archive()).toThrow(/Cannot archive post/);
     });
   });
 
@@ -199,12 +201,10 @@ describe('Post Aggregate', () => {
     });
 
     it('should throw error for title exceeding 200 characters', () => {
-      const post = Post.create('author-id', 'Title', 'Content');
+      const post = Post.create('author-id', 'Original Title', 'Original Content');
       const longTitle = 'a'.repeat(201);
 
-      expect(() => post.updateContent(longTitle, 'Content')).toThrow(
-        'Post title cannot exceed 200 characters',
-      );
+      expect(() => post.updateContent(longTitle, 'Content')).toThrow(/Post title cannot exceed/);
     });
 
     it('should trim whitespace', () => {

@@ -1,4 +1,5 @@
 import * as bcrypt from 'bcrypt';
+import { PasswordTooShortException, WeakPasswordException } from '../exceptions/user.exceptions';
 
 export class Password {
   private readonly _hashedValue: string;
@@ -9,7 +10,7 @@ export class Password {
 
   static async create(plainPassword: string): Promise<Password> {
     if (!plainPassword || plainPassword.length < 8) {
-      throw new Error('Password must be at least 8 characters long');
+      throw new PasswordTooShortException(8);
     }
 
     // Validate password strength: at least one uppercase, one lowercase, one number
@@ -18,8 +19,8 @@ export class Password {
     const hasNumber = /[0-9]/.test(plainPassword);
 
     if (!hasUpperCase || !hasLowerCase || !hasNumber) {
-      throw new Error(
-        'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+      throw new WeakPasswordException(
+        'must contain at least one uppercase letter, one lowercase letter, and one number',
       );
     }
 
@@ -32,7 +33,7 @@ export class Password {
 
   static fromHash(hashedPassword: string): Password {
     if (!hashedPassword || hashedPassword.trim().length === 0) {
-      throw new Error('Hashed password cannot be empty');
+      throw new WeakPasswordException('hashed password cannot be empty');
     }
     return new Password(hashedPassword);
   }

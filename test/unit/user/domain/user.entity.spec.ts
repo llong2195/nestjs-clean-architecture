@@ -56,20 +56,20 @@ describe('User Entity', () => {
 
     it('should throw error for empty user name', async () => {
       await expect(User.create('test@example.com', 'SecurePass123', '')).rejects.toThrow(
-        'User name cannot be empty',
+        /User name cannot be empty/,
       );
     });
 
     it('should throw error for user name too short', async () => {
       await expect(User.create('test@example.com', 'SecurePass123', 'ab')).rejects.toThrow(
-        'User name must be between 3 and 50 characters',
+        'User name must be at least 3 characters',
       );
     });
 
     it('should throw error for user name too long', async () => {
       const longName = 'a'.repeat(51);
       await expect(User.create('test@example.com', 'SecurePass123', longName)).rejects.toThrow(
-        'User name must be between 3 and 50 characters',
+        'User name cannot exceed 50 characters',
       );
     });
   });
@@ -109,7 +109,7 @@ describe('User Entity', () => {
     it('should throw error for empty user name', async () => {
       const user = await User.create('test@example.com', 'SecurePass123', 'testuser');
 
-      expect(() => user.updateProfile('')).toThrow('User name cannot be empty');
+      expect(() => user.updateProfile('')).toThrow(/User name cannot be empty/);
     });
   });
 
@@ -141,7 +141,7 @@ describe('User Entity', () => {
       );
 
       await expect(user.changePassword('NewPass123')).rejects.toThrow(
-        'Cannot change password for OAuth users',
+        /Cannot change password for .* OAuth users/,
       );
     });
   });

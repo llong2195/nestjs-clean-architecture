@@ -4,7 +4,7 @@ import { Repository, DataSource } from 'typeorm';
 import type { IPostRepository } from '../../domain/repositories/post.repository.interface';
 import { Post } from '../../domain/aggregates/post.aggregate';
 import { PostOrmEntity } from './post.orm-entity';
-import { PostStatus } from '../../domain/value-objects/post-status.vo';
+import { PostOrmMapper } from '../mappers/post-orm.mapper';
 
 @Injectable()
 export class PostRepository implements IPostRepository {
@@ -12,12 +12,13 @@ export class PostRepository implements IPostRepository {
     @InjectRepository(PostOrmEntity)
     private readonly ormRepository: Repository<PostOrmEntity>,
     private readonly dataSource: DataSource,
+    private readonly mapper: PostOrmMapper,
   ) {}
 
   async save(post: Post): Promise<Post> {
-    const ormEntity = this.toOrmEntity(post);
+    const ormEntity = this.mapper.toOrm(post);
     const saved = await this.ormRepository.save(ormEntity);
-    return this.toDomain(saved);
+    return this.mapper.toDomain(saved);
   }
 
   /**
@@ -31,7 +32,7 @@ export class PostRepository implements IPostRepository {
     await queryRunner.startTransaction();
 
     try {
-      const ormEntity = this.toOrmEntity(post);
+      const ormEntity = this.mapper.toOrm(post);
       const saved = await queryRunner.manager.save(PostOrmEntity, ormEntity);
 
       // In the future, domain events would be saved here:
@@ -47,7 +48,7 @@ export class PostRepository implements IPostRepository {
       // }
 
       await queryRunner.commitTransaction();
-      return this.toDomain(saved);
+      return this.mapper.toDomain(saved);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -58,12 +59,12 @@ export class PostRepository implements IPostRepository {
 
   async findById(id: string): Promise<Post | null> {
     const ormEntity = await this.ormRepository.findOne({ where: { id } });
-    return ormEntity ? this.toDomain(ormEntity) : null;
+    return ormEntity ? this.mapper.toDomain(ormEntity) : null;
   }
 
   async findBySlug(slug: string): Promise<Post | null> {
     const ormEntity = await this.ormRepository.findOne({ where: { slug } });
-    return ormEntity ? this.toDomain(ormEntity) : null;
+    return ormEntity ? this.mapper.toDomain(ormEntity) : null;
   }
 
   async findByAuthorId(
@@ -76,7 +77,7 @@ export class PostRepository implements IPostRepository {
       take: options?.take || 10,
       order: { createdAt: 'DESC' },
     });
-    return ormEntities.map((entity) => this.toDomain(entity));
+    return this.mapper.toDomainMany(ormEntities);
   }
 
   async findAll(options?: { skip?: number; take?: number }): Promise<Post[]> {
@@ -85,7 +86,7 @@ export class PostRepository implements IPostRepository {
       take: options?.take || 10,
       order: { createdAt: 'DESC' },
     });
-    return ormEntities.map((entity) => this.toDomain(entity));
+    return this.mapper.toDomainMany(ormEntities);
   }
 
   async delete(id: string): Promise<boolean> {
@@ -99,35 +100,5 @@ export class PostRepository implements IPostRepository {
 
   async countByAuthorId(authorId: string): Promise<number> {
     return this.ormRepository.count({ where: { authorId } });
-  }
-
-  private toOrmEntity(post: Post): PostOrmEntity {
-    const ormEntity = new PostOrmEntity();
-    ormEntity.id = post.id;
-    ormEntity.authorId = post.authorId;
-    ormEntity.title = post.title;
-    ormEntity.content = post.content;
-    ormEntity.slug = post.slug;
-    ormEntity.status = post.status;
-    ormEntity.publishedAt = post.publishedAt;
-    ormEntity.viewCount = post.viewCount;
-    ormEntity.createdAt = post.createdAt;
-    ormEntity.updatedAt = post.updatedAt;
-    return ormEntity;
-  }
-
-  private toDomain(ormEntity: PostOrmEntity): Post {
-    return Post.reconstitute(
-      ormEntity.id,
-      ormEntity.authorId,
-      ormEntity.title,
-      ormEntity.content,
-      ormEntity.slug,
-      ormEntity.status as PostStatus,
-      ormEntity.publishedAt,
-      ormEntity.viewCount,
-      ormEntity.createdAt,
-      ormEntity.updatedAt,
-    );
   }
 }

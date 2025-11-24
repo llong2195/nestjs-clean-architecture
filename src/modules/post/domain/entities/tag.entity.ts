@@ -1,4 +1,5 @@
 import { v7 as uuid } from 'uuid';
+import { EmptyTagNameException, TagNameTooLongException } from '../exceptions/post.exceptions';
 
 export class Tag {
   private constructor(
@@ -9,11 +10,11 @@ export class Tag {
 
   static create(name: string, slug?: string): Tag {
     if (!name || name.trim().length === 0) {
-      throw new Error('Tag name cannot be empty');
+      throw new EmptyTagNameException();
     }
 
     if (name.length > 50) {
-      throw new Error('Tag name cannot exceed 50 characters');
+      throw new TagNameTooLongException(name.length, 50);
     }
 
     const generatedSlug = slug || Tag.generateSlug(name);
@@ -36,11 +37,11 @@ export class Tag {
 
   updateName(name: string): void {
     if (!name || name.trim().length === 0) {
-      throw new Error('Tag name cannot be empty');
+      throw new EmptyTagNameException();
     }
 
     if (name.length > 50) {
-      throw new Error('Tag name cannot exceed 50 characters');
+      throw new TagNameTooLongException(name.length, 50);
     }
 
     this._name = name.trim();
